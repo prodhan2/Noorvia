@@ -1,13 +1,21 @@
 import 'dart:convert';
-import 'dart:io';
-
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:provider/provider.dart';
+import '../../../core/providers/audio_provider.dart';
+import '../../../widgets/shimmer.dart';
 
+const _kPrimary = Color(0xFF1B6B3A);
+const _kPrimaryDark = Color(0xFF0F4D2A);
+const _kPrimaryLight = Color(0xFF2E8B57);
+const _kGold = Color(0xFFFFB300);
+
+// ═══════════════════════════════════════════════════════════════
+// SurahDetailPage — uses global AudioProvider
+// ═══════════════════════════════════════════════════════════════
 class SurahDetailPage extends StatefulWidget {
   final Map surahInfo;
   const SurahDetailPage({super.key, required this.surahInfo});
@@ -19,665 +27,722 @@ class SurahDetailPage extends StatefulWidget {
 class _SurahDetailPageState extends State<SurahDetailPage> {
   bool isLoading = true;
   Map<String, dynamic>? surahData;
-  Set<String> favVerseKeys = {}; // "surahId-verseId"
+  Set<String> favVerseKeys = {};
+  final ScrollController _scroll = ScrollController();
 
-  // Audio player variables
-  final AudioPlayer audioPlayer = AudioPlayer();
-  final BaseCacheManager audioCacheManager = DefaultCacheManager();
-  bool isPlaying = false;
-  int? currentlyPlayingVerse;
-  String selectedReciter = 'MaherAlMuaiqly128kbps'; // Default reciter
-  Duration? currentDuration;
-  Duration? currentPosition;
-  bool autoPlayEnabled = false;
-  final ScrollController _scrollController = ScrollController();
-  bool useCachedAudio = true;
-
-  // List of available reciters
-  final List<Map<String, String>> reciters = [
-    {'id': 'MaherAlMuaiqly128kbps', 'name': 'Maher Al Muaiqly'},
-    {
-      'id': 'AbdulSamad_64kbps_QuranExplorer.Com',
-      'name': 'Abdul Basit Abdul Samad'
-    },
-    {'id': 'Abdul_Basit_Mujawwad_128kbps', 'name': 'Abdul Basit Mujawwad'},
-    {'id': 'Abdul_Basit_Murattal_192kbps', 'name': 'Abdul Basit Murattal'},
-    {'id': 'Abdul_Basit_Murattal_64kbps', 'name': 'Abdul Basit Murattal'},
-  ];
+  int get _surahId => (widget.surahInfo['id'] as num).toInt();
+  String get _surahName =>
+      widget.surahInfo['translation'] ?? widget.surahInfo['name'] ?? '';
 
   @override
   void initState() {
     super.initState();
-    _initializeApp();
+    _loadAll();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final audio = context.read<AudioProvider>();
+
+      // Called when a verse finishes playing
+      audio.onAutoPlayNext = (nextVerseId) {
+        if (!mounted) return;
+        if (surahData == null) return;
+        final verses = surahData!['verses'] as List;
+
+        if (nextVerseId <= verses.length) {
+          // ── Next verse in same surah ──────────────────────
+          final verse = verses[nextVerseId - 1];
+          audio.playVerse(
+            surahId: _surahId,
+            verseId: nextVerseId,
+            surahNameStr: _surahName,
+            verseTextStr: verse['text'] ?? '',
+          );
+          _scrollTo(nextVerseId);
+        } else {
+          // ── Last verse done → open next surah ────────────
+          _goToNextSurah();
+        }
+      };
+    });
   }
 
-  Future<void> _initializeApp() async {
-    await _loadAppSettings();
-    await _loadFavVerses();
-    await _loadDetail();
+  // ── Navigate to next surah ────────────────────────────────
+  Future<void> _goToNextSurah() async {
+    if (!mounted) return;
+    final nextId = _surahId + 1;
+    if (nextId > 114) return; // no surah after 114
 
-    // Setup audio player listeners
-    audioPlayer.onPlayerStateChanged.listen((state) {
-      if (mounted) {
-        setState(() {
-          isPlaying = state == PlayerState.playing;
-        });
-      }
-    });
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cached = prefs.getString('cachedSurahs');
+      if (cached == null || !mounted) return;
 
-    audioPlayer.onDurationChanged.listen((duration) {
-      if (mounted) {
-        setState(() {
-          currentDuration = duration;
-        });
-      }
-    });
+      final list = jsonDecode(cached) as List;
+      final nextSurah = list.firstWhere(
+        (s) => (s['id'] as num).toInt() == nextId,
+        orElse: () => null,
+      );
+      if (nextSurah == null || !mounted) return;
 
-    audioPlayer.onPositionChanged.listen((position) {
-      if (mounted) {
-        setState(() {
-          currentPosition = position;
-        });
-      }
-    });
-
-    audioPlayer.onPlayerComplete.listen((event) {
-      if (mounted && autoPlayEnabled && currentlyPlayingVerse != null) {
-        final nextVerse = currentlyPlayingVerse! + 1;
-        if (surahData != null &&
-            nextVerse <= (surahData!['verses'] as List).length) {
-          _playVerseAudio(nextVerse);
-          _scrollToVerse(nextVerse);
-        }
-      }
-    });
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => SurahDetailPage(surahInfo: nextSurah),
+        ),
+      );
+    } catch (_) {}
   }
 
   @override
   void dispose() {
-    audioPlayer.dispose();
-    _scrollController.dispose();
+    _scroll.dispose();
+    // Clear auto-play callback when leaving page
+    final audio = context.read<AudioProvider>();
+    if (audio.onAutoPlayNext != null) audio.onAutoPlayNext = null;
     super.dispose();
   }
 
+  Future<void> _loadAll() async {
+    await Future.wait([_loadDetail(), _loadFavVerses()]);
+  }
+
   Future<void> _loadDetail() async {
-    // Try to load from cache first
-    final cachedData = await _getCachedSurahData();
-    if (cachedData != null && mounted) {
+    final cached = await _getCached();
+    if (cached != null && mounted) {
       setState(() {
-        surahData = cachedData;
+        surahData = cached;
         isLoading = false;
       });
+      // Auto-play first verse on open
+      _autoPlayFirst();
     }
-
-    // Then load from network
     try {
       final link = widget.surahInfo['link'] as String;
       final res = await http.get(Uri.parse(link));
       if (res.statusCode == 200) {
-        final newData = json.decode(res.body) as Map<String, dynamic>;
-        await _cacheSurahData(newData);
-
+        final data = json.decode(res.body) as Map<String, dynamic>;
+        await _setCached(data);
         if (mounted) {
           setState(() {
-            surahData = newData;
+            surahData = data;
             isLoading = false;
           });
+          if (cached == null) _autoPlayFirst();
         }
       } else if (mounted && surahData == null) {
-        setState(() {
-          isLoading = false;
-        });
+        setState(() => isLoading = false);
       }
-    } catch (e) {
-      if (mounted && surahData == null) {
-        setState(() {
-          isLoading = false;
-        });
-      }
+    } catch (_) {
+      if (mounted && surahData == null) setState(() => isLoading = false);
     }
   }
 
-  Future<void> _cacheSurahData(Map<String, dynamic> data) async {
-    if (kIsWeb) return; // Web has limitations with large data storage
-
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final surahId = widget.surahInfo['id'].toString();
-      await prefs.setString('surah_$surahId', json.encode(data));
-    } catch (e) {
-      debugPrint('Failed to cache surah data: $e');
+  void _autoPlayFirst() {
+    if (surahData == null) return;
+    final verses = surahData!['verses'] as List;
+    if (verses.isEmpty) return;
+    final first = verses[0];
+    final audio = context.read<AudioProvider>();
+    // Only auto-play if nothing is currently playing
+    if (!audio.isPlaying) {
+      audio.playVerse(
+        surahId: _surahId,
+        verseId: first['id'] as int,
+        surahNameStr: _surahName,
+        verseTextStr: first['text'] ?? '',
+      );
     }
   }
 
-  Future<Map<String, dynamic>?> _getCachedSurahData() async {
+  Future<void> _setCached(Map<String, dynamic> data) async {
+    if (kIsWeb) return;
     try {
       final prefs = await SharedPreferences.getInstance();
-      final surahId = widget.surahInfo['id'].toString();
-      final cachedData = prefs.getString('surah_$surahId');
-      if (cachedData != null) {
-        return json.decode(cachedData) as Map<String, dynamic>;
-      }
-    } catch (e) {
-      debugPrint('Failed to load cached surah data: $e');
-    }
+      await prefs.setString('surah_$_surahId', json.encode(data));
+    } catch (_) {}
+  }
+
+  Future<Map<String, dynamic>?> _getCached() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final d = prefs.getString('surah_$_surahId');
+      if (d != null) return json.decode(d) as Map<String, dynamic>;
+    } catch (_) {}
     return null;
   }
 
   Future<void> _loadFavVerses() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final verses = prefs.getStringList('favVerses') ?? [];
-      if (mounted) {
-        setState(() {
-          favVerseKeys = verses.toSet();
-        });
-      }
-    } catch (e) {
-      debugPrint('Failed to load favorite verses: $e');
-    }
-  }
-
-  Future<void> _loadAppSettings() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      if (mounted) {
-        setState(() {
-          autoPlayEnabled = prefs.getBool('autoPlay') ?? false;
-          useCachedAudio = prefs.getBool('useCachedAudio') ?? true;
-          selectedReciter =
-              prefs.getString('selectedReciter') ?? 'MaherAlMuaiqly128kbps';
-        });
-      }
-    } catch (e) {
-      debugPrint('Failed to load app settings: $e');
-    }
-  }
-
-  Future<void> _saveAppSettings() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('autoPlay', autoPlayEnabled);
-      await prefs.setBool('useCachedAudio', useCachedAudio);
-      await prefs.setString('selectedReciter', selectedReciter);
-    } catch (e) {
-      debugPrint('Failed to save app settings: $e');
-    }
-  }
-
-  Future<void> _toggleFavVerse(int verseId) async {
-    try {
-      final sId = (widget.surahInfo['id'] ?? '').toString();
-      final key = '$sId-$verseId';
-      final prefs = await SharedPreferences.getInstance();
-
-      if (favVerseKeys.contains(key)) {
-        favVerseKeys.remove(key);
-      } else {
-        favVerseKeys.add(key);
-      }
-
-      await prefs.setStringList('favVerses', favVerseKeys.toList());
-
-      if (mounted) {
-        setState(() {});
-        ScaffoldMessenger.of(context).removeCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(favVerseKeys.contains(key)
-                ? 'আয়াত favorites এ যোগ করা হলো'
-                : 'আয়াত favorites থেকে মুছে ফেলা হলো'),
-            duration: const Duration(seconds: 1),
-          ),
-        );
-      }
-    } catch (e) {
-      debugPrint('Failed to toggle favorite verse: $e');
-    }
-  }
-
-  Future<void> _playVerseAudio(int verseId) async {
-    try {
-      if (isPlaying && currentlyPlayingVerse == verseId) {
-        await audioPlayer.pause();
-        return;
-      }
-
-      // Stop any currently playing audio
-      await audioPlayer.stop();
-
-      // Construct the audio URL
-      final surahId = widget.surahInfo['id'].toString().padLeft(3, '0');
-      final verseNum = verseId.toString().padLeft(3, '0');
-
-      String audioUrl;
-      if (selectedReciter.contains('/')) {
-        final parts = selectedReciter.split('/');
-        audioUrl =
-            'https://everyayah.com/data/${parts[0]}/${parts[1]}/$surahId$verseNum.mp3';
-      } else {
-        audioUrl =
-            'https://everyayah.com/data/$selectedReciter/$surahId$verseNum.mp3';
-      }
-
-      if (mounted) {
-        setState(() {
-          currentlyPlayingVerse = verseId;
-        });
-      }
-
-      if (useCachedAudio && !kIsWeb) {
-        try {
-          final file = await audioCacheManager.getSingleFile(audioUrl);
-          await audioPlayer.play(DeviceFileSource(file.path));
-        } catch (e) {
-          // Fallback to streaming if caching fails
-          debugPrint('Cache failed, falling back to streaming: $e');
-          await audioPlayer.play(UrlSource(audioUrl));
-        }
-      } else {
-        await audioPlayer.play(UrlSource(audioUrl));
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Audio playback failed: ${e.toString()}')),
-        );
-      }
-      debugPrint('Audio playback error: $e');
-    }
-  }
-
-  Future<void> _preCacheAudioForSurah() async {
-    if (kIsWeb || surahData == null) return;
-
+    final prefs = await SharedPreferences.getInstance();
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Starting audio caching...')),
-      );
-    }
-
-    final verses = surahData!['verses'] as List;
-    final surahId = widget.surahInfo['id'].toString().padLeft(3, '0');
-
-    for (final verse in verses) {
-      final verseId = verse['id'] as int;
-      final verseNum = verseId.toString().padLeft(3, '0');
-
-      String audioUrl;
-      if (selectedReciter.contains('/')) {
-        final parts = selectedReciter.split('/');
-        audioUrl =
-            'https://everyayah.com/data/${parts[0]}/${parts[1]}/$surahId$verseNum.mp3';
-      } else {
-        audioUrl =
-            'https://everyayah.com/data/$selectedReciter/$surahId$verseNum.mp3';
-      }
-
-      try {
-        await audioCacheManager.downloadFile(audioUrl);
-      } catch (e) {
-        debugPrint('Failed to cache audio for verse $verseId: $e');
-      }
-    }
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Audio caching completed!')),
-      );
+      setState(() {
+        favVerseKeys = (prefs.getStringList('favVerses') ?? []).toSet();
+      });
     }
   }
 
-  void _scrollToVerse(int verseId) {
-    if (surahData == null || !_scrollController.hasClients) return;
+  Future<void> _toggleFav(int verseId) async {
+    final key = '$_surahId-$verseId';
+    final prefs = await SharedPreferences.getInstance();
+    if (favVerseKeys.contains(key)) {
+      favVerseKeys.remove(key);
+    } else {
+      favVerseKeys.add(key);
+    }
+    await prefs.setStringList('favVerses', favVerseKeys.toList());
+    if (mounted) setState(() {});
+  }
 
+  void _scrollTo(int verseId) {
+    if (surahData == null || !_scroll.hasClients) return;
     final verses = surahData!['verses'] as List;
-    final index = verses.indexWhere((v) => v['id'] == verseId);
-    if (index != -1) {
-      final position = index * 180.0;
-      _scrollController.animateTo(
-        position.clamp(0.0, _scrollController.position.maxScrollExtent),
-        duration: const Duration(milliseconds: 500),
+    final idx = verses.indexWhere((v) => v['id'] == verseId);
+    if (idx != -1) {
+      _scroll.animateTo(
+        (idx * 200.0).clamp(0.0, _scroll.position.maxScrollExtent),
+        duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOut,
       );
     }
   }
 
-  void _showVerseSelector() {
-    if (surahData == null) return;
+  void _snack(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(msg, style: GoogleFonts.hindSiliguri()),
+      backgroundColor: _kPrimary,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    ));
+  }
 
-    final verses = surahData!['verses'] as List;
-    showDialog(
+  String _fmt(Duration d) {
+    String p(int n) => n.toString().padLeft(2, '0');
+    return '${p(d.inMinutes.remainder(60))}:${p(d.inSeconds.remainder(60))}';
+  }
+
+  // ── Settings bottom sheet ─────────────────────────────────
+  void _showSettings(AudioProvider audio) {
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Go to Verse'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: verses.length,
-            itemBuilder: (context, index) {
-              final verse = verses[index];
-              return ListTile(
-                title: Text('Verse ${verse['id']}'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _scrollToVerse(verse['id']);
-                },
-              );
-            },
-          ),
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (_) => ChangeNotifierProvider.value(
+        value: audio,
+        child: _SettingsSheet(
+          onSave: () {
+            audio.saveSettings();
+            Navigator.pop(context);
+            _snack('সেটিংস সেভ হয়েছে ✓');
+          },
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+      ),
+    );
+  }
+
+  Widget _pill(String text) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(text,
+            style: GoogleFonts.hindSiliguri(
+                fontSize: 12,
+                color: Colors.white,
+                fontWeight: FontWeight.w600)),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    final audio = context.watch<AudioProvider>();
+    final name = widget.surahInfo['translation'] ?? widget.surahInfo['name'];
+    final translit = widget.surahInfo['transliteration'] ?? '';
+    final totalVerses = widget.surahInfo['total_verses'] ?? '';
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF2F2F2),
+      body: NestedScrollView(
+        headerSliverBuilder: (_, __) => [
+          SliverAppBar(
+            expandedHeight: 170,
+            pinned: true,
+            snap: false,
+            floating: false,
+            backgroundColor: _kPrimary,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new,
+                  color: Colors.white, size: 20),
+              onPressed: () => Navigator.pop(context),
+            ),
+            actions: [
+              // Font size
+              IconButton(
+                icon: const Icon(Icons.text_decrease, color: Colors.white, size: 20),
+                onPressed: () {
+                  audio.arabicSize = (audio.arabicSize - 2).clamp(18, 40);
+                  audio.notifyListeners();
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.text_increase, color: Colors.white, size: 20),
+                onPressed: () {
+                  audio.arabicSize = (audio.arabicSize + 2).clamp(18, 40);
+                  audio.notifyListeners();
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.settings_outlined, color: Colors.white, size: 20),
+                onPressed: () => _showSettings(audio),
+              ),
+            ],
+            flexibleSpace: FlexibleSpaceBar(
+              collapseMode: CollapseMode.pin,
+              background: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [_kPrimaryDark, _kPrimaryLight],
+                  ),
+                ),
+                child: SafeArea(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 44),
+                      Text(
+                        widget.surahInfo['name'] ?? '',
+                        style: const TextStyle(
+                            fontSize: 30,
+                            color: Colors.white,
+                            fontFamily: 'serif',
+                            fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(name,
+                          style: GoogleFonts.hindSiliguri(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white)),
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 8,
+                        children: [
+                          if (translit.isNotEmpty) _pill(translit),
+                          _pill('$totalVerses আয়াত'),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+        body: isLoading
+            ? VerseCardShimmer(isDark: false)
+            : surahData == null
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.wifi_off, size: 48, color: Colors.grey),
+                        const SizedBox(height: 12),
+                        Text('ডেটা লোড হয়নি',
+                            style: GoogleFonts.hindSiliguri(
+                                color: Colors.grey, fontSize: 16)),
+                        const SizedBox(height: 12),
+                        ElevatedButton(
+                          onPressed: () {
+                            setState(() => isLoading = true);
+                            _loadDetail();
+                          },
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: _kPrimary),
+                          child: Text('আবার চেষ্টা করুন',
+                              style: GoogleFonts.hindSiliguri(
+                                  color: Colors.white)),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    controller: _scroll,
+                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 100),
+                    itemCount: (surahData!['verses'] as List).length,
+                    itemBuilder: (ctx, i) {
+                      final verse = (surahData!['verses'] as List)[i];
+                      final vid = verse['id'] as int;
+                      final key = '$_surahId-$vid';
+                      final isFav = favVerseKeys.contains(key);
+                      final isActive = audio.isThisVerseActive(_surahId, vid);
+                      final isPlaying = audio.isThisVersePlaying(_surahId, vid);
+
+                      return _VerseCard(
+                        verse: verse,
+                        verseId: vid,
+                        isFav: isFav,
+                        isActive: isActive,
+                        isPlaying: isPlaying,
+                        arabicSize: audio.arabicSize,
+                        showTranslit: audio.showTranslit,
+                        showTranslation: audio.showTranslation,
+                        duration: isActive ? audio.duration : null,
+                        position: isActive ? audio.position : null,
+                        onPlay: () => audio.playVerse(
+                          surahId: _surahId,
+                          verseId: vid,
+                          surahNameStr: _surahName,
+                          verseTextStr: verse['text'] ?? '',
+                        ),
+                        onFav: () => _toggleFav(vid),
+                        onSeek: (v) =>
+                            audio.seek(Duration(milliseconds: v.toInt())),
+                        formatDuration: _fmt,
+                      );
+                    },
+                  ),
+      ),
+    );
+  }
+}
+
+// ─── Settings sheet ───────────────────────────────────────────
+class _SettingsSheet extends StatelessWidget {
+  final VoidCallback onSave;
+  const _SettingsSheet({required this.onSave});
+
+  @override
+  Widget build(BuildContext context) {
+    final audio = context.watch<AudioProvider>();
+
+    final reciters = [
+      {'id': 'MaherAlMuaiqly128kbps', 'name': 'মাহের আল-মুয়াইকলি'},
+      {'id': 'AbdulSamad_64kbps_QuranExplorer.Com', 'name': 'আব্দুল সামাদ'},
+      {'id': 'Abdul_Basit_Mujawwad_128kbps', 'name': 'আব্দুল বাসিত মুজাওয়াদ'},
+      {'id': 'Abdul_Basit_Murattal_192kbps', 'name': 'আব্দুল বাসিত মুরাত্তাল'},
+    ];
+
+    return SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(
+          20, 16, 20, MediaQuery.of(context).viewInsets.bottom + 32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2)),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text('সেটিংস',
+              style: GoogleFonts.hindSiliguri(
+                  fontSize: 18, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 12),
+
+          _sw('উচ্চারণ দেখান', audio.showTranslit,
+              (v) => audio.showTranslit = v, audio),
+          _sw('বাংলা অনুবাদ দেখান', audio.showTranslation,
+              (v) => audio.showTranslation = v, audio),
+          _sw('অটো প্লে (পরের আয়াত)', audio.autoPlay,
+              (v) => audio.autoPlay = v, audio),
+          if (!kIsWeb)
+            _sw('অডিও ক্যাশ করুন', audio.useCached,
+                (v) => audio.useCached = v, audio),
+
+          const SizedBox(height: 12),
+          // Font size
+          Row(
+            children: [
+              Text('আরবি ফন্ট সাইজ',
+                  style: GoogleFonts.hindSiliguri(fontSize: 14)),
+              const Spacer(),
+              IconButton(
+                icon: const Icon(Icons.remove_circle_outline, color: _kPrimary),
+                onPressed: () {
+                  audio.arabicSize = (audio.arabicSize - 2).clamp(18, 40);
+                  audio.notifyListeners();
+                },
+              ),
+              Text('${audio.arabicSize.toInt()}',
+                  style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.w700)),
+              IconButton(
+                icon: const Icon(Icons.add_circle_outline, color: _kPrimary),
+                onPressed: () {
+                  audio.arabicSize = (audio.arabicSize + 2).clamp(18, 40);
+                  audio.notifyListeners();
+                },
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 8),
+          Text('ক্বারী নির্বাচন করুন',
+              style: GoogleFonts.hindSiliguri(fontSize: 14)),
+          const SizedBox(height: 4),
+          ...reciters.map((r) => RadioListTile<String>(
+                value: r['id']!,
+                groupValue: audio.reciter,
+                activeColor: _kPrimary,
+                title: Text(r['name']!,
+                    style: GoogleFonts.hindSiliguri(fontSize: 13)),
+                onChanged: (v) {
+                  if (v != null) {
+                    audio.reciter = v;
+                    audio.notifyListeners();
+                  }
+                },
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+              )),
+
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: onSave,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _kPrimary,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+              child: Text('সেভ করুন',
+                  style: GoogleFonts.hindSiliguri(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15)),
+            ),
           ),
         ],
       ),
     );
   }
 
-  void _showSettingsDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) {
-          return AlertDialog(
-            title: const Text('Settings'),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SwitchListTile(
-                    title: const Text('Auto Play Next Verse'),
-                    value: autoPlayEnabled,
-                    onChanged: (value) {
-                      setState(() {
-                        autoPlayEnabled = value;
-                      });
-                    },
-                  ),
-                  if (!kIsWeb)
-                    SwitchListTile(
-                      title: const Text('Use Cached Audio'),
-                      value: useCachedAudio,
-                      onChanged: (value) {
-                        setState(() {
-                          useCachedAudio = value;
-                        });
-                      },
-                    ),
-                  const SizedBox(height: 16),
-                  const Text('Reciter:'),
-                  DropdownButton<String>(
-                    value: selectedReciter,
-                    onChanged: (String? newValue) {
-                      if (newValue != null) {
-                        setState(() {
-                          selectedReciter = newValue;
-                        });
-                      }
-                    },
-                    items: reciters.map<DropdownMenuItem<String>>(
-                        (Map<String, String> reciter) {
-                      return DropdownMenuItem<String>(
-                        value: reciter['id'],
-                        child: Text(reciter['name']!),
-                      );
-                    }).toList(),
-                  ),
-                  if (!kIsWeb) const SizedBox(height: 16),
-                  if (!kIsWeb)
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        _preCacheAudioForSurah();
-                      },
-                      child: const Text('Pre-cache Audio for this Surah'),
-                    ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  _saveAppSettings();
-                  Navigator.pop(context);
-                },
-                child: const Text('Save'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
-              ),
-            ],
-          );
-        },
-      ),
+  Widget _sw(String label, bool val, Function(bool) setter,
+      AudioProvider audio) {
+    return SwitchListTile(
+      title: Text(label, style: GoogleFonts.hindSiliguri(fontSize: 14)),
+      value: val,
+      onChanged: (v) {
+        setter(v);
+        audio.notifyListeners();
+      },
+      activeColor: _kPrimary,
+      contentPadding: EdgeInsets.zero,
+      dense: true,
     );
+  }
+}
+
+// ─── Verse card ───────────────────────────────────────────────
+class _VerseCard extends StatelessWidget {
+  final dynamic verse;
+  final int verseId;
+  final bool isFav, isActive, isPlaying;
+  final double arabicSize;
+  final bool showTranslit, showTranslation;
+  final Duration? duration, position;
+  final VoidCallback onPlay, onFav;
+  final ValueChanged<double> onSeek;
+  final String Function(Duration) formatDuration;
+
+  const _VerseCard({
+    required this.verse,
+    required this.verseId,
+    required this.isFav,
+    required this.isActive,
+    required this.isPlaying,
+    required this.arabicSize,
+    required this.showTranslit,
+    required this.showTranslation,
+    required this.duration,
+    required this.position,
+    required this.onPlay,
+    required this.onFav,
+    required this.onSeek,
+    required this.formatDuration,
+  });
+
+  String _bn(int n) {
+    const e = ['0','1','2','3','4','5','6','7','8','9'];
+    const b = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+    var s = n.toString();
+    for (int i = 0; i < e.length; i++) s = s.replaceAll(e[i], b[i]);
+    return s;
   }
 
   @override
   Widget build(BuildContext context) {
-    final sName = widget.surahInfo['translation'] ?? widget.surahInfo['name'];
-    final sTranslit = widget.surahInfo['transliteration'] ?? '';
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          '$sName  ($sTranslit)',
-          style: const TextStyle(color: Colors.white),
-        ),
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.blueAccent, Colors.purpleAccent],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.list, color: Colors.white),
-            onPressed: _showVerseSelector,
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings, color: Colors.white),
-            onPressed: _showSettingsDialog,
-          ),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: isActive ? Border.all(color: _kPrimary, width: 1.5) : null,
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2))
         ],
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : surahData == null
-              ? const Center(child: Text('Surah data load failed'))
-              : Column(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      color: Colors.teal.withOpacity(0.1),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.headphones,
-                              size: 16, color: Colors.teal),
-                          const SizedBox(width: 8),
-                          Text(
-                            reciters.firstWhere(
-                                (r) => r['id'] == selectedReciter)['name']!,
-                            style: const TextStyle(color: Colors.teal),
-                          ),
-                          if (autoPlayEnabled) ...[
-                            const SizedBox(width: 16),
-                            const Icon(Icons.autorenew,
-                                size: 16, color: Colors.teal),
-                            const SizedBox(width: 4),
-                            const Text('Auto',
-                                style: TextStyle(color: Colors.teal)),
-                          ],
-                          if (useCachedAudio && !kIsWeb) ...[
-                            const SizedBox(width: 16),
-                            const Icon(Icons.storage,
-                                size: 16, color: Colors.teal),
-                            const SizedBox(width: 4),
-                            const Text('Cached',
-                                style: TextStyle(color: Colors.teal)),
-                          ]
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: ListView.builder(
-                        controller: _scrollController,
-                        padding: const EdgeInsets.all(12),
-                        itemCount: (surahData!['verses'] as List).length,
-                        itemBuilder: (context, index) {
-                          final verse = (surahData!['verses'] as List)[index];
-                          final verseId = verse['id'] as int;
-                          final verseKey =
-                              '${widget.surahInfo['id'].toString()}-$verseId';
-                          final isFav = favVerseKeys.contains(verseKey);
-                          final isCurrentVersePlaying =
-                              currentlyPlayingVerse == verseId;
-
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 6),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: [
-                                  BoxShadow(
-                                      color: Colors.grey.withOpacity(0.15),
-                                      blurRadius: 6,
-                                      offset: const Offset(0, 3)),
-                                ],
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(12.0),
-                                child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          CircleAvatar(
-                                            radius: 14,
-                                            backgroundColor: Colors.teal,
-                                            child: Text(
-                                              verseId.toString(),
-                                              style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 12),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          IconButton(
-                                            icon: Icon(
-                                              isCurrentVersePlaying && isPlaying
-                                                  ? Icons.pause
-                                                  : Icons.play_arrow,
-                                              color: Colors.teal,
-                                            ),
-                                            onPressed: () =>
-                                                _playVerseAudio(verseId),
-                                          ),
-                                          Expanded(
-                                            child: Text(
-                                              verse['text'] ?? '',
-                                              textAlign: TextAlign.right,
-                                              style: const TextStyle(
-                                                  fontSize: 22,
-                                                  height: 1.2,
-                                                  fontWeight: FontWeight.w600),
-                                            ),
-                                          ),
-                                          IconButton(
-                                            icon: Icon(
-                                              isFav
-                                                  ? Icons.favorite
-                                                  : Icons.favorite_border,
-                                              color: isFav ? Colors.red : null,
-                                            ),
-                                            onPressed: () =>
-                                                _toggleFavVerse(verseId),
-                                          )
-                                        ],
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        verse['transliteration'] ?? '',
-                                        style: TextStyle(
-                                          fontStyle: FontStyle.italic,
-                                          color: Colors.blueGrey[700],
-                                        ),
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        verse['translation'] ?? '',
-                                      ),
-                                      if (isCurrentVersePlaying) ...[
-                                        const SizedBox(height: 8),
-                                        if (currentDuration != null)
-                                          Column(
-                                            children: [
-                                              Slider(
-                                                value: (currentPosition ??
-                                                        Duration.zero)
-                                                    .inMilliseconds
-                                                    .toDouble(),
-                                                max: currentDuration!
-                                                    .inMilliseconds
-                                                    .toDouble(),
-                                                onChanged: (value) {
-                                                  audioPlayer.seek(Duration(
-                                                      milliseconds:
-                                                          value.toInt()));
-                                                },
-                                              ),
-                                              Padding(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        horizontal: 16.0),
-                                                child: Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment
-                                                          .spaceBetween,
-                                                  children: [
-                                                    Text(_formatDuration(
-                                                        currentPosition ??
-                                                            Duration.zero)),
-                                                    Text(_formatDuration(
-                                                        currentDuration!)),
-                                                  ],
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                      ]
-                                    ]),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: _kPrimary.withValues(alpha: 0.07),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: const BoxDecoration(
+                      color: _kPrimary, shape: BoxShape.circle),
+                  child: Center(
+                    child: Text(_bn(verseId),
+                        style: GoogleFonts.hindSiliguri(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700)),
+                  ),
                 ),
-    );
-  }
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: onPlay,
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: isActive && isPlaying
+                          ? _kPrimary
+                          : _kPrimary.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      isActive && isPlaying ? Icons.pause : Icons.play_arrow,
+                      color: isActive && isPlaying ? Colors.white : _kPrimary,
+                      size: 18,
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                GestureDetector(
+                  onTap: onFav,
+                  child: Icon(
+                    isFav ? Icons.bookmark : Icons.bookmark_border,
+                    color: isFav ? _kGold : Colors.grey,
+                    size: 20,
+                  ),
+                ),
+              ],
+            ),
+          ),
 
-  String _formatDuration(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, '0');
-    final minutes = twoDigits(duration.inMinutes.remainder(60));
-    final seconds = twoDigits(duration.inSeconds.remainder(60));
-    return "$minutes:$seconds";
+          // Arabic
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 18, 16, 8),
+            child: Text(
+              verse['text'] ?? '',
+              textAlign: TextAlign.right,
+              textDirection: TextDirection.rtl,
+              style: TextStyle(
+                  fontSize: arabicSize,
+                  height: 2.0,
+                  color: const Color(0xFF1A1A2E),
+                  fontFamily: 'serif'),
+            ),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Divider(color: _kPrimary.withValues(alpha: 0.12), height: 1),
+          ),
+
+          if (showTranslit && (verse['transliteration'] ?? '').isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
+              child: Text(
+                verse['transliteration'] ?? '',
+                style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    color: _kPrimary,
+                    fontStyle: FontStyle.italic,
+                    height: 1.6),
+              ),
+            ),
+
+          if (showTranslation && (verse['translation'] ?? '').isNotEmpty)
+            Padding(
+              padding:
+                  EdgeInsets.fromLTRB(16, showTranslit ? 4 : 10, 16, 14),
+              child: Text(
+                verse['translation'] ?? '',
+                style: GoogleFonts.hindSiliguri(
+                    fontSize: 14, color: Colors.grey[700], height: 1.7),
+              ),
+            ),
+
+          // Audio progress
+          if (isActive && duration != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+              child: Column(
+                children: [
+                  SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      activeTrackColor: _kPrimary,
+                      inactiveTrackColor: _kPrimary.withValues(alpha: 0.2),
+                      thumbColor: _kPrimary,
+                      overlayColor: _kPrimary.withValues(alpha: 0.1),
+                      thumbShape:
+                          const RoundSliderThumbShape(enabledThumbRadius: 6),
+                      trackHeight: 3,
+                    ),
+                    child: Slider(
+                      value: (position ?? Duration.zero)
+                          .inMilliseconds
+                          .toDouble()
+                          .clamp(0, duration!.inMilliseconds.toDouble()),
+                      max: duration!.inMilliseconds.toDouble(),
+                      onChanged: onSeek,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(formatDuration(position ?? Duration.zero),
+                            style: GoogleFonts.poppins(
+                                fontSize: 11, color: Colors.grey)),
+                        Text(formatDuration(duration!),
+                            style: GoogleFonts.poppins(
+                                fontSize: 11, color: Colors.grey)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+          if (!showTranslit && !showTranslation && !isActive)
+            const SizedBox(height: 12),
+        ],
+      ),
+    );
   }
 }

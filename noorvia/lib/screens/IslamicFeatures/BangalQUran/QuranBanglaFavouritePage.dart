@@ -1,81 +1,93 @@
 import 'dart:convert';
-
-import 'package:dinajpur_city/IslamicFeatures/BangalQUran/BanglaQuran.dart';
-import 'package:dinajpur_city/IslamicFeatures/BangalQUran/BanglaQuranSurahDetails.dart';
+import 'BanglaQuran.dart';
+import 'BanglaQuranSurahDetails.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// ---------- Favorites Page ----------
+const _kPrimary = Color(0xFF1B6B3A);
+const _kPrimaryDark = Color(0xFF0F4D2A);
+const _kPrimaryLight = Color(0xFF2E8B57);
+
+// ═══════════════════════════════════════════════════════════════
+// FavoritesPage
+// ═══════════════════════════════════════════════════════════════
 class FavoritesPage extends StatefulWidget {
+  const FavoritesPage({super.key});
+
   @override
   State<FavoritesPage> createState() => _FavoritesPageState();
 }
 
-class _FavoritesPageState extends State<FavoritesPage> {
+class _FavoritesPageState extends State<FavoritesPage>
+    with SingleTickerProviderStateMixin {
   Set<String> favSurahIds = {};
   Set<String> favVerseKeys = {};
   bool loading = true;
+  late TabController _tab;
 
   @override
   void initState() {
     super.initState();
+    _tab = TabController(length: 2, vsync: this);
     _loadFavs();
+  }
+
+  @override
+  void dispose() {
+    _tab.dispose();
+    super.dispose();
   }
 
   Future<void> _loadFavs() async {
     final prefs = await SharedPreferences.getInstance();
     favSurahIds = (prefs.getStringList('favSurahs') ?? []).toSet();
     favVerseKeys = (prefs.getStringList('favVerses') ?? []).toSet();
-    setState(() => loading = false);
+    if (mounted) setState(() => loading = false);
   }
 
-  Future<void> _removeFavSurah(String id) async {
+  Future<void> _removeSurah(String id) async {
     final prefs = await SharedPreferences.getInstance();
     favSurahIds.remove(id);
     await prefs.setStringList('favSurahs', favSurahIds.toList());
     setState(() {});
   }
 
-  Future<void> _removeFavVerse(String key) async {
+  Future<void> _removeVerse(String key) async {
     final prefs = await SharedPreferences.getInstance();
     favVerseKeys.remove(key);
     await prefs.setStringList('favVerses', favVerseKeys.toList());
     setState(() {});
   }
 
-  // helper to fetch surah index entry by id
-  Future<Map<String, dynamic>?> _fetchSurahInfoById(String id) async {
-    final url =
+  Future<Map<String, dynamic>?> _fetchSurahById(String id) async {
+    const url =
         'https://cdn.jsdelivr.net/npm/quran-cloud@1.0.0/dist/chapters/bn/index.json';
     final res = await http.get(Uri.parse(url));
     if (res.statusCode == 200) {
       final list = json.decode(res.body) as List;
       for (final item in list) {
-        if ((item['id'] ?? '').toString() == id)
+        if ((item['id'] ?? '').toString() == id) {
           return item as Map<String, dynamic>;
+        }
       }
     }
     return null;
   }
 
-  // helper to fetch verse text quickly using surah link and verse id
   Future<Map<String, dynamic>?> _fetchVerseByKey(String key) async {
-    // key format: "surahId-verseId"
     final parts = key.split('-');
     if (parts.length != 2) return null;
     final sId = parts[0];
     final vId = int.tryParse(parts[1]);
     if (vId == null) return null;
-
-    final surahInfo = await _fetchSurahInfoById(sId);
+    final surahInfo = await _fetchSurahById(sId);
     if (surahInfo == null) return null;
-    final link = surahInfo['link'] as String;
-    final res = await http.get(Uri.parse(link));
+    final res = await http.get(Uri.parse(surahInfo['link'] as String));
     if (res.statusCode != 200) return null;
     final data = json.decode(res.body) as Map<String, dynamic>;
-    final verses = data['verses'] as List<dynamic>;
-    for (final v in verses) {
+    for (final v in (data['verses'] as List)) {
       if ((v['id'] ?? 0) == vId) {
         return {
           'surahId': sId,
@@ -84,233 +96,20 @@ class _FavoritesPageState extends State<FavoritesPage> {
           'text': v['text'],
           'translation': v['translation'],
           'transliteration': v['transliteration'],
-          'surahLink': link,
+          'surahInfo': surahInfo,
         };
       }
     }
     return null;
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.blueAccent, Colors.purpleAccent],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
-        title: const Text(
-          'Favorites',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: loading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _loadFavs,
-              child: ListView(
-                padding: const EdgeInsets.all(12),
-                children: [
-                  // Favorite Surahs
-                  Card(
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Favorite Surahs',
-                                style: TextStyle(
-                                    fontSize: 16, fontWeight: FontWeight.bold)),
-                            const SizedBox(height: 8),
-                            if (favSurahIds.isEmpty)
-                              const Text('কোনো সূরা favorites এ নেই।')
-                            else
-                              FutureBuilder(
-                                  future: _fetchAllFavSurahInfos(),
-                                  builder: (context, snapshot) {
-                                    if (snapshot.connectionState ==
-                                        ConnectionState.waiting) {
-                                      return const Center(
-                                          child: CircularProgressIndicator());
-                                    } else if (snapshot.hasError) {
-                                      return Text(
-                                          'Error: ${snapshot.error.toString()}');
-                                    } else {
-                                      final list = snapshot.data as List;
-                                      return Column(
-                                        children: list.map<Widget>((s) {
-                                          final sid =
-                                              (s['id'] ?? '').toString();
-                                          return ListTile(
-                                            contentPadding:
-                                                const EdgeInsets.symmetric(
-                                                    horizontal: 0),
-                                            leading: CircleAvatar(
-                                              backgroundColor: Colors.teal,
-                                              child: Text(
-                                                sid,
-                                                style: const TextStyle(
-                                                    color: Colors.white),
-                                              ),
-                                            ),
-                                            title: Text(
-                                                s['translation'] ?? s['name']),
-                                            subtitle: Text(
-                                                s['transliteration'] ?? ''),
-                                            trailing: IconButton(
-                                              icon: const Icon(Icons.delete),
-                                              onPressed: () =>
-                                                  _removeFavSurah(sid),
-                                            ),
-                                            onTap: () {
-                                              // open surah detail page
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (_) =>
-                                                      SurahDetailPage(
-                                                          surahInfo: s),
-                                                ),
-                                              ).then((_) => _loadFavs());
-                                            },
-                                          );
-                                        }).toList(),
-                                      );
-                                    }
-                                  })
-                          ]),
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Favorite Verses
-                  Card(
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Favorite Verses',
-                                style: TextStyle(
-                                    fontSize: 16, fontWeight: FontWeight.bold)),
-                            const SizedBox(height: 8),
-                            if (favVerseKeys.isEmpty)
-                              const Text('কোনো আয়াত favorites এ নেই।')
-                            else
-                              Column(
-                                children: favVerseKeys.map<Widget>((key) {
-                                  return FutureBuilder(
-                                    future: _fetchVerseByKey(key),
-                                    builder: (context, snapshot) {
-                                      if (snapshot.connectionState ==
-                                          ConnectionState.waiting) {
-                                        return const Padding(
-                                          padding: EdgeInsets.symmetric(
-                                              vertical: 8.0),
-                                          child: LinearProgressIndicator(),
-                                        );
-                                      } else if (snapshot.hasError ||
-                                          snapshot.data == null) {
-                                        return ListTile(
-                                          title: Text(key),
-                                          subtitle: const Text(
-                                              'Unable to load verse'),
-                                          trailing: IconButton(
-                                            icon: const Icon(Icons.delete),
-                                            onPressed: () =>
-                                                _removeFavVerse(key),
-                                          ),
-                                        );
-                                      } else {
-                                        final v = snapshot.data!;
-                                        return ListTile(
-                                          title: Text(
-                                            v['surahName'] ?? 'Surah',
-                                            style: const TextStyle(
-                                                fontWeight: FontWeight.w600),
-                                          ),
-                                          subtitle: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                (v['text'] ?? '').toString(),
-                                                maxLines: 2,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                (v['translation'] ?? '')
-                                                    .toString(),
-                                                maxLines: 2,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: const TextStyle(
-                                                    color: Colors.black87),
-                                              )
-                                            ],
-                                          ),
-                                          isThreeLine: true,
-                                          trailing: IconButton(
-                                            icon: const Icon(Icons.delete),
-                                            onPressed: () =>
-                                                _removeFavVerse(key),
-                                          ),
-                                          onTap: () async {
-                                            // open the surah detail page and scroll to verse
-                                            final surahInfo =
-                                                await _fetchSurahInfoById(
-                                                    v['surahId'] ?? '');
-                                            if (surahInfo != null) {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (_) =>
-                                                      SurahDetailPage(
-                                                          surahInfo: surahInfo),
-                                                ),
-                                              ).then((_) => _loadFavs());
-                                            }
-                                          },
-                                        );
-                                      }
-                                    },
-                                  );
-                                }).toList(),
-                              )
-                          ]),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-    );
-  }
-
-  Future<List<Map<String, dynamic>>> _fetchAllFavSurahInfos() async {
-    // fetch index and filter by fav ids
-    final url =
+  Future<List<Map<String, dynamic>>> _fetchAllFavSurahs() async {
+    const url =
         'https://cdn.jsdelivr.net/npm/quran-cloud@1.0.0/dist/chapters/bn/index.json';
     final res = await http.get(Uri.parse(url));
     final results = <Map<String, dynamic>>[];
     if (res.statusCode == 200) {
-      final list = json.decode(res.body) as List<dynamic>;
+      final list = json.decode(res.body) as List;
       for (final id in favSurahIds) {
         for (final item in list) {
           if ((item['id'] ?? '').toString() == id) {
@@ -321,5 +120,361 @@ class _FavoritesPageState extends State<FavoritesPage> {
       }
     }
     return results;
+  }
+
+  String _bn(dynamic n) {
+    const e = ['0','1','2','3','4','5','6','7','8','9'];
+    const b = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+    var s = n.toString();
+    for (int i = 0; i < e.length; i++) s = s.replaceAll(e[i], b[i]);
+    return s;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF2F2F2),
+      body: NestedScrollView(
+        headerSliverBuilder: (_, __) => [
+          SliverAppBar(
+            expandedHeight: 120,
+            pinned: true,
+            backgroundColor: _kPrimary,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new,
+                  color: Colors.white, size: 20),
+              onPressed: () => Navigator.pop(context),
+            ),
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [_kPrimaryDark, _kPrimaryLight],
+                  ),
+                ),
+                child: SafeArea(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 40),
+                      const Text('❤️', style: TextStyle(fontSize: 28)),
+                      const SizedBox(height: 4),
+                      Text('পছন্দের তালিকা',
+                          style: GoogleFonts.hindSiliguri(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(44),
+              child: Container(
+                color: _kPrimary,
+                child: TabBar(
+                  controller: _tab,
+                  labelColor: Colors.white,
+                  unselectedLabelColor: Colors.white60,
+                  indicatorColor: Colors.white,
+                  indicatorWeight: 3,
+                  labelStyle: GoogleFonts.hindSiliguri(
+                      fontWeight: FontWeight.w700, fontSize: 14),
+                  tabs: const [
+                    Tab(text: 'পছন্দের সূরা'),
+                    Tab(text: 'পছন্দের আয়াত'),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+        body: loading
+            ? const Center(
+                child: CircularProgressIndicator(color: _kPrimary))
+            : TabBarView(
+                controller: _tab,
+                children: [
+                  _buildSurahTab(),
+                  _buildVerseTab(),
+                ],
+              ),
+      ),
+    );
+  }
+
+  // ── Surah tab ─────────────────────────────────────────────
+  Widget _buildSurahTab() {
+    if (favSurahIds.isEmpty) {
+      return _emptyState('কোনো সূরা পছন্দ করা হয়নি', '📖');
+    }
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _fetchAllFavSurahs(),
+      builder: (ctx, snap) {
+        if (snap.connectionState == ConnectionState.waiting) {
+          return const Center(
+              child: CircularProgressIndicator(color: _kPrimary));
+        }
+        if (snap.hasError || snap.data == null || snap.data!.isEmpty) {
+          return _emptyState('সূরা লোড হয়নি', '⚠️');
+        }
+        final list = snap.data!;
+        return ListView.builder(
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
+          itemCount: list.length,
+          itemBuilder: (ctx, i) {
+            final s = list[i];
+            final sid = (s['id'] ?? '').toString();
+            return _FavSurahTile(
+              surah: s,
+              bnNumber: _bn(s['id']),
+              onTap: () => Navigator.push(
+                ctx,
+                MaterialPageRoute(
+                    builder: (_) => SurahDetailPage(surahInfo: s)),
+              ).then((_) => _loadFavs()),
+              onRemove: () => _removeSurah(sid),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // ── Verse tab ─────────────────────────────────────────────
+  Widget _buildVerseTab() {
+    if (favVerseKeys.isEmpty) {
+      return _emptyState('কোনো আয়াত পছন্দ করা হয়নি', '🤲');
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
+      itemCount: favVerseKeys.length,
+      itemBuilder: (ctx, i) {
+        final key = favVerseKeys.elementAt(i);
+        return FutureBuilder<Map<String, dynamic>?>(
+          future: _fetchVerseByKey(key),
+          builder: (ctx, snap) {
+            if (snap.connectionState == ConnectionState.waiting) {
+              return Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                height: 80,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Center(
+                    child: LinearProgressIndicator(color: _kPrimary)),
+              );
+            }
+            if (snap.data == null) {
+              return _FavVerseTile(
+                title: 'আয়াত $key',
+                subtitle: 'লোড হয়নি',
+                onRemove: () => _removeVerse(key),
+                onTap: null,
+              );
+            }
+            final v = snap.data!;
+            return _FavVerseTile(
+              title: '${v['surahName']} — আয়াত ${_bn(v['verseId'])}',
+              subtitle: v['translation'] ?? '',
+              arabic: v['text'] ?? '',
+              onRemove: () => _removeVerse(key),
+              onTap: () => Navigator.push(
+                ctx,
+                MaterialPageRoute(
+                    builder: (_) =>
+                        SurahDetailPage(surahInfo: v['surahInfo'])),
+              ).then((_) => _loadFavs()),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _emptyState(String msg, String emoji) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 48)),
+          const SizedBox(height: 12),
+          Text(msg,
+              style: GoogleFonts.hindSiliguri(
+                  color: Colors.grey, fontSize: 16)),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Fav surah tile ───────────────────────────────────────────
+class _FavSurahTile extends StatelessWidget {
+  final Map surah;
+  final String bnNumber;
+  final VoidCallback onTap;
+  final VoidCallback onRemove;
+
+  const _FavSurahTile({
+    required this.surah,
+    required this.bnNumber,
+    required this.onTap,
+    required this.onRemove,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04), blurRadius: 6)
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: _kPrimary.withValues(alpha: 0.10),
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Text(bnNumber,
+                    style: GoogleFonts.hindSiliguri(
+                        color: _kPrimary,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14)),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    surah['translation'] ?? surah['name'] ?? '',
+                    style: GoogleFonts.hindSiliguri(
+                        fontWeight: FontWeight.w700, fontSize: 15),
+                  ),
+                  Text(
+                    surah['transliteration'] ?? '',
+                    style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: Colors.grey,
+                        fontStyle: FontStyle.italic),
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              surah['name'] ?? '',
+              style: const TextStyle(
+                  fontSize: 20,
+                  color: _kPrimary,
+                  fontFamily: 'serif',
+                  fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: onRemove,
+              child: const Icon(Icons.delete_outline,
+                  color: Colors.redAccent, size: 20),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Fav verse tile ───────────────────────────────────────────
+class _FavVerseTile extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final String? arabic;
+  final VoidCallback? onTap;
+  final VoidCallback onRemove;
+
+  const _FavVerseTile({
+    required this.title,
+    required this.subtitle,
+    this.arabic,
+    required this.onTap,
+    required this.onRemove,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04), blurRadius: 6)
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(title,
+                      style: GoogleFonts.hindSiliguri(
+                          fontWeight: FontWeight.w700, fontSize: 14)),
+                ),
+                GestureDetector(
+                  onTap: onRemove,
+                  child: const Icon(Icons.delete_outline,
+                      color: Colors.redAccent, size: 20),
+                ),
+              ],
+            ),
+            if (arabic != null && arabic!.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                arabic!,
+                textAlign: TextAlign.right,
+                textDirection: TextDirection.rtl,
+                style: const TextStyle(
+                    fontSize: 18,
+                    color: _kPrimary,
+                    fontFamily: 'serif',
+                    height: 1.8),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+            if (subtitle.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Text(
+                subtitle,
+                style: GoogleFonts.hindSiliguri(
+                    fontSize: 13, color: Colors.grey[700], height: 1.5),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
   }
 }

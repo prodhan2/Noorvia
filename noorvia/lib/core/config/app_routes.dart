@@ -10,7 +10,7 @@
 import 'package:flutter/material.dart';
 import '../../screens/home/home_screen.dart';
 import '../../screens/tools/tools_screen.dart';
-import '../../screens/quran/quran_screen.dart';
+import '../../screens/IslamicFeatures/BangalQUran/BanglaQuran.dart';
 import '../../screens/dowa/dowa_screen.dart';
 import '../../screens/login/login_screen.dart';
 
@@ -100,7 +100,8 @@ final List<AppRouteConfig> appRoutes = [
     label: 'কুরআন',
     icon: Icons.menu_book_outlined,
     activeIcon: Icons.menu_book_rounded,
-    pageBuilder: () => const QuranScreen(),
+    // SurahListPage — QuranApp-এর home screen (QuranApp নিজে MaterialApp তাই সরাসরি দেওয়া যায় না)
+    pageBuilder: () => const SurahListPage(),
     showInNavbar: true,
     showInDrawer: true,
   ),

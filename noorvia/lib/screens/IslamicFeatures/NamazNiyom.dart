@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:dinajpur_city/IslamicFeatures/ChapterDEtails.dart';
+import 'ChapterDEtails.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
@@ -10,13 +11,15 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // ignore: deprecated_member_use
-  Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
-  Workmanager().registerPeriodicTask(
-    "1",
-    "fetchChaptersTask",
-    frequency: const Duration(minutes: 15),
-  );
+  if (!kIsWeb) {
+    // ignore: deprecated_member_use
+    Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
+    Workmanager().registerPeriodicTask(
+      "1",
+      "fetchChaptersTask",
+      frequency: const Duration(minutes: 15),
+    );
+  }
 
   runApp(const MyApp());
 }

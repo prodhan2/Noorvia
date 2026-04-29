@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:share_plus/share_plus.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HadithDemoPage extends StatefulWidget {
@@ -101,7 +101,19 @@ class _HadithDemoPageState extends State<HadithDemoPage> {
   }
 
   void _shareHadith(Hadith hadith) {
-    Share.share('${hadith.text}\n\n- ${hadith.source} (${hadith.number})');
+    // share_plus not available on web — copy to clipboard instead
+    if (kIsWeb) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('হাদিস কপি করা হয়েছে')),
+      );
+      return;
+    }
+    // On mobile: use clipboard as fallback
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+          content: Text('${hadith.text}\n- ${hadith.source}',
+              maxLines: 2)),
+    );
   }
 
   @override

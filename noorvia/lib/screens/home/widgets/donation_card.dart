@@ -49,7 +49,7 @@ class DonationCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Text(
-              'মুসলিম বাংলার সাথী হোন',
+              'Noorvia App এ সাথী হোন',
               style: GoogleFonts.hindSiliguri(
                 fontSize: 24,
                 fontWeight: FontWeight.w800,

@@ -1,13 +1,20 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+// Firebase imports — requires google-services.json to be configured.
+// App runs without it; Firebase features are gracefully disabled.
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  try {
+    await Firebase.initializeApp();
+  } catch (_) {
+    // Firebase not configured — app continues without it
+  }
   runApp(const MyApp());
 }
 
@@ -275,18 +282,21 @@ class _TasbihCounterState extends State<TasbihCounter>
   }
 
   Future<void> _showSuccessDialog(int completedTimes) async {
-    final currentUser = FirebaseAuth.instance.currentUser;
     String greeting = 'অনামী ব্যবহারকারী';
 
-    if (currentUser != null) {
-      final userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(currentUser.uid)
-          .get();
-
-      if (userDoc.exists && userDoc.data()?['name'] != null) {
-        greeting = 'প্রিয় ${userDoc.data()!['name']}';
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser.uid)
+            .get();
+        if (userDoc.exists && userDoc.data()?['name'] != null) {
+          greeting = 'প্রিয় ${userDoc.data()!['name']}';
+        }
       }
+    } catch (_) {
+      // Firebase not available — use default greeting
     }
 
     return showDialog(

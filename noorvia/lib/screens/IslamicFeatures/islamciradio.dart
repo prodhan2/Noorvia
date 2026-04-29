@@ -62,7 +62,10 @@ class _RadioScreenState extends State<RadioScreen> {
     connectivityStream = Connectivity().onConnectivityChanged;
     connectivityStream.listen((result) {
       setState(() {
-        isConnected = result != ConnectivityResult.none;
+        isConnected = !result.contains(ConnectivityResult.none) ||
+            result.contains(ConnectivityResult.wifi) ||
+            result.contains(ConnectivityResult.mobile) ||
+            result.contains(ConnectivityResult.ethernet);
       });
       if (isConnected && radioStations.isEmpty) {
         fetchRadioStations();

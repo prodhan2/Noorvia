@@ -1,10 +1,10 @@
-import 'package:dinajpur_city/IslamicFeatures/AudioQuran.dart';
-import 'package:dinajpur_city/IslamicFeatures/BangalQUran/BanglaQuran.dart';
-import 'package:dinajpur_city/IslamicFeatures/NamazNiyom.dart';
-import 'package:dinajpur_city/IslamicFeatures/islamciradio.dart';
-import 'package:dinajpur_city/IslamicFeatures/otherpage.dart';
-import 'package:dinajpur_city/IslamicFeatures/ramadancalender.dart';
-import 'package:dinajpur_city/IslamicFeatures/tashbi.dart';
+import 'AudioQuran.dart';
+import 'BangalQUran/BanglaQuran.dart';
+import 'NamazNiyom.dart';
+import 'islamciradio.dart';
+import 'otherpage.dart';
+import 'ramadancalender.dart';
+import 'tashbi.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 

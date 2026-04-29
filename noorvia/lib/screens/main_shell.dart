@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import '../core/theme/app_theme.dart';
 import '../core/providers/theme_provider.dart';
 import '../core/providers/nav_provider.dart';
+import '../core/providers/prayer_provider.dart';
 import '../core/config/app_routes.dart';
 
 class MainShell extends StatefulWidget {
@@ -59,6 +60,9 @@ class _NoorviaAppBar extends StatelessWidget implements PreferredSizeWidget {
     final bgColor = isDark ? AppColors.darkBg : Colors.white;
     final textColor = isDark ? AppColors.darkText : AppColors.lightText;
     final subColor = isDark ? AppColors.darkSubText : AppColors.lightSubText;
+    final prayer = context.watch<PrayerProvider>();
+    final screenW = MediaQuery.of(context).size.width;
+    final isSmall = screenW < 360;
 
     return Container(
       height: preferredSize.height + MediaQuery.of(context).padding.top,
@@ -85,6 +89,7 @@ class _NoorviaAppBar extends StatelessWidget implements PreferredSizeWidget {
             builder: (ctx) => GestureDetector(
               onTap: () => Scaffold.of(ctx).openDrawer(),
               child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
                     width: 36,
@@ -96,31 +101,33 @@ class _NoorviaAppBar extends StatelessWidget implements PreferredSizeWidget {
                     child: const Icon(Icons.menu,
                         color: AppColors.primary, size: 20),
                   ),
-                  const SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'নূরভিয়া',
-                        style: GoogleFonts.hindSiliguri(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.primary,
-                          height: 1.1,
+                  if (!isSmall) ...[
+                    const SizedBox(width: 8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'নূরভিয়া',
+                          style: GoogleFonts.hindSiliguri(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.primary,
+                            height: 1.1,
+                          ),
                         ),
-                      ),
-                      Text(
-                        'Noorvia',
-                        style: GoogleFonts.poppins(
-                          fontSize: 10,
-                          color: subColor,
-                          letterSpacing: 1.5,
-                          height: 1.1,
+                        Text(
+                          'Noorvia',
+                          style: GoogleFonts.poppins(
+                            fontSize: 9,
+                            color: subColor,
+                            letterSpacing: 1.5,
+                            height: 1.1,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -128,49 +135,40 @@ class _NoorviaAppBar extends StatelessWidget implements PreferredSizeWidget {
 
           const Spacer(),
 
-          // ── Date pill ──────────────────────────────────────
-          _Pill(
-            color: isDark
-                ? AppColors.darkCard
-                : AppColors.primary.withValues(alpha: 0.08),
-            child: Row(
-              children: [
-                const Icon(Icons.calendar_today_outlined,
-                    size: 12, color: AppColors.primary),
-                const SizedBox(width: 4),
-                Text(
-                  'এপ্রিল-৩০',
-                  style: GoogleFonts.hindSiliguri(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primary,
+          // ── Location pill (real city from GPS) ─────────────
+          GestureDetector(
+            onTap: () => prayer.requestLocationAndFetch(),
+            child: _Pill(
+              color: isDark ? AppColors.darkCard : Colors.black87,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  prayer.isLoading
+                      ? const SizedBox(
+                          width: 10,
+                          height: 10,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 1.5,
+                              color: Colors.white))
+                      : const Icon(Icons.location_on_outlined,
+                          color: Colors.white, size: 12),
+                  const SizedBox(width: 3),
+                  ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: isSmall ? 60 : 80),
+                    child: Text(
+                      prayer.cityDisplayName,
+                      style: GoogleFonts.hindSiliguri(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(width: 6),
-
-          // ── Location pill ──────────────────────────────────
-          _Pill(
-            color: isDark ? AppColors.darkCard : Colors.black87,
-            child: Row(
-              children: [
-                const Icon(Icons.location_on_outlined,
-                    color: Colors.white, size: 12),
-                const SizedBox(width: 3),
-                Text(
-                  'ঢাকা',
-                  style: GoogleFonts.hindSiliguri(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                  ),
-                ),
-                const Icon(Icons.keyboard_arrow_down,
-                    color: Colors.white, size: 14),
-              ],
+                  const Icon(Icons.keyboard_arrow_down,
+                      color: Colors.white, size: 14),
+                ],
+              ),
             ),
           ),
 

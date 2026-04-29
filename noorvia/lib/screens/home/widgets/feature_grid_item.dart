@@ -5,8 +5,13 @@ import '../../../core/theme/app_theme.dart';
 class FeatureItem {
   final String emoji;
   final String label;
+  final VoidCallback? onTap; // ← navigation callback
 
-  FeatureItem({required this.emoji, required this.label});
+  const FeatureItem({
+    required this.emoji,
+    required this.label,
+    this.onTap,
+  });
 }
 
 class FeatureGridItem extends StatelessWidget {
@@ -18,14 +23,14 @@ class FeatureGridItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {},
+      onTap: item.onTap ?? () => _showComingSoon(context, item.label),
       child: Container(
         decoration: BoxDecoration(
           color: isDark ? AppColors.darkCard : Colors.white,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 6,
               offset: const Offset(0, 2),
             ),
@@ -49,6 +54,21 @@ class FeatureGridItem extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showComingSoon(BuildContext context, String label) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          '$label — শীঘ্রই আসছে',
+          style: const TextStyle(fontFamily: 'HindSiliguri'),
+        ),
+        backgroundColor: AppColors.primary,
+        duration: const Duration(seconds: 1),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
