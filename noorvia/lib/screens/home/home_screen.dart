@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/providers/theme_provider.dart';
+import '../../core/utils/prayer_times.dart';
 import 'widgets/section_header.dart';
 import 'widgets/feature_grid_item.dart';
 import 'widgets/prayer_card.dart';
