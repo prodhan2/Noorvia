@@ -3,6 +3,51 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/providers/theme_provider.dart';
+import 'surah_detail_page.dart';
+
+// ─── Surah data ───────────────────────────────────────────────────────────────
+
+class SurahInfo {
+  final int number;
+  final String name;
+  final String arabic;
+  final int ayatCount;
+  final String type;
+
+  const SurahInfo({
+    required this.number,
+    required this.name,
+    required this.arabic,
+    required this.ayatCount,
+    required this.type,
+  });
+}
+
+const List<SurahInfo> _surahs = [
+  SurahInfo(number: 1,  name: 'আল-ফাতিহা',   arabic: 'الفاتحة',    ayatCount: 7,   type: 'মাক্কী'),
+  SurahInfo(number: 2,  name: 'আল-বাকারা',   arabic: 'البقرة',     ayatCount: 286, type: 'মাদানী'),
+  SurahInfo(number: 3,  name: 'আলে-ইমরান',   arabic: 'آل عمران',   ayatCount: 200, type: 'মাদানী'),
+  SurahInfo(number: 4,  name: 'আন-নিসা',     arabic: 'النساء',     ayatCount: 176, type: 'মাদানী'),
+  SurahInfo(number: 5,  name: 'আল-মায়িদা',  arabic: 'المائدة',    ayatCount: 120, type: 'মাদানী'),
+  SurahInfo(number: 6,  name: 'আল-আনআম',     arabic: 'الأنعام',    ayatCount: 165, type: 'মাক্কী'),
+  SurahInfo(number: 7,  name: 'আল-আরাফ',     arabic: 'الأعراف',    ayatCount: 206, type: 'মাক্কী'),
+  SurahInfo(number: 8,  name: 'আল-আনফাল',    arabic: 'الأنفال',    ayatCount: 75,  type: 'মাদানী'),
+  SurahInfo(number: 9,  name: 'আত-তাওবা',    arabic: 'التوبة',     ayatCount: 129, type: 'মাদানী'),
+  SurahInfo(number: 10, name: 'ইউনুস',        arabic: 'يونس',       ayatCount: 109, type: 'মাক্কী'),
+  SurahInfo(number: 11, name: 'হুদ',          arabic: 'هود',        ayatCount: 123, type: 'মাক্কী'),
+  SurahInfo(number: 12, name: 'ইউসুফ',        arabic: 'يوسف',       ayatCount: 111, type: 'মাক্কী'),
+  SurahInfo(number: 13, name: 'আর-রাদ',       arabic: 'الرعد',      ayatCount: 43,  type: 'মাদানী'),
+  SurahInfo(number: 14, name: 'ইবরাহীম',      arabic: 'إبراهيم',    ayatCount: 52,  type: 'মাক্কী'),
+  SurahInfo(number: 15, name: 'আল-হিজর',      arabic: 'الحجر',      ayatCount: 99,  type: 'মাক্কী'),
+  SurahInfo(number: 36, name: 'ইয়া-সীন',     arabic: 'يس',         ayatCount: 83,  type: 'মাক্কী'),
+  SurahInfo(number: 55, name: 'আর-রাহমান',    arabic: 'الرحمن',     ayatCount: 78,  type: 'মাদানী'),
+  SurahInfo(number: 67, name: 'আল-মুলক',      arabic: 'الملك',      ayatCount: 30,  type: 'মাক্কী'),
+  SurahInfo(number: 112, name: 'আল-ইখলাস',   arabic: 'الإخلاص',    ayatCount: 4,   type: 'মাক্কী'),
+  SurahInfo(number: 113, name: 'আল-ফালাক',   arabic: 'الفلق',      ayatCount: 5,   type: 'মাক্কী'),
+  SurahInfo(number: 114, name: 'আন-নাস',      arabic: 'الناس',      ayatCount: 6,   type: 'মাক্কী'),
+];
+
+// ─── QuranScreen ──────────────────────────────────────────────────────────────
 
 class QuranScreen extends StatefulWidget {
   const QuranScreen({super.key});
@@ -14,6 +59,8 @@ class QuranScreen extends StatefulWidget {
 class _QuranScreenState extends State<QuranScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  String _searchQuery = '';
+  List<SurahInfo> _filtered = _surahs;
 
   @override
   void initState() {
@@ -27,18 +74,32 @@ class _QuranScreenState extends State<QuranScreen>
     super.dispose();
   }
 
-  final List<Map<String, String>> surahs = [
-    {'number': '১', 'name': 'আল-ফাতিহা', 'arabic': 'الفاتحة', 'ayat': '৭ আয়াত', 'type': 'মাক্কী'},
-    {'number': '২', 'name': 'আল-বাকারা', 'arabic': 'البقرة', 'ayat': '২৮৬ আয়াত', 'type': 'মাদানী'},
-    {'number': '৩', 'name': 'আলে-ইমরান', 'arabic': 'آل عمران', 'ayat': '২০০ আয়াত', 'type': 'মাদানী'},
-    {'number': '৪', 'name': 'আন-নিসা', 'arabic': 'النساء', 'ayat': '১৭৬ আয়াত', 'type': 'মাদানী'},
-    {'number': '৫', 'name': 'আল-মায়িদা', 'arabic': 'المائدة', 'ayat': '১২০ আয়াত', 'type': 'মাদানী'},
-    {'number': '৬', 'name': 'আল-আনআম', 'arabic': 'الأنعام', 'ayat': '১৬৫ আয়াত', 'type': 'মাক্কী'},
-    {'number': '৭', 'name': 'আল-আরাফ', 'arabic': 'الأعراف', 'ayat': '২০৬ আয়াত', 'type': 'মাক্কী'},
-    {'number': '৮', 'name': 'আল-আনফাল', 'arabic': 'الأنفال', 'ayat': '৭৫ আয়াত', 'type': 'মাদানী'},
-    {'number': '৯', 'name': 'আত-তাওবা', 'arabic': 'التوبة', 'ayat': '১২৯ আয়াত', 'type': 'মাদানী'},
-    {'number': '১০', 'name': 'ইউনুস', 'arabic': 'يونس', 'ayat': '১০৯ আয়াত', 'type': 'মাক্কী'},
-  ];
+  void _onSearch(String q) {
+    setState(() {
+      _searchQuery = q;
+      _filtered = _surahs
+          .where((s) =>
+              s.name.contains(q) ||
+              s.arabic.contains(q) ||
+              s.number.toString().contains(q))
+          .toList();
+    });
+  }
+
+  void _openSurah(BuildContext context, SurahInfo surah) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SurahDetailPage(
+          surahName: surah.name,
+          arabicName: surah.arabic,
+          surahNumber: surah.number,
+          ayatCount: surah.ayatCount,
+          type: surah.type,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,39 +117,64 @@ class _QuranScreenState extends State<QuranScreen>
             child: Container(
               decoration: BoxDecoration(
                 color: cardColor,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(14),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 6),
+                  BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 8),
                 ],
               ),
               child: TextField(
+                onChanged: _onSearch,
                 style: GoogleFonts.hindSiliguri(color: textColor),
                 decoration: InputDecoration(
-                  hintText: 'সূরা খুঁজুন...',
-                  hintStyle: GoogleFonts.hindSiliguri(color: Colors.grey),
-                  prefixIcon: const Icon(Icons.search, color: AppColors.primary),
+                  hintText: 'সূরার নাম বা নম্বর দিয়ে খুঁজুন...',
+                  hintStyle:
+                      GoogleFonts.hindSiliguri(color: Colors.grey, fontSize: 13),
+                  prefixIcon:
+                      const Icon(Icons.search, color: AppColors.primary, size: 20),
+                  suffixIcon: _searchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear,
+                              color: Colors.grey, size: 18),
+                          onPressed: () {
+                            _onSearch('');
+                          },
+                        )
+                      : null,
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(vertical: 14),
                 ),
               ),
             ),
           ),
+
           // Tabs
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
               color: cardColor,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04), blurRadius: 6),
+              ],
             ),
             child: TabBar(
               controller: _tabController,
               labelColor: Colors.white,
               unselectedLabelColor: AppColors.primary,
+              dividerColor: Colors.transparent,
               indicator: BoxDecoration(
                 color: AppColors.primary,
                 borderRadius: BorderRadius.circular(10),
               ),
-              labelStyle: GoogleFonts.hindSiliguri(fontWeight: FontWeight.w600),
+              indicatorSize: TabBarIndicatorSize.tab,
+              labelStyle: GoogleFonts.hindSiliguri(
+                  fontWeight: FontWeight.w700, fontSize: 14),
+              unselectedLabelStyle:
+                  GoogleFonts.hindSiliguri(fontWeight: FontWeight.w500),
               tabs: const [
                 Tab(text: 'সূরা'),
                 Tab(text: 'পারা'),
@@ -97,6 +183,7 @@ class _QuranScreenState extends State<QuranScreen>
             ),
           ),
           const SizedBox(height: 8),
+
           Expanded(
             child: TabBarView(
               controller: _tabController,
@@ -112,70 +199,49 @@ class _QuranScreenState extends State<QuranScreen>
     );
   }
 
+  // ── Surah list ──────────────────────────────────────────────────────────────
+
   Widget _buildSurahList(bool isDark, Color textColor, Color cardColor) {
+    if (_filtered.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('🔍', style: TextStyle(fontSize: 48)),
+            const SizedBox(height: 12),
+            Text(
+              'কোনো সূরা পাওয়া যায়নি',
+              style: GoogleFonts.hindSiliguri(color: Colors.grey, fontSize: 16),
+            ),
+          ],
+        ),
+      );
+    }
+
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: surahs.length,
+      itemCount: _filtered.length,
       itemBuilder: (context, index) {
-        final surah = surahs[index];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 8),
-          decoration: BoxDecoration(
-            color: cardColor,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6),
-            ],
-          ),
-          child: ListTile(
-            leading: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Text(
-                  surah['number']!,
-                  style: GoogleFonts.hindSiliguri(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13,
-                  ),
-                ),
-              ),
-            ),
-            title: Text(
-              surah['name']!,
-              style: GoogleFonts.hindSiliguri(
-                fontWeight: FontWeight.w600,
-                color: textColor,
-                fontSize: 15,
-              ),
-            ),
-            subtitle: Text(
-              '${surah['ayat']} • ${surah['type']}',
-              style: GoogleFonts.hindSiliguri(
-                color: Colors.grey,
-                fontSize: 12,
-              ),
-            ),
-            trailing: Text(
-              surah['arabic']!,
-              style: const TextStyle(
-                fontSize: 18,
-                color: AppColors.primary,
-                fontFamily: 'serif',
-              ),
-            ),
-          ),
+        final surah = _filtered[index];
+        return _SurahListTile(
+          surah: surah,
+          isDark: isDark,
+          textColor: textColor,
+          cardColor: cardColor,
+          onTap: () => _openSurah(context, surah),
         );
       },
     );
   }
 
+  // ── Para list ───────────────────────────────────────────────────────────────
+
   Widget _buildParaList(bool isDark, Color textColor, Color cardColor) {
+    final banglaNumbers = [
+      '১','২','৩','৪','৫','৬','৭','৮','৯','১০',
+      '১১','১২','১৩','১৪','১৫','১৬','১৭','১৮','১৯','২০',
+      '২১','২২','২৩','২৪','২৫','২৬','২৭','২৮','২৯','৩০',
+    ];
     return GridView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -186,23 +252,38 @@ class _QuranScreenState extends State<QuranScreen>
       ),
       itemCount: 30,
       itemBuilder: (context, index) {
-        final banglaNumbers = ['১','২','৩','৪','৫','৬','৭','৮','৯','১০',
-          '১১','১২','১৩','১৪','১৫','১৬','১৭','১৮','১৯','২০',
-          '২১','২২','২৩','২৪','২৫','২৬','২৭','২৮','২৯','৩০'];
-        return Container(
-          decoration: BoxDecoration(
-            color: cardColor,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: AppColors.primary.withOpacity(0.2)),
-          ),
-          child: Center(
-            child: Text(
-              banglaNumbers[index],
-              style: GoogleFonts.hindSiliguri(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: AppColors.primary,
-              ),
+        return GestureDetector(
+          onTap: () {},
+          child: Container(
+            decoration: BoxDecoration(
+              color: cardColor,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.25), width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04), blurRadius: 4),
+              ],
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  banglaNumbers[index],
+                  style: GoogleFonts.hindSiliguri(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.primary,
+                  ),
+                ),
+                Text(
+                  'পারা',
+                  style: GoogleFonts.hindSiliguri(
+                    fontSize: 10,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
             ),
           ),
         );
@@ -210,11 +291,181 @@ class _QuranScreenState extends State<QuranScreen>
     );
   }
 
+  // ── Page list ───────────────────────────────────────────────────────────────
+
   Widget _buildPageList(bool isDark, Color textColor, Color cardColor) {
-    return Center(
-      child: Text(
-        'পৃষ্ঠা তালিকা',
-        style: GoogleFonts.hindSiliguri(color: textColor, fontSize: 18),
+    return GridView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 5,
+        childAspectRatio: 1,
+        crossAxisSpacing: 6,
+        mainAxisSpacing: 6,
+      ),
+      itemCount: 604,
+      itemBuilder: (context, index) {
+        return GestureDetector(
+          onTap: () {},
+          child: Container(
+            decoration: BoxDecoration(
+              color: cardColor,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.15)),
+            ),
+            child: Center(
+              child: Text(
+                '${index + 1}',
+                style: GoogleFonts.hindSiliguri(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: textColor,
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ─── Surah list tile widget ───────────────────────────────────────────────────
+
+class _SurahListTile extends StatelessWidget {
+  final SurahInfo surah;
+  final bool isDark;
+  final Color textColor;
+  final Color cardColor;
+  final VoidCallback onTap;
+
+  const _SurahListTile({
+    required this.surah,
+    required this.isDark,
+    required this.textColor,
+    required this.cardColor,
+    required this.onTap,
+  });
+
+  String _toBangla(String s) {
+    const en = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    const bn = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+    for (int i = 0; i < en.length; i++) {
+      s = s.replaceAll(en[i], bn[i]);
+    }
+    return s;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04), blurRadius: 6),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              // Number badge
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    _toBangla(surah.number.toString()),
+                    style: GoogleFonts.hindSiliguri(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+
+              // Name + meta
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      surah.name,
+                      style: GoogleFonts.hindSiliguri(
+                        fontWeight: FontWeight.w700,
+                        color: textColor,
+                        fontSize: 15,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: surah.type == 'মাক্কী'
+                                ? Colors.orange.withValues(alpha: 0.15)
+                                : Colors.blue.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            surah.type,
+                            style: GoogleFonts.hindSiliguri(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: surah.type == 'মাক্কী'
+                                  ? Colors.orange[700]
+                                  : Colors.blue[700],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${_toBangla(surah.ayatCount.toString())} আয়াত',
+                          style: GoogleFonts.hindSiliguri(
+                            color: Colors.grey,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Arabic name + arrow
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    surah.arabic,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      color: AppColors.primary,
+                      fontFamily: 'serif',
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Icon(Icons.arrow_forward_ios,
+                      size: 12, color: AppColors.primary),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

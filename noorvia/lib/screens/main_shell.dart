@@ -42,124 +42,196 @@ class MainShell extends StatelessWidget {
 
   PreferredSizeWidget _buildAppBar(
       BuildContext context, bool isDark, ThemeProvider themeProvider) {
-    final theme = Theme.of(context);
-    return AppBar(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      elevation: 0,
-      titleSpacing: 0,
-      leading: Builder(
-        builder: (ctx) => GestureDetector(
-          onTap: () => Scaffold.of(ctx).openDrawer(),
+    final bgColor = isDark ? AppColors.darkBg : Colors.white;
+    final textColor = isDark ? AppColors.darkText : AppColors.lightText;
+    final subColor = isDark ? AppColors.darkSubText : AppColors.lightSubText;
+
+    return PreferredSize(
+      preferredSize: const Size.fromHeight(64),
+      child: Container(
+        decoration: BoxDecoration(
+          color: bgColor,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.only(left: 16),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
               children: [
-                // Date row
-                Row(
+                // Hamburger menu + Noorvia name
+                Builder(
+                  builder: (ctx) => GestureDetector(
+                    onTap: () => Scaffold.of(ctx).openDrawer(),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(Icons.menu,
+                              color: AppColors.primary, size: 20),
+                        ),
+                        const SizedBox(width: 10),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'নূরভিয়া',
+                              style: GoogleFonts.hindSiliguri(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.primary,
+                                height: 1.1,
+                              ),
+                            ),
+                            Text(
+                              'Noorvia',
+                              style: GoogleFonts.poppins(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w400,
+                                color: subColor,
+                                letterSpacing: 1.5,
+                                height: 1.1,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const Spacer(),
+
+                // Date pill
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? AppColors.darkCard
+                        : AppColors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.calendar_today_outlined,
+                          size: 12,
+                          color: AppColors.primary),
+                      const SizedBox(width: 4),
+                      Text(
+                        'এপ্রিল-৩০',
+                        style: GoogleFonts.hindSiliguri(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(width: 8),
+
+                // Location pill
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.darkCard : Colors.black87,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.location_on_outlined,
+                          color: Colors.white, size: 12),
+                      const SizedBox(width: 3),
+                      Text(
+                        'ঢাকা',
+                        style: GoogleFonts.hindSiliguri(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const Icon(Icons.keyboard_arrow_down,
+                          color: Colors.white, size: 14),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(width: 8),
+
+                // Notification bell
+                Stack(
+                  clipBehavior: Clip.none,
                   children: [
-                    Icon(Icons.keyboard_arrow_down,
-                        size: 16,
-                        color: isDark ? AppColors.darkText : AppColors.lightText),
-                    Text(
-                      'এপ্রিল-৩০',
-                      style: GoogleFonts.hindSiliguri(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: isDark ? AppColors.darkText : AppColors.lightText,
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.darkCard : Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 6,
+                          )
+                        ],
+                      ),
+                      child: Icon(Icons.notifications_outlined,
+                          size: 18, color: textColor),
+                    ),
+                    Positioned(
+                      top: -2,
+                      right: -2,
+                      child: Container(
+                        width: 16,
+                        height: 16,
+                        decoration: const BoxDecoration(
+                          color: AppColors.notifRed,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Center(
+                          child: Text('৬',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.bold)),
+                        ),
                       ),
                     ),
                   ],
+                ),
+
+                const SizedBox(width: 8),
+
+                // Profile avatar
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    shape: BoxShape.circle,
+                    border:
+                        Border.all(color: AppColors.primaryLight, width: 2),
+                  ),
+                  child: const Icon(Icons.person, color: Colors.white, size: 18),
                 ),
               ],
             ),
           ),
         ),
-      ),
-      leadingWidth: 120,
-      title: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          // Notification bell
-          Stack(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkCard : Colors.white,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
-                      blurRadius: 6,
-                    )
-                  ],
-                ),
-                child: Icon(Icons.notifications_outlined,
-                    size: 20,
-                    color: isDark ? AppColors.darkText : AppColors.lightText),
-              ),
-              Positioned(
-                top: 2,
-                right: 2,
-                child: Container(
-                  width: 16,
-                  height: 16,
-                  decoration: const BoxDecoration(
-                    color: AppColors.notifRed,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Center(
-                    child: Text('৬',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold)),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(width: 8),
-          // Location pill
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.darkCard : Colors.black87,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              children: [
-                Text(
-                  'ঢাকা',
-                  style: GoogleFonts.hindSiliguri(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                const Icon(Icons.keyboard_arrow_down,
-                    color: Colors.white, size: 16),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          // Profile avatar
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.primaryLight, width: 2),
-            ),
-            child: const Icon(Icons.person, color: Colors.white, size: 20),
-          ),
-          const SizedBox(width: 12),
-        ],
       ),
     );
   }
@@ -322,17 +394,27 @@ class MainShell extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCard : Colors.white,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 12,
-            offset: const Offset(0, -2),
+            color: Colors.black.withValues(alpha: 0.10),
+            blurRadius: 20,
+            offset: const Offset(0, -4),
           ),
         ],
+        border: Border(
+          top: BorderSide(
+            color: AppColors.primary.withValues(alpha: 0.15),
+            width: 1.5,
+          ),
+        ),
       ),
       child: SafeArea(
         child: SizedBox(
-          height: 60,
+          height: 64,
           child: Row(
             children: List.generate(items.length, (index) {
               final isSelected = navProvider.currentIndex == index;
@@ -341,30 +423,65 @@ class MainShell extends StatelessWidget {
                 child: GestureDetector(
                   onTap: () => navProvider.setIndex(index),
                   behavior: HitTestBehavior.opaque,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        isSelected
-                            ? item['activeIcon'] as IconData
-                            : item['icon'] as IconData,
-                        color: isSelected
-                            ? AppColors.primary
-                            : (isDark ? AppColors.darkSubText : AppColors.lightSubText),
-                        size: 24,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        item['label'] as String,
-                        style: GoogleFonts.hindSiliguri(
-                          fontSize: 11,
-                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                          color: isSelected
-                              ? AppColors.primary
-                              : (isDark ? AppColors.darkSubText : AppColors.lightSubText),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeInOut,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Top indicator line
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          height: 3,
+                          width: isSelected ? 28 : 0,
+                          margin: const EdgeInsets.only(bottom: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
                         ),
-                      ),
-                    ],
+                        // Icon with background pill when selected
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: isSelected
+                              ? const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 4)
+                              : EdgeInsets.zero,
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? AppColors.primary.withValues(alpha: 0.12)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Icon(
+                            isSelected
+                                ? item['activeIcon'] as IconData
+                                : item['icon'] as IconData,
+                            color: isSelected
+                                ? AppColors.primary
+                                : (isDark
+                                    ? AppColors.darkSubText
+                                    : AppColors.lightSubText),
+                            size: 22,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          item['label'] as String,
+                          style: GoogleFonts.hindSiliguri(
+                            fontSize: 10,
+                            fontWeight: isSelected
+                                ? FontWeight.w700
+                                : FontWeight.w400,
+                            color: isSelected
+                                ? AppColors.primary
+                                : (isDark
+                                    ? AppColors.darkSubText
+                                    : AppColors.lightSubText),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );
