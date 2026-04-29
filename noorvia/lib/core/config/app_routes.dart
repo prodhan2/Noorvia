@@ -1,10 +1,10 @@
 // ============================================================
 //  app_routes.dart  —  Noorvia centralized route & menu config
 //
-//  নতুন পেজ যোগ করতে:
-//    1. নিচে AppRoute enum-এ নাম যোগ করুন
-//    2. AppRouteConfig.all list-এ entry যোগ করুন
-//    3. শেষ — বাকি সব (navbar, drawer, pages) auto-update হবে
+//  নতুন পেজ যোগ করতে মাত্র ৩টি কাজ:
+//    1. AppRoute enum-এ নাম যোগ করুন
+//    2. _configs list-এ একটি AppRouteConfig entry যোগ করুন
+//    3. শেষ — navbar, drawer, pages সব auto-update হবে
 // ============================================================
 
 import 'package:flutter/material.dart';
@@ -14,7 +14,10 @@ import '../../screens/quran/quran_screen.dart';
 import '../../screens/dowa/dowa_screen.dart';
 import '../../screens/login/login_screen.dart';
 
-// ── Step 1: Route identifiers ────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+// Step 1 ▸ Route identifiers
+//   নতুন route যোগ করলে এখানে enum value যোগ করুন
+// ─────────────────────────────────────────────────────────────
 enum AppRoute {
   home,
   tools,
@@ -23,29 +26,32 @@ enum AppRoute {
   login,
 }
 
-// ── Step 2: Single config entry ──────────────────────────────
+// ─────────────────────────────────────────────────────────────
+// Config model  (পরিবর্তন করার দরকার নেই)
+// ─────────────────────────────────────────────────────────────
 class AppRouteConfig {
+  /// Route identifier
   final AppRoute route;
 
-  /// বাংলা লেবেল — navbar ও drawer-এ দেখাবে
+  /// বাংলা লেবেল — navbar ও drawer উভয়তে ব্যবহার হয়
   final String label;
 
-  /// Drawer-এ দেখানো হবে কিনা
-  final bool showInDrawer;
-
-  /// Bottom navbar-এ দেখানো হবে কিনা
+  /// Bottom navbar-এ দেখাবে কিনা
   final bool showInNavbar;
 
-  /// Navbar icon (inactive)
+  /// App drawer-এ দেখাবে কিনা
+  final bool showInDrawer;
+
+  /// Navbar inactive icon
   final IconData icon;
 
-  /// Navbar icon (active/selected)
+  /// Navbar active/selected icon
   final IconData activeIcon;
 
-  /// Drawer icon
-  final IconData drawerIcon;
+  /// Drawer icon (আলাদা না হলে icon-ই ব্যবহার হয়)
+  final IconData? drawerIcon;
 
-  /// পেজ widget — lazy হওয়ার জন্য builder ব্যবহার করা হয়েছে
+  /// পেজ widget builder
   final Widget Function() pageBuilder;
 
   const AppRouteConfig({
@@ -53,82 +59,99 @@ class AppRouteConfig {
     required this.label,
     required this.icon,
     required this.activeIcon,
-    required this.drawerIcon,
     required this.pageBuilder,
-    this.showInDrawer = true,
+    this.drawerIcon,
     this.showInNavbar = true,
+    this.showInDrawer = true,
   });
 
-  // ── Step 3: Add / remove / reorder entries here ────────────
-  static const List<AppRouteConfig> all = [
-    AppRouteConfig(
-      route: AppRoute.home,
-      label: 'হোম',
-      icon: Icons.home_outlined,
-      activeIcon: Icons.home,
-      drawerIcon: Icons.home_outlined,
-      pageBuilder: HomeScreen.new,
-    ),
-    AppRouteConfig(
-      route: AppRoute.tools,
-      label: 'টুলস',
-      icon: Icons.build_outlined,
-      activeIcon: Icons.build,
-      drawerIcon: Icons.build_outlined,
-      showInNavbar: false, // navbar-এ নেই, শুধু drawer-এ
-    ),
-    AppRouteConfig(
-      route: AppRoute.quran,
-      label: 'কুরআন',
-      icon: Icons.menu_book_outlined,
-      activeIcon: Icons.menu_book,
-      drawerIcon: Icons.menu_book_outlined,
-      pageBuilder: QuranScreen.new,
-    ),
-    AppRouteConfig(
-      route: AppRoute.dowa,
-      label: 'দু\'আ',
-      icon: Icons.volunteer_activism_outlined,
-      activeIcon: Icons.volunteer_activism,
-      drawerIcon: Icons.volunteer_activism_outlined,
-      pageBuilder: DowaScreen.new,
-    ),
-    AppRouteConfig(
-      route: AppRoute.login,
-      label: 'লগইন',
-      icon: Icons.person_outline,
-      activeIcon: Icons.person,
-      drawerIcon: Icons.person_outline,
-      pageBuilder: LoginScreen.new,
-    ),
-  ];
+  IconData get effectiveDrawerIcon => drawerIcon ?? icon;
+}
 
-  // ── Derived helpers (auto-computed, don't edit) ─────────────
+// ─────────────────────────────────────────────────────────────
+// Step 2 ▸ THE MASTER LIST  ← শুধু এখানে পরিবর্তন করুন
+//
+//   • showInNavbar: false  → শুধু drawer-এ থাকবে
+//   • showInDrawer: false  → শুধু navbar-এ থাকবে
+//   • উভয় true            → দুই জায়গায় থাকবে
+//   • reorder করলে সব auto-update হয়
+// ─────────────────────────────────────────────────────────────
+final List<AppRouteConfig> appRoutes = [
+  AppRouteConfig(
+    route: AppRoute.home,
+    label: 'হোম',
+    icon: Icons.home_outlined,
+    activeIcon: Icons.home_rounded,
+    pageBuilder: () => const HomeScreen(),
+    showInNavbar: true,
+    showInDrawer: true,
+  ),
+  AppRouteConfig(
+    route: AppRoute.tools,
+    label: 'টুলস',
+    icon: Icons.build_outlined,
+    activeIcon: Icons.build_rounded,
+    pageBuilder: () => const ToolsScreen(),
+    showInNavbar: false, // ← navbar-এ নেই, শুধু drawer-এ
+    showInDrawer: true,
+  ),
+  AppRouteConfig(
+    route: AppRoute.quran,
+    label: 'কুরআন',
+    icon: Icons.menu_book_outlined,
+    activeIcon: Icons.menu_book_rounded,
+    pageBuilder: () => const QuranScreen(),
+    showInNavbar: true,
+    showInDrawer: true,
+  ),
+  AppRouteConfig(
+    route: AppRoute.dowa,
+    label: 'দু\'আ',
+    icon: Icons.volunteer_activism_outlined,
+    activeIcon: Icons.volunteer_activism,
+    pageBuilder: () => const DowaScreen(),
+    showInNavbar: true,
+    showInDrawer: true,
+  ),
+  AppRouteConfig(
+    route: AppRoute.login,
+    label: 'লগইন',
+    icon: Icons.person_outline_rounded,
+    activeIcon: Icons.person_rounded,
+    pageBuilder: () => const LoginScreen(),
+    showInNavbar: true,
+    showInDrawer: true,
+  ),
+];
 
-  /// শুধু navbar-এর items
-  static List<AppRouteConfig> get navbarItems =>
-      all.where((r) => r.showInNavbar).toList();
+// ─────────────────────────────────────────────────────────────
+// Step 3 ▸ Computed helpers  (পরিবর্তন করার দরকার নেই)
+// ─────────────────────────────────────────────────────────────
+class AppRoutes {
+  AppRoutes._();
 
-  /// শুধু drawer-এর items
-  static List<AppRouteConfig> get drawerItems =>
-      all.where((r) => r.showInDrawer).toList();
+  /// শুধু navbar items (showInNavbar == true)
+  static List<AppRouteConfig> get navbar =>
+      appRoutes.where((r) => r.showInNavbar).toList();
 
-  /// navbar index → AppRoute
-  static AppRoute navbarRouteAt(int index) => navbarItems[index].route;
+  /// শুধু drawer items (showInDrawer == true)
+  static List<AppRouteConfig> get drawer =>
+      appRoutes.where((r) => r.showInDrawer).toList();
 
-  /// AppRoute → navbar index (null if not in navbar)
+  /// navbar index → config
+  static AppRouteConfig navbarAt(int index) => navbar[index];
+
+  /// AppRoute → navbar index  (null = not in navbar)
   static int? navbarIndexOf(AppRoute route) {
-    final idx = navbarItems.indexWhere((r) => r.route == route);
-    return idx == -1 ? null : idx;
+    final i = navbar.indexWhere((r) => r.route == route);
+    return i == -1 ? null : i;
   }
 
-  /// AppRoute → page widget
-  static Widget pageFor(AppRoute route) {
-    final cfg = all.firstWhere((r) => r.route == route);
-    return cfg.pageBuilder();
-  }
+  /// AppRoute → config
+  static AppRouteConfig configOf(AppRoute route) =>
+      appRoutes.firstWhere((r) => r.route == route);
 
-  /// All navbar pages in order (for IndexedStack)
-  static List<Widget> get navbarPages =>
-      navbarItems.map((r) => r.pageBuilder()).toList();
+  /// IndexedStack-এর জন্য navbar pages list
+  static List<Widget> buildNavbarPages() =>
+      navbar.map((r) => r.pageBuilder()).toList();
 }

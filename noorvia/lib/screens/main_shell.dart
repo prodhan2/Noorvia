@@ -1,243 +1,256 @@
+// ============================================================
+//  main_shell.dart
+//  AppBar, Drawer, BottomNav — সব AppRoutes config থেকে আসে।
+//  নতুন route যোগ করতে শুধু app_routes.dart এডিট করুন।
+// ============================================================
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../core/theme/app_theme.dart';
 import '../core/providers/theme_provider.dart';
 import '../core/providers/nav_provider.dart';
-import 'home/home_screen.dart';
-import 'tools/tools_screen.dart';
-import 'quran/quran_screen.dart';
-import 'dowa/dowa_screen.dart';
-import 'login/login_screen.dart';
+import '../core/config/app_routes.dart';
 
-class MainShell extends StatelessWidget {
+class MainShell extends StatefulWidget {
   const MainShell({super.key});
 
-  static final List<Widget> _pages = [
-    const HomeScreen(),
-    const ToolsScreen(),
-    const QuranScreen(),
-    const DowaScreen(),
-    const LoginScreen(),
-  ];
+  @override
+  State<MainShell> createState() => _MainShellState();
+}
+
+class _MainShellState extends State<MainShell> {
+  // Build pages once — IndexedStack keeps them alive
+  late final List<Widget> _pages = AppRoutes.buildNavbarPages();
 
   @override
   Widget build(BuildContext context) {
-    final navProvider = context.watch<NavProvider>();
-    final themeProvider = context.watch<ThemeProvider>();
-    final isDark = themeProvider.isDark;
-    final theme = Theme.of(context);
+    final nav = context.watch<NavProvider>();
+    final theme = context.watch<ThemeProvider>();
+    final isDark = theme.isDark;
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: _buildAppBar(context, isDark, themeProvider),
-      drawer: _buildDrawer(context, isDark, themeProvider),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: _NoorviaAppBar(isDark: isDark, theme: theme),
+      drawer: _NoorviaDrawer(isDark: isDark, theme: theme),
       body: IndexedStack(
-        index: navProvider.currentIndex,
+        index: nav.currentIndex,
         children: _pages,
       ),
-      bottomNavigationBar: _buildBottomNav(context, navProvider, isDark),
+      bottomNavigationBar: _NoorviaBottomNav(isDark: isDark),
     );
   }
+}
 
-  PreferredSizeWidget _buildAppBar(
-      BuildContext context, bool isDark, ThemeProvider themeProvider) {
+// ─────────────────────────────────────────────────────────────
+// AppBar
+// ─────────────────────────────────────────────────────────────
+class _NoorviaAppBar extends StatelessWidget implements PreferredSizeWidget {
+  final bool isDark;
+  final ThemeProvider theme;
+
+  const _NoorviaAppBar({required this.isDark, required this.theme});
+
+  @override
+  Size get preferredSize => const Size.fromHeight(64);
+
+  @override
+  Widget build(BuildContext context) {
     final bgColor = isDark ? AppColors.darkBg : Colors.white;
     final textColor = isDark ? AppColors.darkText : AppColors.lightText;
     final subColor = isDark ? AppColors.darkSubText : AppColors.lightSubText;
 
-    return PreferredSize(
-      preferredSize: const Size.fromHeight(64),
-      child: Container(
-        decoration: BoxDecoration(
-          color: bgColor,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+    return Container(
+      height: preferredSize.height + MediaQuery.of(context).padding.top,
+      decoration: BoxDecoration(
+        color: bgColor,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top,
+        left: 12,
+        right: 12,
+        bottom: 8,
+      ),
+      child: Row(
+        children: [
+          // ── Hamburger + Brand ──────────────────────────────
+          Builder(
+            builder: (ctx) => GestureDetector(
+              onTap: () => Scaffold.of(ctx).openDrawer(),
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.menu,
+                        color: AppColors.primary, size: 20),
+                  ),
+                  const SizedBox(width: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'নূরভিয়া',
+                        style: GoogleFonts.hindSiliguri(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.primary,
+                          height: 1.1,
+                        ),
+                      ),
+                      Text(
+                        'Noorvia',
+                        style: GoogleFonts.poppins(
+                          fontSize: 10,
+                          color: subColor,
+                          letterSpacing: 1.5,
+                          height: 1.1,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          ),
+
+          const Spacer(),
+
+          // ── Date pill ──────────────────────────────────────
+          _Pill(
+            color: isDark
+                ? AppColors.darkCard
+                : AppColors.primary.withValues(alpha: 0.08),
             child: Row(
               children: [
-                // Hamburger menu + Noorvia name
-                Builder(
-                  builder: (ctx) => GestureDetector(
-                    onTap: () => Scaffold.of(ctx).openDrawer(),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(Icons.menu,
-                              color: AppColors.primary, size: 20),
-                        ),
-                        const SizedBox(width: 10),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'নূরভিয়া',
-                              style: GoogleFonts.hindSiliguri(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.primary,
-                                height: 1.1,
-                              ),
-                            ),
-                            Text(
-                              'Noorvia',
-                              style: GoogleFonts.poppins(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w400,
-                                color: subColor,
-                                letterSpacing: 1.5,
-                                height: 1.1,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const Spacer(),
-
-                // Date pill
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? AppColors.darkCard
-                        : AppColors.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.calendar_today_outlined,
-                          size: 12,
-                          color: AppColors.primary),
-                      const SizedBox(width: 4),
-                      Text(
-                        'এপ্রিল-৩০',
-                        style: GoogleFonts.hindSiliguri(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(width: 8),
-
-                // Location pill
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkCard : Colors.black87,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.location_on_outlined,
-                          color: Colors.white, size: 12),
-                      const SizedBox(width: 3),
-                      Text(
-                        'ঢাকা',
-                        style: GoogleFonts.hindSiliguri(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                      ),
-                      const Icon(Icons.keyboard_arrow_down,
-                          color: Colors.white, size: 14),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(width: 8),
-
-                // Notification bell
-                Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: isDark ? AppColors.darkCard : Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.08),
-                            blurRadius: 6,
-                          )
-                        ],
-                      ),
-                      child: Icon(Icons.notifications_outlined,
-                          size: 18, color: textColor),
-                    ),
-                    Positioned(
-                      top: -2,
-                      right: -2,
-                      child: Container(
-                        width: 16,
-                        height: 16,
-                        decoration: const BoxDecoration(
-                          color: AppColors.notifRed,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Center(
-                          child: Text('৬',
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 8,
-                                  fontWeight: FontWeight.bold)),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(width: 8),
-
-                // Profile avatar
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
+                const Icon(Icons.calendar_today_outlined,
+                    size: 12, color: AppColors.primary),
+                const SizedBox(width: 4),
+                Text(
+                  'এপ্রিল-৩০',
+                  style: GoogleFonts.hindSiliguri(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
                     color: AppColors.primary,
-                    shape: BoxShape.circle,
-                    border:
-                        Border.all(color: AppColors.primaryLight, width: 2),
                   ),
-                  child: const Icon(Icons.person, color: Colors.white, size: 18),
                 ),
               ],
             ),
           ),
-        ),
+
+          const SizedBox(width: 6),
+
+          // ── Location pill ──────────────────────────────────
+          _Pill(
+            color: isDark ? AppColors.darkCard : Colors.black87,
+            child: Row(
+              children: [
+                const Icon(Icons.location_on_outlined,
+                    color: Colors.white, size: 12),
+                const SizedBox(width: 3),
+                Text(
+                  'ঢাকা',
+                  style: GoogleFonts.hindSiliguri(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+                const Icon(Icons.keyboard_arrow_down,
+                    color: Colors.white, size: 14),
+              ],
+            ),
+          ),
+
+          const SizedBox(width: 6),
+
+          // ── Notification bell ──────────────────────────────
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkCard : Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 6,
+                    ),
+                  ],
+                ),
+                child: Icon(Icons.notifications_outlined,
+                    size: 18, color: textColor),
+              ),
+              Positioned(
+                top: -2,
+                right: -2,
+                child: Container(
+                  width: 16,
+                  height: 16,
+                  decoration: const BoxDecoration(
+                    color: AppColors.notifRed,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Center(
+                    child: Text(
+                      '৬',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(width: 6),
+
+          // ── Profile avatar ─────────────────────────────────
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.primaryLight, width: 2),
+            ),
+            child: const Icon(Icons.person, color: Colors.white, size: 18),
+          ),
+        ],
       ),
     );
   }
+}
 
-  Widget _buildDrawer(
-      BuildContext context, bool isDark, ThemeProvider themeProvider) {
+// ─────────────────────────────────────────────────────────────
+// Drawer  — AppRoutes.drawer থেকে auto-build হয়
+// ─────────────────────────────────────────────────────────────
+class _NoorviaDrawer extends StatelessWidget {
+  final bool isDark;
+  final ThemeProvider theme;
+
+  const _NoorviaDrawer({required this.isDark, required this.theme});
+
+  @override
+  Widget build(BuildContext context) {
+    final nav = context.read<NavProvider>();
     final bg = isDark ? AppColors.darkCard : Colors.white;
     final textColor = isDark ? AppColors.darkText : AppColors.lightText;
 
@@ -246,7 +259,7 @@ class MainShell extends StatelessWidget {
       child: SafeArea(
         child: Column(
           children: [
-            // Drawer header
+            // ── Header ──────────────────────────────────────
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(24),
@@ -262,7 +275,7 @@ class MainShell extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Text('🕌', style: const TextStyle(fontSize: 32)),
+                      const Text('🕌', style: TextStyle(fontSize: 32)),
                       const SizedBox(width: 12),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -287,61 +300,99 @@ class MainShell extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   Text(
                     'ইসলামিক জীবনযাপনের সঙ্গী',
                     style: GoogleFonts.hindSiliguri(
-                      fontSize: 13,
-                      color: Colors.white70,
-                    ),
+                        fontSize: 13, color: Colors.white70),
                   ),
                 ],
               ),
             ),
+
+            // ── Nav items (auto from AppRoutes.drawer) ───────
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 children: [
-                  _drawerItem(context, Icons.home_outlined, 'হোম', textColor, () {
-                    context.read<NavProvider>().setIndex(0);
-                    Navigator.pop(context);
+                  // Main nav items
+                  ...AppRoutes.drawer.map((cfg) {
+                    final isActive = context.watch<NavProvider>().current ==
+                        cfg.route;
+                    return _DrawerItem(
+                      icon: cfg.effectiveDrawerIcon,
+                      label: cfg.label,
+                      textColor: textColor,
+                      isActive: isActive,
+                      onTap: () {
+                        final navIdx = AppRoutes.navbarIndexOf(cfg.route);
+                        if (navIdx != null) {
+                          nav.goTo(cfg.route);
+                        }
+                        Navigator.pop(context);
+                      },
+                    );
                   }),
-                  _drawerItem(context, Icons.build_outlined, 'টুলস', textColor, () {
-                    context.read<NavProvider>().setIndex(1);
-                    Navigator.pop(context);
-                  }),
-                  _drawerItem(context, Icons.menu_book_outlined, 'কুরআন', textColor, () {
-                    context.read<NavProvider>().setIndex(2);
-                    Navigator.pop(context);
-                  }),
-                  _drawerItem(context, Icons.volunteer_activism_outlined, 'দু\'আ', textColor, () {
-                    context.read<NavProvider>().setIndex(3);
-                    Navigator.pop(context);
-                  }),
-                  const Divider(height: 1),
-                  _drawerItem(context, Icons.access_time_outlined, 'নামাজের সময়', textColor, () => Navigator.pop(context)),
-                  _drawerItem(context, Icons.explore_outlined, 'কিবলা', textColor, () => Navigator.pop(context)),
-                  _drawerItem(context, Icons.calendar_month_outlined, 'ইসলামিক ক্যালেন্ডার', textColor, () => Navigator.pop(context)),
-                  _drawerItem(context, Icons.mosque_outlined, 'মসজিদ খুঁজি', textColor, () => Navigator.pop(context)),
-                  const Divider(height: 1),
-                  _drawerItem(context, Icons.settings_outlined, 'সেটিংস', textColor, () => Navigator.pop(context)),
-                  _drawerItem(context, Icons.info_outline, 'আমাদের সম্পর্কে', textColor, () => Navigator.pop(context)),
-                  // Day/Night toggle
+
+                  const Divider(height: 16),
+
+                  // Extra static items (not in AppRoute enum)
+                  _DrawerItem(
+                    icon: Icons.access_time_outlined,
+                    label: 'নামাজের সময়',
+                    textColor: textColor,
+                    onTap: () => Navigator.pop(context),
+                  ),
+                  _DrawerItem(
+                    icon: Icons.explore_outlined,
+                    label: 'কিবলা',
+                    textColor: textColor,
+                    onTap: () => Navigator.pop(context),
+                  ),
+                  _DrawerItem(
+                    icon: Icons.calendar_month_outlined,
+                    label: 'ইসলামিক ক্যালেন্ডার',
+                    textColor: textColor,
+                    onTap: () => Navigator.pop(context),
+                  ),
+                  _DrawerItem(
+                    icon: Icons.mosque_outlined,
+                    label: 'মসজিদ খুঁজি',
+                    textColor: textColor,
+                    onTap: () => Navigator.pop(context),
+                  ),
+
+                  const Divider(height: 16),
+
+                  _DrawerItem(
+                    icon: Icons.settings_outlined,
+                    label: 'সেটিংস',
+                    textColor: textColor,
+                    onTap: () => Navigator.pop(context),
+                  ),
+                  _DrawerItem(
+                    icon: Icons.info_outline,
+                    label: 'আমাদের সম্পর্কে',
+                    textColor: textColor,
+                    onTap: () => Navigator.pop(context),
+                  ),
+
+                  // Day / Night toggle
                   ListTile(
                     leading: Icon(
-                      themeProvider.isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+                      theme.isDark
+                          ? Icons.light_mode_outlined
+                          : Icons.dark_mode_outlined,
                       color: AppColors.primary,
                     ),
                     title: Text(
-                      themeProvider.isDark ? 'দিনের মোড' : 'রাতের মোড',
+                      theme.isDark ? 'দিনের মোড' : 'রাতের মোড',
                       style: GoogleFonts.hindSiliguri(
-                        color: textColor,
-                        fontSize: 15,
-                      ),
+                          color: textColor, fontSize: 15),
                     ),
                     trailing: Switch(
-                      value: themeProvider.isDark,
-                      onChanged: (_) => themeProvider.toggleTheme(),
+                      value: theme.isDark,
+                      onChanged: (_) => theme.toggleTheme(),
                       activeThumbColor: Colors.white,
                       activeTrackColor: AppColors.primary,
                     ),
@@ -349,14 +400,13 @@ class MainShell extends StatelessWidget {
                 ],
               ),
             ),
+
             Padding(
               padding: const EdgeInsets.all(16),
               child: Text(
                 'সংস্করণ ১.০.০',
-                style: GoogleFonts.hindSiliguri(
-                  color: Colors.grey,
-                  fontSize: 12,
-                ),
+                style:
+                    GoogleFonts.hindSiliguri(color: Colors.grey, fontSize: 12),
               ),
             ),
           ],
@@ -364,32 +414,20 @@ class MainShell extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _drawerItem(BuildContext context, IconData icon, String label,
-      Color textColor, VoidCallback onTap) {
-    return ListTile(
-      leading: Icon(icon, color: AppColors.primary, size: 22),
-      title: Text(
-        label,
-        style: GoogleFonts.hindSiliguri(
-          color: textColor,
-          fontSize: 15,
-        ),
-      ),
-      onTap: onTap,
-      dense: true,
-    );
-  }
+// ─────────────────────────────────────────────────────────────
+// Bottom Nav  — AppRoutes.navbar থেকে auto-build হয়
+// ─────────────────────────────────────────────────────────────
+class _NoorviaBottomNav extends StatelessWidget {
+  final bool isDark;
 
-  Widget _buildBottomNav(
-      BuildContext context, NavProvider navProvider, bool isDark) {
-    final items = [
-      {'icon': Icons.menu_book_outlined, 'activeIcon': Icons.menu_book, 'label': 'ইলম'},
-      {'icon': Icons.checklist_outlined, 'activeIcon': Icons.checklist, 'label': 'আমল'},
-      {'icon': Icons.shopping_bag_outlined, 'activeIcon': Icons.shopping_bag, 'label': 'সেবা'},
-      {'icon': Icons.grid_view_outlined, 'activeIcon': Icons.grid_view, 'label': 'বিবিধ'},
-      {'icon': Icons.person_outline, 'activeIcon': Icons.person, 'label': 'লগইন'},
-    ];
+  const _NoorviaBottomNav({required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    final nav = context.watch<NavProvider>();
+    final items = AppRoutes.navbar; // ← single source of truth
 
     return Container(
       decoration: BoxDecoration(
@@ -417,71 +455,66 @@ class MainShell extends StatelessWidget {
           height: 64,
           child: Row(
             children: List.generate(items.length, (index) {
-              final isSelected = navProvider.currentIndex == index;
-              final item = items[index];
+              final cfg = items[index];
+              final isSelected = nav.currentIndex == index;
+
               return Expanded(
                 child: GestureDetector(
-                  onTap: () => navProvider.setIndex(index),
+                  onTap: () => nav.goToIndex(index),
                   behavior: HitTestBehavior.opaque,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    curve: Curves.easeInOut,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Top indicator line
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          height: 3,
-                          width: isSelected ? 28 : 0,
-                          margin: const EdgeInsets.only(bottom: 6),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Top indicator
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 220),
+                        height: 3,
+                        width: isSelected ? 28 : 0,
+                        margin: const EdgeInsets.only(bottom: 5),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(2),
                         ),
-                        // Icon with background pill when selected
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          padding: isSelected
-                              ? const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 4)
-                              : EdgeInsets.zero,
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppColors.primary.withValues(alpha: 0.12)
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Icon(
-                            isSelected
-                                ? item['activeIcon'] as IconData
-                                : item['icon'] as IconData,
-                            color: isSelected
-                                ? AppColors.primary
-                                : (isDark
-                                    ? AppColors.darkSubText
-                                    : AppColors.lightSubText),
-                            size: 22,
-                          ),
+                      ),
+                      // Icon pill
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 220),
+                        padding: isSelected
+                            ? const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 4)
+                            : EdgeInsets.zero,
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? AppColors.primary.withValues(alpha: 0.12)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                        const SizedBox(height: 3),
-                        Text(
-                          item['label'] as String,
-                          style: GoogleFonts.hindSiliguri(
-                            fontSize: 10,
-                            fontWeight: isSelected
-                                ? FontWeight.w700
-                                : FontWeight.w400,
-                            color: isSelected
-                                ? AppColors.primary
-                                : (isDark
-                                    ? AppColors.darkSubText
-                                    : AppColors.lightSubText),
-                          ),
+                        child: Icon(
+                          isSelected ? cfg.activeIcon : cfg.icon,
+                          color: isSelected
+                              ? AppColors.primary
+                              : (isDark
+                                  ? AppColors.darkSubText
+                                  : AppColors.lightSubText),
+                          size: 22,
                         ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        cfg.label,
+                        style: GoogleFonts.hindSiliguri(
+                          fontSize: 10,
+                          fontWeight: isSelected
+                              ? FontWeight.w700
+                              : FontWeight.w400,
+                          color: isSelected
+                              ? AppColors.primary
+                              : (isDark
+                                  ? AppColors.darkSubText
+                                  : AppColors.lightSubText),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               );
@@ -489,6 +522,69 @@ class MainShell extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Small reusable widgets
+// ─────────────────────────────────────────────────────────────
+class _Pill extends StatelessWidget {
+  final Color color;
+  final Widget child;
+
+  const _Pill({required this.color, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: child,
+    );
+  }
+}
+
+class _DrawerItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color textColor;
+  final VoidCallback onTap;
+  final bool isActive;
+
+  const _DrawerItem({
+    required this.icon,
+    required this.label,
+    required this.textColor,
+    required this.onTap,
+    this.isActive = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Icon(
+        icon,
+        color: isActive ? AppColors.primary : AppColors.primary.withValues(alpha: 0.7),
+        size: 22,
+      ),
+      title: Text(
+        label,
+        style: GoogleFonts.hindSiliguri(
+          color: isActive ? AppColors.primary : textColor,
+          fontSize: 15,
+          fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
+        ),
+      ),
+      tileColor: isActive
+          ? AppColors.primary.withValues(alpha: 0.07)
+          : Colors.transparent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      onTap: onTap,
+      dense: true,
     );
   }
 }

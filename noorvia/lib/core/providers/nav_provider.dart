@@ -1,12 +1,24 @@
 import 'package:flutter/material.dart';
+import '../config/app_routes.dart';
 
 class NavProvider extends ChangeNotifier {
-  int _currentIndex = 0;
+  // Default: first navbar item
+  AppRoute _current = AppRoutes.navbar.first.route;
 
-  int get currentIndex => _currentIndex;
+  AppRoute get current => _current;
 
-  void setIndex(int index) {
-    _currentIndex = index;
+  /// Current navbar index (for IndexedStack)
+  int get currentIndex => AppRoutes.navbarIndexOf(_current) ?? 0;
+
+  /// Navigate by AppRoute
+  void goTo(AppRoute route) {
+    if (_current == route) return;
+    _current = route;
     notifyListeners();
+  }
+
+  /// Navigate by navbar index (tap on bottom nav)
+  void goToIndex(int index) {
+    goTo(AppRoutes.navbarAt(index).route);
   }
 }
