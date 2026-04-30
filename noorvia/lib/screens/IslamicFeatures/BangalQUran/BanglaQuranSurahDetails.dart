@@ -5,6 +5,8 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/providers/theme_provider.dart';
 import '../../../core/providers/audio_provider.dart';
 import '../../../widgets/shimmer.dart';
 
@@ -247,12 +249,13 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
   @override
   Widget build(BuildContext context) {
     final audio = context.watch<AudioProvider>();
+    final isDark = context.watch<ThemeProvider>().isDark;
     final name = widget.surahInfo['translation'] ?? widget.surahInfo['name'];
     final translit = widget.surahInfo['transliteration'] ?? '';
     final totalVerses = widget.surahInfo['total_verses'] ?? '';
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F2F2),
+      backgroundColor: isDark ? AppColors.darkBg : const Color(0xFFF2F2F2),
       body: NestedScrollView(
         headerSliverBuilder: (_, innerBoxIsScrolled) => [
           SliverAppBar(
@@ -342,6 +345,7 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
                         showTranslation: audio.showTranslation,
                         duration: isActive ? audio.duration : null,
                         position: isActive ? audio.position : null,
+                        isDark: isDark,
                         onPlay: () => audio.playVerse(
                           surahId: _surahId,
                           verseId: vid,
@@ -498,7 +502,7 @@ class _SettingsSheet extends StatelessWidget {
 class _VerseCard extends StatelessWidget {
   final dynamic verse;
   final int verseId;
-  final bool isFav, isActive, isPlaying;
+  final bool isFav, isActive, isPlaying, isDark;
   final double arabicSize;
   final bool showTranslit, showTranslation;
   final Duration? duration, position;
@@ -517,6 +521,7 @@ class _VerseCard extends StatelessWidget {
     required this.showTranslation,
     required this.duration,
     required this.position,
+    required this.isDark,
     required this.onPlay,
     required this.onFav,
     required this.onSeek,
@@ -536,7 +541,7 @@ class _VerseCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? AppColors.darkCard : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: isActive ? Border.all(color: _kPrimary, width: 1.5) : null,
         boxShadow: [
@@ -616,7 +621,7 @@ class _VerseCard extends StatelessWidget {
               style: TextStyle(
                   fontSize: arabicSize,
                   height: 2.0,
-                  color: const Color(0xFF1A1A2E),
+                  color: isDark ? AppColors.darkText : const Color(0xFF1A1A2E),
                   fontFamily: 'serif'),
             ),
           ),
@@ -646,7 +651,9 @@ class _VerseCard extends StatelessWidget {
               child: Text(
                 verse['translation'] ?? '',
                 style: GoogleFonts.hindSiliguri(
-                    fontSize: 14, color: Colors.grey[700], height: 1.7),
+                    fontSize: 14,
+                    color: isDark ? AppColors.darkSubText : Colors.grey[700],
+                    height: 1.7),
               ),
             ),
 

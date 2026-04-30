@@ -392,15 +392,51 @@ class _NoorviaDrawer extends StatelessWidget {
                       color: AppColors.primary,
                     ),
                     title: Text(
-                      theme.isDark ? 'দিনের মোড' : 'রাতের মোড',
+                      theme.autoMode
+                          ? 'অটো মোড (চালু)'
+                          : (theme.isDark ? 'দিনের মোড' : 'রাতের মোড'),
                       style: GoogleFonts.hindSiliguri(
                           color: textColor, fontSize: 15),
                     ),
-                    trailing: Switch(
-                      value: theme.isDark,
-                      onChanged: (_) => theme.toggleTheme(),
-                      activeThumbColor: Colors.white,
-                      activeTrackColor: AppColors.primary,
+                    subtitle: theme.autoMode
+                        ? Text(
+                            'সময় অনুযায়ী স্বয়ংক্রিয়',
+                            style: GoogleFonts.hindSiliguri(
+                                color: AppColors.primary, fontSize: 11),
+                          )
+                        : null,
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Auto mode button
+                        if (!theme.autoMode)
+                          GestureDetector(
+                            onTap: () => theme.enableAutoMode(),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                'অটো',
+                                style: GoogleFonts.hindSiliguri(
+                                  color: AppColors.primary,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        const SizedBox(width: 6),
+                        Switch(
+                          value: theme.isDark,
+                          onChanged: (_) => theme.toggleTheme(),
+                          activeThumbColor: Colors.white,
+                          activeTrackColor: AppColors.primary,
+                        ),
+                      ],
                     ),
                   ),
                 ],

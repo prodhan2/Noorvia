@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/providers/theme_provider.dart';
 
 const _kPrimary = Color(0xFF1B6B3A);
 const _kPrimaryDark = Color(0xFF0F4D2A);
@@ -132,8 +135,13 @@ class _FavoritesPageState extends State<FavoritesPage>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.watch<ThemeProvider>().isDark;
+    final bg = isDark ? AppColors.darkBg : const Color(0xFFF2F2F2);
+    final cardColor = isDark ? AppColors.darkCard : Colors.white;
+    final textColor = isDark ? AppColors.darkText : const Color(0xFF1A1A1A);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F2F2),
+      backgroundColor: bg,
       body: NestedScrollView(
         headerSliverBuilder: (_, __) => [
           SliverAppBar(
@@ -208,8 +216,11 @@ class _FavoritesPageState extends State<FavoritesPage>
 
   // ── Surah tab ─────────────────────────────────────────────
   Widget _buildSurahTab() {
+    final isDark = context.read<ThemeProvider>().isDark;
+    final cardColor = isDark ? AppColors.darkCard : Colors.white;
+    final textColor = isDark ? AppColors.darkText : const Color(0xFF1A1A1A);
     if (favSurahIds.isEmpty) {
-      return _emptyState('কোনো সূরা পছন্দ করা হয়নি', '📖');
+      return _emptyState('কোনো সূরা পছন্দ করা হয়নি', '📖', isDark);
     }
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: _fetchAllFavSurahs(),
@@ -219,7 +230,7 @@ class _FavoritesPageState extends State<FavoritesPage>
               child: CircularProgressIndicator(color: _kPrimary));
         }
         if (snap.hasError || snap.data == null || snap.data!.isEmpty) {
-          return _emptyState('সূরা লোড হয়নি', '⚠️');
+          return _emptyState('সূরা লোড হয়নি', '⚠️', isDark);
         }
         final list = snap.data!;
         return ListView.builder(
@@ -231,6 +242,9 @@ class _FavoritesPageState extends State<FavoritesPage>
             return _FavSurahTile(
               surah: s,
               bnNumber: _bn(s['id']),
+              isDark: isDark,
+              cardColor: cardColor,
+              textColor: textColor,
               onTap: () => Navigator.push(
                 ctx,
                 MaterialPageRoute(
@@ -246,8 +260,11 @@ class _FavoritesPageState extends State<FavoritesPage>
 
   // ── Verse tab ─────────────────────────────────────────────
   Widget _buildVerseTab() {
+    final isDark = context.read<ThemeProvider>().isDark;
+    final cardColor = isDark ? AppColors.darkCard : Colors.white;
+    final textColor = isDark ? AppColors.darkText : const Color(0xFF1A1A1A);
     if (favVerseKeys.isEmpty) {
-      return _emptyState('কোনো আয়াত পছন্দ করা হয়নি', '🤲');
+      return _emptyState('কোনো আয়াত পছন্দ করা হয়নি', '🤲', isDark);
     }
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
@@ -262,7 +279,7 @@ class _FavoritesPageState extends State<FavoritesPage>
                 margin: const EdgeInsets.only(bottom: 8),
                 height: 80,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: cardColor,
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: const Center(
@@ -273,6 +290,9 @@ class _FavoritesPageState extends State<FavoritesPage>
               return _FavVerseTile(
                 title: 'আয়াত $key',
                 subtitle: 'লোড হয়নি',
+                isDark: isDark,
+                cardColor: cardColor,
+                textColor: textColor,
                 onRemove: () => _removeVerse(key),
                 onTap: null,
               );
@@ -282,6 +302,9 @@ class _FavoritesPageState extends State<FavoritesPage>
               title: '${v['surahName']} — আয়াত ${_bn(v['verseId'])}',
               subtitle: v['translation'] ?? '',
               arabic: v['text'] ?? '',
+              isDark: isDark,
+              cardColor: cardColor,
+              textColor: textColor,
               onRemove: () => _removeVerse(key),
               onTap: () => Navigator.push(
                 ctx,
@@ -296,7 +319,7 @@ class _FavoritesPageState extends State<FavoritesPage>
     );
   }
 
-  Widget _emptyState(String msg, String emoji) {
+  Widget _emptyState(String msg, String emoji, bool isDark) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -305,7 +328,8 @@ class _FavoritesPageState extends State<FavoritesPage>
           const SizedBox(height: 12),
           Text(msg,
               style: GoogleFonts.hindSiliguri(
-                  color: Colors.grey, fontSize: 16)),
+                  color: isDark ? AppColors.darkSubText : Colors.grey,
+                  fontSize: 16)),
         ],
       ),
     );
@@ -316,12 +340,18 @@ class _FavoritesPageState extends State<FavoritesPage>
 class _FavSurahTile extends StatelessWidget {
   final Map surah;
   final String bnNumber;
+  final bool isDark;
+  final Color cardColor;
+  final Color textColor;
   final VoidCallback onTap;
   final VoidCallback onRemove;
 
   const _FavSurahTile({
     required this.surah,
     required this.bnNumber,
+    required this.isDark,
+    required this.cardColor,
+    required this.textColor,
     required this.onTap,
     required this.onRemove,
   });
@@ -334,7 +364,7 @@ class _FavSurahTile extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardColor,
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
@@ -366,13 +396,15 @@ class _FavSurahTile extends StatelessWidget {
                   Text(
                     surah['translation'] ?? surah['name'] ?? '',
                     style: GoogleFonts.hindSiliguri(
-                        fontWeight: FontWeight.w700, fontSize: 15),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                        color: textColor),
                   ),
                   Text(
                     surah['transliteration'] ?? '',
                     style: GoogleFonts.poppins(
                         fontSize: 12,
-                        color: Colors.grey,
+                        color: isDark ? AppColors.darkSubText : Colors.grey,
                         fontStyle: FontStyle.italic),
                   ),
                 ],
@@ -404,6 +436,9 @@ class _FavVerseTile extends StatelessWidget {
   final String title;
   final String subtitle;
   final String? arabic;
+  final bool isDark;
+  final Color cardColor;
+  final Color textColor;
   final VoidCallback? onTap;
   final VoidCallback onRemove;
 
@@ -411,6 +446,9 @@ class _FavVerseTile extends StatelessWidget {
     required this.title,
     required this.subtitle,
     this.arabic,
+    required this.isDark,
+    required this.cardColor,
+    required this.textColor,
     required this.onTap,
     required this.onRemove,
   });
@@ -423,7 +461,7 @@ class _FavVerseTile extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardColor,
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
@@ -438,7 +476,9 @@ class _FavVerseTile extends StatelessWidget {
                 Expanded(
                   child: Text(title,
                       style: GoogleFonts.hindSiliguri(
-                          fontWeight: FontWeight.w700, fontSize: 14)),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          color: textColor)),
                 ),
                 GestureDetector(
                   onTap: onRemove,
@@ -467,7 +507,9 @@ class _FavVerseTile extends StatelessWidget {
               Text(
                 subtitle,
                 style: GoogleFonts.hindSiliguri(
-                    fontSize: 13, color: Colors.grey[700], height: 1.5),
+                    fontSize: 13,
+                    color: isDark ? AppColors.darkSubText : Colors.grey[700],
+                    height: 1.5),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),

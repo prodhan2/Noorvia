@@ -9,6 +9,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:provider/provider.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/providers/theme_provider.dart';
 import '../../../widgets/shimmer.dart';
 
 
@@ -16,8 +19,6 @@ import '../../../widgets/shimmer.dart';
 const _kPrimary = Color(0xFF1B6B3A);
 const _kPrimaryDark = Color(0xFF0F4D2A);
 const _kPrimaryLight = Color(0xFF2E8B57);
-const _kBg = Color(0xFFF2F2F2);
-const _kCard = Colors.white;
 
 // ─── Background task setup ────────────────────────────────────
 void main() {
@@ -267,8 +268,13 @@ class _SurahListPageState extends State<SurahListPage>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.watch<ThemeProvider>().isDark;
+    final bg = isDark ? AppColors.darkBg : AppColors.lightBg;
+    final cardColor = isDark ? AppColors.darkCard : Colors.white;
+    final textColor = isDark ? AppColors.darkText : const Color(0xFF1A1A1A);
+
     return Scaffold(
-      backgroundColor: _kBg,
+      backgroundColor: bg,
       body: NestedScrollView(
         headerSliverBuilder: (_, __) => [_buildSliverAppBar()],
         body: Column(
@@ -294,7 +300,7 @@ class _SurahListPageState extends State<SurahListPage>
               padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
               child: Container(
                 decoration: BoxDecoration(
-                  color: _kCard,
+                  color: cardColor,
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(
@@ -308,17 +314,20 @@ class _SurahListPageState extends State<SurahListPage>
                     searchQuery = v;
                     _filter();
                   },
-                  style: GoogleFonts.hindSiliguri(),
+                  style: GoogleFonts.hindSiliguri(
+                      color: isDark ? AppColors.darkText : Colors.black87),
                   decoration: InputDecoration(
                     hintText: 'সূরার নাম বা অনুবাদ দিয়ে খুঁজুন...',
                     hintStyle: GoogleFonts.hindSiliguri(
-                        color: Colors.grey, fontSize: 13),
+                        color: isDark ? AppColors.darkSubText : Colors.grey,
+                        fontSize: 13),
                     prefixIcon:
                         const Icon(Icons.search, color: _kPrimary, size: 20),
                     suffixIcon: searchQuery.isNotEmpty
                         ? IconButton(
-                            icon: const Icon(Icons.clear,
-                                color: Colors.grey, size: 18),
+                            icon: Icon(Icons.clear,
+                                color: isDark ? AppColors.darkSubText : Colors.grey,
+                                size: 18),
                             onPressed: () {
                               _searchCtrl.clear();
                               searchQuery = '';
@@ -335,7 +344,7 @@ class _SurahListPageState extends State<SurahListPage>
             // List
             Expanded(
               child: isLoading
-                  ? SurahListShimmer(isDark: false)
+                  ? SurahListShimmer(isDark: isDark)
                   : filteredSurahs.isEmpty
                       ? Center(
                           child: Column(
@@ -346,7 +355,8 @@ class _SurahListPageState extends State<SurahListPage>
                               const SizedBox(height: 12),
                               Text('কোনো সূরা পাওয়া যায়নি',
                                   style: GoogleFonts.hindSiliguri(
-                                      color: Colors.grey, fontSize: 16)),
+                                      color: isDark ? AppColors.darkSubText : Colors.grey,
+                                      fontSize: 16)),
                             ],
                           ),
                         )
@@ -364,6 +374,9 @@ class _SurahListPageState extends State<SurahListPage>
                               onFavTap: () =>
                                   _toggleFav(filteredSurahs[i]['id'] as int),
                               bnNumber: _bn(filteredSurahs[i]['id']),
+                              isDark: isDark,
+                              cardColor: cardColor,
+                              textColor: textColor,
                               onTap: () async {
                                 await Navigator.push(
                                   ctx,
@@ -441,6 +454,9 @@ class _SurahListPageState extends State<SurahListPage>
 class _SurahTile extends StatelessWidget {
   final dynamic surah;
   final bool isFav;
+  final bool isDark;
+  final Color cardColor;
+  final Color textColor;
   final VoidCallback onFavTap;
   final VoidCallback onTap;
   final String bnNumber;
@@ -448,6 +464,9 @@ class _SurahTile extends StatelessWidget {
   const _SurahTile({
     required this.surah,
     required this.isFav,
+    required this.isDark,
+    required this.cardColor,
+    required this.textColor,
     required this.onFavTap,
     required this.onTap,
     required this.bnNumber,
@@ -467,7 +486,7 @@ class _SurahTile extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
-          color: _kCard,
+          color: cardColor,
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
@@ -504,7 +523,7 @@ class _SurahTile extends StatelessWidget {
                         style: GoogleFonts.hindSiliguri(
                             fontWeight: FontWeight.w700,
                             fontSize: 15,
-                            color: const Color(0xFF1A1A1A))),
+                            color: textColor)),
                     const SizedBox(height: 3),
                     Row(
                       children: [
@@ -530,7 +549,8 @@ class _SurahTile extends StatelessWidget {
                         const SizedBox(width: 6),
                         Text('$totalVerses আয়াত',
                             style: GoogleFonts.hindSiliguri(
-                                color: Colors.grey, fontSize: 12)),
+                                color: isDark ? AppColors.darkSubText : Colors.grey,
+                                fontSize: 12)),
                       ],
                     ),
                   ],

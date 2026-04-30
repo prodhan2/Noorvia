@@ -258,11 +258,14 @@ class _PrayerCardState extends State<PrayerCard>
   }
 
   // ─────────────────────────────────────────────────────────────
-  // BOTTOM CARD — White background (light design)
+  // BOTTOM CARD — theme-aware background
   // ─────────────────────────────────────────────────────────────
   Widget _buildBottomCard(
       BuildContext context, PrayerProvider prayer, PrayerTimeModel? pt) {
-    const cardBg = Colors.white;
+    final cardBg = isDark ? AppColors.darkCard : AppColors.lightCard;
+    final dividerColor = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : Colors.grey.withValues(alpha: 0.15);
 
     return Container(
       width: double.infinity,
@@ -274,7 +277,7 @@ class _PrayerCardState extends State<PrayerCard>
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
+            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.06),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -283,7 +286,7 @@ class _PrayerCardState extends State<PrayerCard>
       child: prayer.isLoading && pt == null
           ? Padding(
               padding: const EdgeInsets.all(20),
-              child: PrayerCardShimmer(isDark: false),
+              child: PrayerCardShimmer(isDark: isDark),
             )
           : pt == null
               ? const SizedBox(height: 80)
@@ -292,12 +295,12 @@ class _PrayerCardState extends State<PrayerCard>
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       // ── Left: circular timer ───────────────
-                      _buildTimerSection(prayer, pt, cardBg),
+                      _buildTimerSection(prayer, pt),
 
                       // ── Vertical divider ───────────────────
                       Container(
                         width: 1,
-                        color: Colors.grey.withValues(alpha: 0.15),
+                        color: dividerColor,
                       ),
 
                       // ── Right: prayer list ─────────────────
@@ -313,8 +316,10 @@ class _PrayerCardState extends State<PrayerCard>
   // ─────────────────────────────────────────────────────────────
   // LEFT: current prayer name + circular countdown
   // ─────────────────────────────────────────────────────────────
-  Widget _buildTimerSection(
-      PrayerProvider prayer, PrayerTimeModel pt, Color bg) {
+  Widget _buildTimerSection(PrayerProvider prayer, PrayerTimeModel pt) {
+    final textColor = isDark ? AppColors.darkText : const Color(0xFF1A1836);
+    final subTextColor = isDark ? AppColors.darkSubText : Colors.black87;
+
     return SizedBox(
       width: 150,
       child: Padding(
@@ -322,13 +327,12 @@ class _PrayerCardState extends State<PrayerCard>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Current prayer name
             Text(
               prayer.currentPrayer.isNotEmpty ? prayer.currentPrayer : '--',
               style: GoogleFonts.hindSiliguri(
                 fontSize: 20,
                 fontWeight: FontWeight.w800,
-                color: const Color(0xFF1A1836),
+                color: textColor,
               ),
             ),
             const SizedBox(height: 2),
@@ -336,24 +340,22 @@ class _PrayerCardState extends State<PrayerCard>
               'শেষ হতে বাকি',
               style: GoogleFonts.hindSiliguri(
                 fontSize: 12,
-                color: Colors.black,
+                color: subTextColor,
               ),
             ),
             const SizedBox(height: 14),
-
-            // Circular progress with countdown
             SizedBox(
               width: 110,
               height: 110,
               child: CustomPaint(
                 painter: _CircularTimerPainter(
                   progress: prayer.prayerProgress.clamp(0.0, 1.0),
+                  isDark: isDark,
                 ),
                 child: Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Pulsing dot
                       FadeTransition(
                         opacity: _pulseAnim,
                         child: Container(
@@ -371,7 +373,7 @@ class _PrayerCardState extends State<PrayerCard>
                         style: GoogleFonts.hindSiliguri(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
-                          color: const Color(0xFF1A1836),
+                          color: textColor,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -446,27 +448,26 @@ class _PrayerCardState extends State<PrayerCard>
     required bool isLast,
     required PrayerTimeModel pt,
   }) {
-    // Active row: light peach/orange background like 2nd image
+    final textColor = isDark ? AppColors.darkText : const Color(0xFF1A1836);
+    final subTextColor = isDark ? AppColors.darkSubText : Colors.black87;
+    final dividerColor = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : Colors.grey.withValues(alpha: 0.12);
+    // Active row highlight — peach in light, subtle purple in dark
+    final activeBg = isDark
+        ? AppColors.gradientStart.withValues(alpha: 0.18)
+        : const Color(0xFFFFF3E8);
+
     final bgDecoration = isActive
-        ? const BoxDecoration(
-            color: Color(0xFFFFF3E8),
-          )
+        ? BoxDecoration(color: activeBg)
         : BoxDecoration(
             color: Colors.transparent,
             border: isLast
                 ? null
                 : Border(
-                    bottom: BorderSide(
-                      color: Colors.grey.withValues(alpha: 0.12),
-                      width: 0.8,
-                    ),
+                    bottom: BorderSide(color: dividerColor, width: 0.8),
                   ),
           );
-
-    final textColor = const Color(0xFF1A1836);
-    final subColor = isActive
-        ? const Color(0xFF6C3CE1)
-        : Colors.black;
 
     return Container(
       decoration: bgDecoration,
@@ -490,12 +491,11 @@ class _PrayerCardState extends State<PrayerCard>
                 style: GoogleFonts.hindSiliguri(
                   fontSize: 13,
                   fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
-                  color: subColor,
+                  color: isActive ? AppColors.gradientStart : subTextColor,
                 ),
               ),
             ],
           ),
-          // Extra info for Isha (মাকরুহ time)
           if (name == 'ইশা')
             Padding(
               padding: const EdgeInsets.only(top: 2),
@@ -503,9 +503,8 @@ class _PrayerCardState extends State<PrayerCard>
                 'মাকরুহ: রাত ${_fmt(pt.tahajjud)}',
                 style: GoogleFonts.hindSiliguri(
                   fontSize: 11,
-                  color: Colors.black,
+                  color: isDark ? AppColors.darkSubText : Colors.black54,
                 ),
-                textAlign: TextAlign.right,
               ),
             ),
         ],
@@ -516,9 +515,10 @@ class _PrayerCardState extends State<PrayerCard>
 
 // ─── Circular timer painter ───────────────────────────────────
 class _CircularTimerPainter extends CustomPainter {
-  final double progress; // 0.0 → 1.0
+  final double progress;
+  final bool isDark;
 
-  _CircularTimerPainter({required this.progress});
+  _CircularTimerPainter({required this.progress, required this.isDark});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -526,16 +526,18 @@ class _CircularTimerPainter extends CustomPainter {
     final radius = (size.width / 2) - 8;
     const strokeWidth = 8.0;
 
-    // Background track
+    // Background track — lighter in light mode, subtle in dark
     final trackPaint = Paint()
-      ..color = Colors.grey.withValues(alpha: 0.15)
+      ..color = isDark
+          ? Colors.white.withValues(alpha: 0.12)
+          : Colors.grey.withValues(alpha: 0.15)
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round;
 
     canvas.drawCircle(center, radius, trackPaint);
 
-    // Progress arc — starts from top (-π/2), goes clockwise
+    // Progress arc
     final arcRect = Rect.fromCircle(center: center, radius: radius);
     final progressPaint = GradientHelper.gradientPaint(arcRect)
       ..strokeWidth = strokeWidth;
@@ -550,7 +552,8 @@ class _CircularTimerPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_CircularTimerPainter old) => old.progress != progress;
+  bool shouldRepaint(_CircularTimerPainter old) =>
+      old.progress != progress || old.isDark != isDark;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -727,7 +730,8 @@ class _RamadanMiniCardState extends State<RamadanMiniCard>
 
   @override
   Widget build(BuildContext context) {
-    const cardBg = Colors.white;
+    final cardBg = isDark ? AppColors.darkCard : AppColors.lightCard;
+    final textColor = isDark ? AppColors.darkText : const Color(0xFF1A1836);
 
     if (_loading) {
       return Container(
@@ -737,7 +741,7 @@ class _RamadanMiniCardState extends State<RamadanMiniCard>
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
+              color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.06),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -763,7 +767,7 @@ class _RamadanMiniCardState extends State<RamadanMiniCard>
           child: Text(
             _error!,
             style: GoogleFonts.hindSiliguri(
-              color: Colors.black,
+              color: textColor,
               fontSize: 13,
             ),
           ),
@@ -905,6 +909,13 @@ class _RamadanMiniCardState extends State<RamadanMiniCard>
     required Color pillTextColor,
     required bool isPast,
   }) {
+    final textColor = isDark ? AppColors.darkText : const Color(0xFF1A1836);
+    final labelColor = isDark ? AppColors.darkSubText : Colors.black87;
+    // In dark mode, tint pill backgrounds slightly
+    final effectivePillBg = isDark
+        ? pillTextColor.withValues(alpha: 0.18)
+        : pillBg;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -915,7 +926,9 @@ class _RamadanMiniCardState extends State<RamadanMiniCard>
           style: GoogleFonts.hindSiliguri(
             fontSize: 18,
             fontWeight: FontWeight.w800,
-            color: isPast ? Colors.black38 : const Color(0xFF1A1836),
+            color: isPast
+                ? (isDark ? Colors.white38 : Colors.black38)
+                : textColor,
           ),
         ),
         const SizedBox(height: 2),
@@ -923,16 +936,15 @@ class _RamadanMiniCardState extends State<RamadanMiniCard>
           label,
           style: GoogleFonts.hindSiliguri(
             fontSize: 11,
-            color: Colors.black87,
+            color: labelColor,
           ),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 10),
-        // Pill button
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
-            color: pillBg,
+            color: effectivePillBg,
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
@@ -952,7 +964,9 @@ class _RamadanMiniCardState extends State<RamadanMiniCard>
   Widget _vDivider() {
     return Container(
       width: 1,
-      color: Colors.grey.withValues(alpha: 0.15),
+      color: isDark
+          ? Colors.white.withValues(alpha: 0.08)
+          : Colors.grey.withValues(alpha: 0.15),
     );
   }
 }
