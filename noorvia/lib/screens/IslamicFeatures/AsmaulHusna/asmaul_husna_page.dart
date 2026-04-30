@@ -203,65 +203,52 @@ class _AsmaulHusnaPageState extends State<AsmaulHusnaPage>
   // ── sliver app bar ─────────────────────────────────────────────────────────
   Widget _buildSliverAppBar(_TC tc) {
     return SliverAppBar(
-      expandedHeight: 180,
+      expandedHeight: 0,
       pinned: true,
-      backgroundColor: tc.bg,
+      backgroundColor: tc.headerGrad[0],
       elevation: 0,
       leading: IconButton(
-        icon: Icon(Icons.arrow_back_ios_new_rounded,
-            color: tc.isDark ? tc.gold : Colors.white),
+        icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
         onPressed: () => Navigator.maybePop(context),
       ),
-      flexibleSpace: FlexibleSpaceBar(
-        collapseMode: CollapseMode.parallax,
-        background: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: tc.headerGrad,
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-          child: Stack(children: [
-            Positioned(top: -30, right: -30,
-              child: Container(width: 120, height: 120,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.06)))),
-            Positioned(bottom: -20, left: -20,
-              child: Container(width: 90, height: 90,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: tc.gold.withValues(alpha: 0.08)))),
-            Center(child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SizedBox(height: 40),
-                Text('اَلْأَسْمَاءُ الْحُسْنَىٰ',
-                  style: GoogleFonts.amiri(
-                    fontSize: 30, color: tc.gold,
-                    fontWeight: FontWeight.bold,
-                    shadows: [Shadow(color: tc.gold.withValues(alpha: 0.4), blurRadius: 12)],
-                  )),
-                const SizedBox(height: 6),
-                Text('আল্লাহর ৯৯ নাম',
-                  style: GoogleFonts.hindSiliguri(
-                    fontSize: 15, color: Colors.white.withValues(alpha: 0.9),
-                    fontWeight: FontWeight.w600)),
-                const SizedBox(height: 3),
-                Text('99 Beautiful Names of Allah',
-                  style: GoogleFonts.poppins(
-                    fontSize: 11, color: Colors.white.withValues(alpha: 0.6),
-                    letterSpacing: 0.5)),
-              ],
+      title: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text('اَلْأَسْمَاءُ الْحُسْنَىٰ',
+            style: GoogleFonts.amiri(
+              fontSize: 18,
+              color: tc.gold,
+              fontWeight: FontWeight.bold,
             )),
-          ]),
-        ),
-        title: Text('আসমাউল হুসনা',
-          style: GoogleFonts.hindSiliguri(
-            color: tc.gold, fontWeight: FontWeight.bold, fontSize: 17)),
-        centerTitle: true,
+          const SizedBox(width: 8),
+          Container(width: 1.2, height: 16, color: Colors.white30),
+          const SizedBox(width: 8),
+          Text('আসমাউল হুসনা',
+            style: GoogleFonts.hindSiliguri(
+              fontSize: 13,
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            )),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+            decoration: BoxDecoration(
+              color: tc.gold.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: tc.gold.withValues(alpha: 0.4), width: 1),
+            ),
+            child: Text('৯৯',
+              style: GoogleFonts.poppins(
+                fontSize: 11,
+                color: tc.gold,
+                fontWeight: FontWeight.w700,
+              )),
+          ),
+        ],
       ),
+      centerTitle: false,
+      titleSpacing: 0,
     );
   }
 
@@ -678,81 +665,58 @@ class _DetailPageState extends State<_DetailPage> with TickerProviderStateMixin 
           slivers: [
             // ── hero header ──────────────────────────────────────────────────
             SliverAppBar(
-              expandedHeight: 250,
+              expandedHeight: 0,
               pinned: true,
-              backgroundColor: tc.bg,
+              backgroundColor: tc.headerGrad[0],
               elevation: 0,
               leading: IconButton(
-                icon: Icon(Icons.arrow_back_ios_new_rounded,
-                    color: isDark ? tc.gold : Colors.white),
+                icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
                 onPressed: () => Navigator.pop(context),
               ),
-              flexibleSpace: FlexibleSpaceBar(
-                collapseMode: CollapseMode.parallax,
-                background: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: tc.headerGrad,
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter)),
-                  child: Stack(children: [
-                    Positioned(top: -40, right: -40,
-                      child: Container(width: 160, height: 160,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.05)))),
-                    Positioned(bottom: -30, left: -30,
-                      child: Container(width: 120, height: 120,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: tc.gold.withValues(alpha: 0.07)))),
-                    Center(child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const SizedBox(height: 50),
-                        AnimatedBuilder(
-                          animation: _pulseCtrl,
-                          builder: (_, __) {
-                            final s = isThis && _isPlaying
-                                ? 1.0 + _pulseCtrl.value * 0.06 : 1.0;
-                            return Transform.scale(
-                              scale: s,
-                              child: Container(
-                                width: 60, height: 60,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  gradient: LinearGradient(
-                                    colors: [tc.gold, tc.goldLight]),
-                                  boxShadow: [BoxShadow(
-                                    color: tc.gold.withValues(alpha: 0.4),
-                                    blurRadius: 20)]),
-                                child: Center(child: Text('$num',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 20, fontWeight: FontWeight.bold,
-                                    color: Colors.white)))));
-                          }),
-                        const SizedBox(height: 12),
-                        Text(ar,
-                          style: GoogleFonts.amiri(
-                            fontSize: 36, color: tc.gold,
-                            fontWeight: FontWeight.bold,
-                            shadows: [Shadow(
-                              color: tc.gold.withValues(alpha: 0.4),
-                              blurRadius: 14)])),
-                        const SizedBox(height: 6),
-                        Text(tr,
-                          style: GoogleFonts.poppins(
-                            fontSize: 13, color: Colors.white.withValues(alpha: 0.8),
-                            fontStyle: FontStyle.italic, letterSpacing: 0.5)),
-                      ],
-                    )),
-                  ]),
-                ),
-                title: Text(ar,
-                  style: GoogleFonts.amiri(
-                    color: tc.gold, fontSize: 20, fontWeight: FontWeight.bold)),
-                centerTitle: true,
+              title: Row(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Number badge
+                  AnimatedBuilder(
+                    animation: _pulseCtrl,
+                    builder: (_, __) {
+                      final s = isThis && _isPlaying
+                          ? 1.0 + _pulseCtrl.value * 0.08 : 1.0;
+                      return Transform.scale(
+                        scale: s,
+                        child: Container(
+                          width: 28, height: 28,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              colors: [tc.gold, tc.goldLight])),
+                          child: Center(child: Text('$num',
+                            style: GoogleFonts.poppins(
+                              fontSize: 11, fontWeight: FontWeight.bold,
+                              color: Colors.white)))));
+                    }),
+                  const SizedBox(width: 8),
+                  // Arabic name
+                  Text(ar,
+                    style: GoogleFonts.amiri(
+                      fontSize: 20, color: tc.gold,
+                      fontWeight: FontWeight.bold)),
+                  const SizedBox(width: 8),
+                  Container(width: 1.2, height: 16, color: Colors.white30),
+                  const SizedBox(width: 8),
+                  // Transliteration
+                  Flexible(
+                    child: Text(tr,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.poppins(
+                        fontSize: 12, color: Colors.white70,
+                        fontStyle: FontStyle.italic))),
+                ],
               ),
+              centerTitle: false,
+              titleSpacing: 0,
             ),
 
             // ── body ─────────────────────────────────────────────────────────

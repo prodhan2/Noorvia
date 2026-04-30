@@ -41,14 +41,12 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final audio = context.read<AudioProvider>();
 
-      // Called when a verse finishes playing
       audio.onAutoPlayNext = (nextVerseId) {
         if (!mounted) return;
         if (surahData == null) return;
         final verses = surahData!['verses'] as List;
 
         if (nextVerseId <= verses.length) {
-          // ── Next verse in same surah ──────────────────────
           final verse = verses[nextVerseId - 1];
           audio.playVerse(
             surahId: _surahId,
@@ -58,18 +56,16 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
           );
           _scrollTo(nextVerseId);
         } else {
-          // ── Last verse done → open next surah ────────────
           _goToNextSurah();
         }
       };
     });
   }
 
-  // ── Navigate to next surah ────────────────────────────────
   Future<void> _goToNextSurah() async {
     if (!mounted) return;
     final nextId = _surahId + 1;
-    if (nextId > 114) return; // no surah after 114
+    if (nextId > 114) return;
 
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -95,7 +91,6 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
   @override
   void dispose() {
     _scroll.dispose();
-    // Clear auto-play callback when leaving page
     final audio = context.read<AudioProvider>();
     if (audio.onAutoPlayNext != null) audio.onAutoPlayNext = null;
     super.dispose();
@@ -112,7 +107,6 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
         surahData = cached;
         isLoading = false;
       });
-      // Auto-play first verse on open
       _autoPlayFirst();
     }
     try {
@@ -142,7 +136,6 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
     if (verses.isEmpty) return;
     final first = verses[0];
     final audio = context.read<AudioProvider>();
-    // Only auto-play if nothing is currently playing
     if (!audio.isPlaying) {
       audio.playVerse(
         surahId: _surahId,
@@ -218,7 +211,6 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
     return '${p(d.inMinutes.remainder(60))}:${p(d.inSeconds.remainder(60))}';
   }
 
-  // ── Settings bottom sheet ─────────────────────────────────
   void _showSettings(AudioProvider audio) {
     showModalBottomSheet(
       context: context,
@@ -262,81 +254,40 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF2F2F2),
       body: NestedScrollView(
-        headerSliverBuilder: (_, __) => [
+        headerSliverBuilder: (_, innerBoxIsScrolled) => [
           SliverAppBar(
-            expandedHeight: 170,
+            expandedHeight: 0,
+            collapsedHeight: kToolbarHeight,
+            toolbarHeight: kToolbarHeight,
             pinned: true,
             snap: false,
             floating: false,
+            forceElevated: innerBoxIsScrolled,
             backgroundColor: _kPrimary,
+            automaticallyImplyLeading: false,
+
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new,
                   color: Colors.white, size: 20),
               onPressed: () => Navigator.pop(context),
             ),
+
+            title: _CollapsedTitle(
+              arabic: widget.surahInfo['name'] ?? '',
+              bangla: name,
+              translit: translit,
+              totalVerses: '$totalVerses',
+            ),
+            centerTitle: false,
+            titleSpacing: 4,
+
             actions: [
-              // Font size
               IconButton(
-                icon: const Icon(Icons.text_decrease, color: Colors.white, size: 20),
-                onPressed: () {
-                  audio.arabicSize = (audio.arabicSize - 2).clamp(18, 40);
-                  audio.notifyListeners();
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.text_increase, color: Colors.white, size: 20),
-                onPressed: () {
-                  audio.arabicSize = (audio.arabicSize + 2).clamp(18, 40);
-                  audio.notifyListeners();
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.settings_outlined, color: Colors.white, size: 20),
+                icon: const Icon(Icons.settings_outlined,
+                    color: Colors.white, size: 20),
                 onPressed: () => _showSettings(audio),
               ),
             ],
-            flexibleSpace: FlexibleSpaceBar(
-              collapseMode: CollapseMode.pin,
-              background: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [_kPrimaryDark, _kPrimaryLight],
-                  ),
-                ),
-                child: SafeArea(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 44),
-                      Text(
-                        widget.surahInfo['name'] ?? '',
-                        style: const TextStyle(
-                            fontSize: 30,
-                            color: Colors.white,
-                            fontFamily: 'serif',
-                            fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(name,
-                          style: GoogleFonts.hindSiliguri(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white)),
-                      const SizedBox(height: 6),
-                      Wrap(
-                        spacing: 8,
-                        children: [
-                          if (translit.isNotEmpty) _pill(translit),
-                          _pill('$totalVerses আয়াত'),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
           ),
         ],
         body: isLoading
@@ -366,7 +317,9 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
                       ],
                     ),
                   )
-                : ListView.builder(
+                : _PinchFontScaler(
+                    audio: audio,
+                    child: ListView.builder(
                     controller: _scroll,
                     padding: const EdgeInsets.fromLTRB(12, 8, 12, 100),
                     itemCount: (surahData!['verses'] as List).length,
@@ -402,6 +355,7 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
                       );
                     },
                   ),
+                ),
       ),
     );
   }
@@ -743,6 +697,126 @@ class _VerseCard extends StatelessWidget {
             const SizedBox(height: 12),
         ],
       ),
+    );
+  }
+}
+
+// ─── Pinch-to-zoom font scaler ───────────────────────────────
+class _PinchFontScaler extends StatefulWidget {
+  final AudioProvider audio;
+  final Widget child;
+  const _PinchFontScaler({required this.audio, required this.child});
+
+  @override
+  State<_PinchFontScaler> createState() => _PinchFontScalerState();
+}
+
+class _PinchFontScalerState extends State<_PinchFontScaler> {
+  double _baseSize = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onScaleStart: (_) => _baseSize = widget.audio.arabicSize,
+      onScaleUpdate: (details) {
+        if (details.pointerCount < 2) return;
+        final newSize = (_baseSize * details.scale).clamp(18.0, 40.0);
+        widget.audio.arabicSize = newSize;
+        widget.audio.notifyListeners();
+      },
+      child: widget.child,
+    );
+  }
+}
+
+// ─── Collapsed app-bar title ──────────────────────────────────
+// ✅ সব টেক্সট এক লাইনে, স্মুথ ট্রানজিশন
+class _CollapsedTitle extends StatelessWidget {
+  final String arabic;
+  final String bangla;
+  final String translit;
+  final String totalVerses;
+
+  const _CollapsedTitle({
+    required this.arabic,
+    required this.bangla,
+    required this.translit,
+    required this.totalVerses,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // Arabic name
+        Text(
+          arabic,
+          style: const TextStyle(
+            fontSize: 15,
+            color: Colors.white,
+            fontFamily: 'serif',
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(width: 5),
+
+        // Divider
+        Container(width: 1, height: 14, color: Colors.white38),
+        const SizedBox(width: 5),
+
+        // Bangla name
+        Flexible(
+          child: Text(
+            bangla,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.hindSiliguri(
+              fontSize: 13,
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+
+        if (translit.isNotEmpty) ...[
+          const SizedBox(width: 4),
+          Container(width: 1, height: 14, color: Colors.white38),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              translit,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.poppins(
+                fontSize: 11,
+                color: Colors.white70,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
+        ],
+
+        const SizedBox(width: 6),
+
+        // Verse count pill
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Text(
+            '$totalVerses আয়াত',
+            style: GoogleFonts.hindSiliguri(
+              fontSize: 10,
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

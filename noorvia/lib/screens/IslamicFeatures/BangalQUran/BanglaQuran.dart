@@ -11,6 +11,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../../widgets/shimmer.dart';
 
+
 // ─── App colors (matches Noorvia theme) ──────────────────────
 const _kPrimary = Color(0xFF1B6B3A);
 const _kPrimaryDark = Color(0xFF0F4D2A);
@@ -385,7 +386,7 @@ class _SurahListPageState extends State<SurahListPage>
 
   Widget _buildSliverAppBar() {
     return SliverAppBar(
-      expandedHeight: 160,
+      expandedHeight: 0,
       pinned: true,
       backgroundColor: _kPrimary,
       leading: Navigator.canPop(context)
@@ -395,14 +396,35 @@ class _SurahListPageState extends State<SurahListPage>
               onPressed: () => Navigator.pop(context),
             )
           : null,
+      title: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const Text('📖', style: TextStyle(fontSize: 18)),
+          const SizedBox(width: 8),
+          Text('পবিত্র কুরআন',
+              style: GoogleFonts.hindSiliguri(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white)),
+          const SizedBox(width: 8),
+          Container(width: 1.2, height: 16, color: Colors.white30),
+          const SizedBox(width: 8),
+          Text('বাংলা অনুবাদ ও তিলাওয়াত',
+              style: GoogleFonts.hindSiliguri(
+                  fontSize: 11, color: Colors.white70)),
+        ],
+      ),
+      centerTitle: false,
+      titleSpacing: 4,
       actions: [
         IconButton(
-          icon: const Icon(Icons.refresh, color: Colors.white),
+          icon: const Icon(Icons.refresh, color: Colors.white, size: 20),
           onPressed: _refresh,
           tooltip: 'রিফ্রেশ',
         ),
         IconButton(
-          icon: const Icon(Icons.favorite_border, color: Colors.white),
+          icon: const Icon(Icons.favorite_border, color: Colors.white, size: 20),
           tooltip: 'পছন্দের সূরা',
           onPressed: () async {
             await Navigator.push(context,
@@ -411,35 +433,6 @@ class _SurahListPageState extends State<SurahListPage>
           },
         ),
       ],
-      flexibleSpace: FlexibleSpaceBar(
-        background: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [_kPrimaryDark, _kPrimaryLight],
-            ),
-          ),
-          child: SafeArea(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text('📖', style: TextStyle(fontSize: 34)),
-                const SizedBox(height: 6),
-                Text('পবিত্র কুরআন',
-                    style: GoogleFonts.hindSiliguri(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white)),
-                const SizedBox(height: 2),
-                Text('বাংলা অনুবাদ ও তিলাওয়াত',
-                    style: GoogleFonts.hindSiliguri(
-                        fontSize: 12, color: Colors.white70)),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

@@ -96,19 +96,19 @@ class _QiblaDirectionPageState extends State<QiblaDirectionPage>
   }
 
   double _bearing(double lat, double lng) {
-    final φ1 = _r(lat), φ2 = _r(_kaabaLat);
-    final Δλ = _r(_kaabaLng - lng);
-    final y = math.sin(Δλ) * math.cos(φ2);
-    final x = math.cos(φ1) * math.sin(φ2) - math.sin(φ1) * math.cos(φ2) * math.cos(Δλ);
+    final phi1 = _r(lat), phi2 = _r(_kaabaLat);
+    final dLng = _r(_kaabaLng - lng);
+    final y = math.sin(dLng) * math.cos(phi2);
+    final x = math.cos(phi1) * math.sin(phi2) - math.sin(phi1) * math.cos(phi2) * math.cos(dLng);
     return (_d(math.atan2(y, x)) + 360) % 360;
   }
 
   double _haversine(double lat, double lng) {
     const R = 6371.0;
-    final φ1 = _r(lat), φ2 = _r(_kaabaLat);
-    final Δφ = _r(_kaabaLat - lat), Δλ = _r(_kaabaLng - lng);
-    final a = math.sin(Δφ/2)*math.sin(Δφ/2) +
-              math.cos(φ1)*math.cos(φ2)*math.sin(Δλ/2)*math.sin(Δλ/2);
+    final phi1 = _r(lat), phi2 = _r(_kaabaLat);
+    final dLat = _r(_kaabaLat - lat), dLng = _r(_kaabaLng - lng);
+    final a = math.sin(dLat/2)*math.sin(dLat/2) +
+              math.cos(phi1)*math.cos(phi2)*math.sin(dLng/2)*math.sin(dLng/2);
     return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1-a));
   }
 
@@ -602,7 +602,6 @@ class _QiblaDirectionPageState extends State<QiblaDirectionPage>
     );
   }
 
-  double _r(double d) => d * math.pi / 180;
 }
 
 // ── Compass ring painter ─────────────────────────────────────
