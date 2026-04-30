@@ -12,7 +12,7 @@ import '../core/providers/theme_provider.dart';
 import '../core/providers/nav_provider.dart';
 import '../core/providers/prayer_provider.dart';
 import '../core/config/app_routes.dart';
-import '../widgets/location_picker.dart';
+import 'location/location_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -136,9 +136,12 @@ class _NoorviaAppBar extends StatelessWidget implements PreferredSizeWidget {
 
           const Spacer(),
 
-          // ── Location pill (tap → picker) ───────────────────
+          // ── Location pill (tap → LocationScreen) ──────────
           GestureDetector(
-            onTap: () => showLocationPicker(context),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const LocationScreen()),
+            ),
             child: _Pill(
               color: isDark ? AppColors.darkCard : Colors.black87,
               child: Row(

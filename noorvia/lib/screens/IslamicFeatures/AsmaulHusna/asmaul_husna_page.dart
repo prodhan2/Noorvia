@@ -4,1100 +4,949 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/providers/theme_provider.dart';
 
-// ─── Model ───────────────────────────────────────────────────────────────────
-class AsmaulHusnaItem {
-  final int number;
-  final String arabic;
-  final String transliteration;
-  final String banglaName;
-  final String banglaMeaning;
-  final String banglaDetails;
-  final String englishName;
-  final String englishMeaning;
-  final String audioUrl;
+// ─── Theme-aware colour helper ────────────────────────────────────────────────
+class _TC {
+  final bool isDark;
+  const _TC(this.isDark);
 
-  const AsmaulHusnaItem({
-    required this.number,
-    required this.arabic,
-    required this.transliteration,
-    required this.banglaName,
-    required this.banglaMeaning,
-    required this.banglaDetails,
-    required this.englishName,
-    required this.englishMeaning,
-    required this.audioUrl,
-  });
+  // backgrounds
+  Color get bg     => isDark ? AppColors.darkBg   : AppColors.lightBg;
+  Color get card   => isDark ? AppColors.darkCard  : AppColors.lightCard;
+  Color get card2  => isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF8F8F8);
 
-  factory AsmaulHusnaItem.fromJson(Map<String, dynamic> j) {
-    final bangla = j['translations']?['bangla'] ?? {};
-    final english = j['translations']?['english'] ?? {};
-    return AsmaulHusnaItem(
-      number: j['number'] ?? 0,
-      arabic: j['name']?['arabic'] ?? '',
-      transliteration: j['name']?['transliteration'] ?? '',
-      banglaName: bangla['name'] ?? '',
-      banglaMeaning: bangla['meaning'] ?? '',
-      banglaDetails: bangla['details'] ?? '',
-      englishName: english['name'] ?? '',
-      englishMeaning: english['meaning'] ?? '',
-      audioUrl: j['audio_url'] ?? '',
-    );
+  // text
+  Color get text   => isDark ? AppColors.darkText    : AppColors.lightText;
+  Color get sub    => isDark ? AppColors.darkSubText  : AppColors.lightSubText;
+
+  // accents (same in both modes)
+  Color get gold      => const Color(0xFFD4AF37);
+  Color get goldLight => const Color(0xFFF0D060);
+  Color get teal      => const Color(0xFF00BFA5);
+  Color get tealDark  => const Color(0xFF00897B);
+  Color get primary   => AppColors.primary;
+
+  // divider
+  Color get divider => isDark ? const Color(0xFF2A3F58) : const Color(0xFFE0E0E0);
+
+  // header gradient
+  List<Color> get headerGrad => isDark
+      ? [const Color(0xFF0D1B2A), const Color(0xFF1A3A5C), const Color(0xFF0D2B3E)]
+      : [const Color(0xFF1B6B3A), const Color(0xFF2E8B57), const Color(0xFF0F4D2A)];
+
+  // card shadow
+  List<BoxShadow> get cardShadow => [
+    BoxShadow(
+      color: isDark
+          ? Colors.black.withValues(alpha: 0.3)
+          : Colors.black.withValues(alpha: 0.06),
+      blurRadius: 8, offset: const Offset(0, 2)),
+  ];
+}
+
+// ─── Language model ───────────────────────────────────────────────────────────
+enum _Lang { english, bangla, urdu, indonesian }
+
+extension _LangExt on _Lang {
+  String get label {
+    switch (this) {
+      case _Lang.english:    return 'EN';
+      case _Lang.bangla:     return 'বাং';
+      case _Lang.urdu:       return 'اردو';
+      case _Lang.indonesian: return 'ID';
+    }
+  }
+  String get key {
+    switch (this) {
+      case _Lang.english:    return 'english';
+      case _Lang.bangla:     return 'bangla';
+      case _Lang.urdu:       return 'urdu';
+      case _Lang.indonesian: return 'indonesian';
+    }
   }
 }
 
-// ─── Color palette for cards (cycles through 99 names) ───────────────────────
-const List<Color> _kCardColors = [
-  Color(0xFF1B6B3A), Color(0xFF1565C0), Color(0xFF6A1B9A), Color(0xFFE65100),
-  Color(0xFF00838F), Color(0xFFAD1457), Color(0xFF2E7D32), Color(0xFF4527A0),
-  Color(0xFF00695C), Color(0xFF558B2F), Color(0xFF4E342E), Color(0xFF37474F),
-];
-
-Color _colorFor(int index) => _kCardColors[index % _kCardColors.length];
-
-// ─── Main Page ────────────────────────────────────────────────────────────────
+// ─── Main page ────────────────────────────────────────────────────────────────
 class AsmaulHusnaPage extends StatefulWidget {
   const AsmaulHusnaPage({super.key});
-
   @override
   State<AsmaulHusnaPage> createState() => _AsmaulHusnaPageState();
 }
 
 class _AsmaulHusnaPageState extends State<AsmaulHusnaPage>
-    with SingleTickerProviderStateMixin {
-  static const _apiUrl =
-      'https://raw.githubusercontent.com/eiaserbd/asmaul-husna-api/main/data/asmaul-husna.json';
-
-  List<AsmaulHusnaItem> _all = [];
-  List<AsmaulHusnaItem> _filtered = [];
+    with TickerProviderStateMixin {
+  List _all   = [];
+  List _shown = [];
   bool _loading = true;
-  String? _error;
-  String _query = '';
-  Set<int> _favorites = {};
+  bool _error   = false;
 
-  late TabController _tabCtrl;
-  final TextEditingController _searchCtrl = TextEditingController();
-  final AudioPlayer _audio = AudioPlayer();
-  int? _playingIndex;
-  bool _isPlaying = false;
+  final _player     = AudioPlayer();
+  String? _playingUrl;
+  bool    _isPlaying = false;
+
+  _Lang _lang = _Lang.bangla;
+  final _searchCtrl = TextEditingController();
+  bool  _searching  = false;
+
+  late AnimationController _pulseCtrl;
 
   @override
   void initState() {
     super.initState();
-    _tabCtrl = TabController(length: 2, vsync: this);
-    _loadFavorites();
-    _fetchData();
-    _audio.onPlayerStateChanged.listen((s) {
+    _pulseCtrl = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 900))
+      ..repeat(reverse: true);
+
+    _player.onPlayerStateChanged.listen((s) {
       if (mounted) setState(() => _isPlaying = s == PlayerState.playing);
     });
-    _audio.onPlayerComplete.listen((_) {
-      if (mounted) setState(() { _playingIndex = null; _isPlaying = false; });
+    _player.onPlayerComplete.listen((_) {
+      if (mounted) setState(() { _playingUrl = null; _isPlaying = false; });
     });
+    _fetchData();
   }
 
   @override
   void dispose() {
-    _tabCtrl.dispose();
+    _pulseCtrl.dispose();
+    _player.dispose();
     _searchCtrl.dispose();
-    _audio.dispose();
     super.dispose();
   }
 
-  // ── Data ──────────────────────────────────────────────────
   Future<void> _fetchData() async {
+    setState(() { _loading = true; _error = false; });
     try {
-      final res = await http.get(Uri.parse(_apiUrl));
+      final res = await http.get(Uri.parse(
+        'https://raw.githubusercontent.com/prodhan2/App_Backend_Data/main/MyApi/asmaul-husna.json',
+      )).timeout(const Duration(seconds: 15));
       if (res.statusCode == 200) {
-        final json = jsonDecode(res.body);
-        final list = (json['asmaul_husna'] as List)
-            .map((e) => AsmaulHusnaItem.fromJson(e))
-            .toList();
-        setState(() { _all = list; _filtered = list; _loading = false; });
+        final d = json.decode(res.body)['asmaul_husna'] as List;
+        setState(() { _all = d; _shown = d; _loading = false; });
       } else {
-        setState(() { _error = 'ডেটা লোড ব্যর্থ (${res.statusCode})'; _loading = false; });
+        setState(() { _loading = false; _error = true; });
       }
-    } catch (e) {
-      setState(() { _error = 'ইন্টারনেট সংযোগ নেই'; _loading = false; });
+    } catch (_) {
+      setState(() { _loading = false; _error = true; });
     }
   }
 
-  void _search(String q) {
+  void _onSearch(String q) {
+    final lq = q.toLowerCase();
     setState(() {
-      _query = q;
-      if (q.isEmpty) {
-        _filtered = _all;
-      } else {
-        _filtered = _all.where((item) =>
-          item.arabic.contains(q) ||
-          item.transliteration.toLowerCase().contains(q.toLowerCase()) ||
-          item.banglaName.contains(q) ||
-          item.englishName.toLowerCase().contains(q.toLowerCase()) ||
-          item.number.toString() == q,
-        ).toList();
-      }
+      _shown = q.isEmpty
+          ? _all
+          : _all.where((e) {
+              final ar = (e['name']['arabic'] ?? '').toLowerCase();
+              final tr = (e['name']['transliteration'] ?? '').toLowerCase();
+              final nm = (e['translations'][_lang.key]?['name'] ?? '').toLowerCase();
+              return ar.contains(lq) || tr.contains(lq) || nm.contains(lq);
+            }).toList();
     });
   }
 
-  // ── Favorites ─────────────────────────────────────────────
-  Future<void> _loadFavorites() async {
-    final prefs = await SharedPreferences.getInstance();
-    final list = prefs.getStringList('asmaul_husna_favs') ?? [];
-    setState(() => _favorites = list.map(int.parse).toSet());
-  }
-
-  Future<void> _toggleFavorite(int number) async {
-    setState(() {
-      if (_favorites.contains(number)) {
-        _favorites.remove(number);
-      } else {
-        _favorites.add(number);
-      }
-    });
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList('asmaul_husna_favs', _favorites.map((e) => e.toString()).toList());
-  }
-
-  // ── Audio ─────────────────────────────────────────────────
-  Future<void> _toggleAudio(int index, String url) async {
-    try {
-      // Same track — pause/resume
-      if (_playingIndex == index) {
-        if (_isPlaying) {
-          await _audio.pause();
-          if (mounted) setState(() => _isPlaying = false);
-        } else {
-          await _audio.resume();
-          if (mounted) setState(() => _isPlaying = true);
-        }
-        return;
-      }
-
-      // New track — stop previous, play new
-      await _audio.stop();
-      if (mounted) setState(() { _playingIndex = index; _isPlaying = false; });
-
-      await _audio.play(UrlSource(url));
-      if (mounted) setState(() => _isPlaying = true);
-
-    } catch (e) {
-      if (mounted) {
-        setState(() { _playingIndex = null; _isPlaying = false; });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('অডিও চালাতে সমস্যা হয়েছে', style: GoogleFonts.hindSiliguri()),
-            backgroundColor: Colors.red[700],
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      }
+  Future<void> _toggleAudio(String url) async {
+    HapticFeedback.lightImpact();
+    if (_playingUrl == url && _isPlaying) {
+      await _player.pause();
+    } else if (_playingUrl == url && !_isPlaying) {
+      await _player.resume();
+    } else {
+      await _player.stop();
+      setState(() { _playingUrl = url; _isPlaying = false; });
+      await _player.play(UrlSource(url));
     }
   }
 
-  // ── Build ─────────────────────────────────────────────────
+  void _openDetail(Map item, _TC tc) {
+    Navigator.push(context, PageRouteBuilder(
+      pageBuilder: (_, a, __) => _DetailPage(
+        item: item, lang: _lang,
+        player: _player,
+        playingUrl: _playingUrl,
+        isPlaying: _isPlaying,
+        onToggle: _toggleAudio,
+      ),
+      transitionsBuilder: (_, a, __, child) => SlideTransition(
+        position: Tween(begin: const Offset(1, 0), end: Offset.zero)
+            .animate(CurvedAnimation(parent: a, curve: Curves.easeOutCubic)),
+        child: child,
+      ),
+    ));
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? AppColors.darkBg : AppColors.lightBg;
-    final textColor = isDark ? AppColors.darkText : AppColors.lightText;
-    final cardBg = isDark ? AppColors.darkCard : Colors.white;
+    final isDark = context.watch<ThemeProvider>().isDark;
+    final tc = _TC(isDark);
 
     return Scaffold(
-      backgroundColor: bg,
+      backgroundColor: tc.bg,
       body: NestedScrollView(
-        headerSliverBuilder: (_, __) => [
-          SliverAppBar(
-            expandedHeight: 160,
-            floating: false,
-            pinned: true,
-            backgroundColor: AppColors.primary,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
-              onPressed: () => Navigator.maybePop(context),
+        headerSliverBuilder: (_, __) => [_buildSliverAppBar(tc)],
+        body: _loading
+            ? _buildLoader(tc)
+            : _error
+                ? _buildError(tc)
+                : Column(children: [
+                    _buildSearchBar(tc),
+                    _buildLangBar(tc),
+                    Expanded(child: _buildList(tc)),
+                  ]),
+      ),
+    );
+  }
+
+  // ── sliver app bar ─────────────────────────────────────────────────────────
+  Widget _buildSliverAppBar(_TC tc) {
+    return SliverAppBar(
+      expandedHeight: 180,
+      pinned: true,
+      backgroundColor: tc.bg,
+      elevation: 0,
+      leading: IconButton(
+        icon: Icon(Icons.arrow_back_ios_new_rounded,
+            color: tc.isDark ? tc.gold : Colors.white),
+        onPressed: () => Navigator.maybePop(context),
+      ),
+      flexibleSpace: FlexibleSpaceBar(
+        collapseMode: CollapseMode.parallax,
+        background: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: tc.headerGrad,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [AppColors.primaryDark, AppColors.primaryLight],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: SafeArea(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 32),
-                      Text(
-                        'أَسْمَاءُ اللّٰهِ الْحُسْنَى',
-                        style: const TextStyle(
-                          fontSize: 28,
-                          color: Colors.white,
-                          height: 1.6,
-                          fontWeight: FontWeight.w300,
-                        ),
-                        textDirection: TextDirection.rtl,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'আল্লাহর ৯৯টি সুন্দর নাম',
-                        style: GoogleFonts.hindSiliguri(
-                          fontSize: 16,
-                          color: Colors.white.withValues(alpha: 0.9),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              title: Text(
-                'আসমাউল হুসনা',
-                style: GoogleFonts.hindSiliguri(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
-              ),
-              centerTitle: true,
-            ),
-            bottom: TabBar(
-              controller: _tabCtrl,
-              indicatorColor: Colors.white,
-              indicatorWeight: 3,
-              labelColor: Colors.white,
-              unselectedLabelColor: Colors.white60,
-              labelStyle: GoogleFonts.hindSiliguri(fontSize: 13, fontWeight: FontWeight.w700),
-              tabs: const [
-                Tab(text: 'সকল নাম'),
-                Tab(text: 'প্রিয় নাম'),
+          ),
+          child: Stack(children: [
+            Positioned(top: -30, right: -30,
+              child: Container(width: 120, height: 120,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.06)))),
+            Positioned(bottom: -20, left: -20,
+              child: Container(width: 90, height: 90,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: tc.gold.withValues(alpha: 0.08)))),
+            Center(child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(height: 40),
+                Text('اَلْأَسْمَاءُ الْحُسْنَىٰ',
+                  style: GoogleFonts.amiri(
+                    fontSize: 30, color: tc.gold,
+                    fontWeight: FontWeight.bold,
+                    shadows: [Shadow(color: tc.gold.withValues(alpha: 0.4), blurRadius: 12)],
+                  )),
+                const SizedBox(height: 6),
+                Text('আল্লাহর ৯৯ নাম',
+                  style: GoogleFonts.hindSiliguri(
+                    fontSize: 15, color: Colors.white.withValues(alpha: 0.9),
+                    fontWeight: FontWeight.w600)),
+                const SizedBox(height: 3),
+                Text('99 Beautiful Names of Allah',
+                  style: GoogleFonts.poppins(
+                    fontSize: 11, color: Colors.white.withValues(alpha: 0.6),
+                    letterSpacing: 0.5)),
               ],
-            ),
-          ),
-        ],
-        body: Column(
-          children: [
-            // Search bar
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              child: TextField(
-                controller: _searchCtrl,
-                onChanged: _search,
-                style: GoogleFonts.hindSiliguri(color: textColor),
-                decoration: InputDecoration(
-                  hintText: 'নাম, অর্থ বা নম্বর দিয়ে খুঁজুন...',
-                  hintStyle: GoogleFonts.hindSiliguri(
-                    color: isDark ? AppColors.darkSubText : AppColors.lightSubText,
-                    fontSize: 13,
-                  ),
-                  prefixIcon: Icon(Icons.search_rounded,
-                    color: isDark ? AppColors.darkSubText : AppColors.lightSubText),
-                  suffixIcon: _query.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear_rounded),
-                        onPressed: () { _searchCtrl.clear(); _search(''); },
-                      )
-                    : null,
-                  filled: true,
-                  fillColor: cardBg,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                ),
-              ),
-            ),
+            )),
+          ]),
+        ),
+        title: Text('আসমাউল হুসনা',
+          style: GoogleFonts.hindSiliguri(
+            color: tc.gold, fontWeight: FontWeight.bold, fontSize: 17)),
+        centerTitle: true,
+      ),
+    );
+  }
 
-            // Tab content
-            Expanded(
-              child: _loading
-                ? _buildLoading()
-                : _error != null
-                  ? _buildError()
-                  : TabBarView(
-                      controller: _tabCtrl,
-                      children: [
-                        _buildGrid(_filtered, isDark),
-                        _buildGrid(
-                          _all.where((e) => _favorites.contains(e.number)).toList(),
-                          isDark,
-                          emptyMsg: 'কোনো প্রিয় নাম নেই\nকার্ডে ❤️ চাপুন',
-                        ),
-                      ],
-                    ),
-            ),
-          ],
+  // ── search bar ─────────────────────────────────────────────────────────────
+  Widget _buildSearchBar(_TC tc) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          color: tc.card,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: _searching ? tc.gold.withValues(alpha: 0.5) : tc.divider,
+            width: 1.2),
+          boxShadow: _searching
+              ? [BoxShadow(color: tc.gold.withValues(alpha: 0.12), blurRadius: 12)]
+              : tc.cardShadow,
+        ),
+        child: TextField(
+          controller: _searchCtrl,
+          style: GoogleFonts.hindSiliguri(color: tc.text, fontSize: 14),
+          onChanged: _onSearch,
+          onTap: () => setState(() => _searching = true),
+          onSubmitted: (_) => setState(() => _searching = false),
+          decoration: InputDecoration(
+            hintText: 'নাম বা অর্থ খুঁজুন…',
+            hintStyle: GoogleFonts.hindSiliguri(color: tc.sub, fontSize: 14),
+            prefixIcon: Icon(Icons.search_rounded, color: tc.sub, size: 20),
+            suffixIcon: _searchCtrl.text.isNotEmpty
+                ? IconButton(
+                    icon: Icon(Icons.close_rounded, color: tc.sub, size: 18),
+                    onPressed: () {
+                      _searchCtrl.clear(); _onSearch('');
+                      setState(() => _searching = false);
+                    })
+                : null,
+            border: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(vertical: 14),
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildLoading() {
-    return GridView.builder(
-      padding: const EdgeInsets.all(16),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        childAspectRatio: 0.85,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-      ),
-      itemCount: 12,
-      itemBuilder: (_, i) => _ShimmerCard(color: _colorFor(i)),
+  // ── language bar ───────────────────────────────────────────────────────────
+  Widget _buildLangBar(_TC tc) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
+      child: Row(children: [
+        Text('ভাষা:', style: GoogleFonts.hindSiliguri(color: tc.sub, fontSize: 12)),
+        const SizedBox(width: 8),
+        ..._Lang.values.map((l) => _LangChip(
+          label: l.label, selected: _lang == l, tc: tc,
+          onTap: () => setState(() { _lang = l; _onSearch(_searchCtrl.text); }),
+        )),
+        const Spacer(),
+        Text('${_shown.length} টি নাম',
+          style: GoogleFonts.hindSiliguri(color: tc.sub, fontSize: 12)),
+      ]),
     );
   }
 
-  Widget _buildError() {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.wifi_off_rounded, size: 56, color: Colors.grey[400]),
-          const SizedBox(height: 12),
-          Text(_error!, style: GoogleFonts.hindSiliguri(fontSize: 15, color: Colors.grey)),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: () { setState(() { _loading = true; _error = null; }); _fetchData(); },
-            icon: const Icon(Icons.refresh_rounded),
-            label: Text('আবার চেষ্টা করুন', style: GoogleFonts.hindSiliguri()),
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGrid(List<AsmaulHusnaItem> items, bool isDark, {String? emptyMsg}) {
-    if (items.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.search_off_rounded, size: 56, color: Colors.grey[400]),
-            const SizedBox(height: 12),
-            Text(
-              emptyMsg ?? 'কোনো ফলাফল পাওয়া যায়নি',
-              style: GoogleFonts.hindSiliguri(fontSize: 14, color: Colors.grey),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      );
-    }
-
-    return GridView.builder(
+  // ── list ───────────────────────────────────────────────────────────────────
+  Widget _buildList(_TC tc) {
+    return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        childAspectRatio: 0.82,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-      ),
-      itemCount: items.length,
+      itemCount: _shown.length,
       itemBuilder: (_, i) {
-        final item = items[i];
-        final color = _colorFor(item.number - 1);
-        final isFav = _favorites.contains(item.number);
-        final isPlaying = _playingIndex == item.number && _isPlaying;
-
+        final item = _shown[i] as Map;
+        final url  = item['audio_url'] as String? ?? '';
+        final isThis = _playingUrl == url;
         return _NameCard(
-          item: item,
-          color: color,
-          isFav: isFav,
-          isPlaying: isPlaying,
-          onTap: () => _openDetail(item, color, isDark),
-          onFav: () => _toggleFavorite(item.number),
-          onAudio: () => _toggleAudio(item.number, item.audioUrl),
+          item: item, lang: _lang, tc: tc,
+          isPlaying: isThis && _isPlaying,
+          isPaused:  isThis && !_isPlaying && _playingUrl != null,
+          pulseCtrl: _pulseCtrl,
+          onPlay: () => _toggleAudio(url),
+          onTap:  () => _openDetail(item, tc),
         );
       },
     );
   }
 
-  void _openDetail(AsmaulHusnaItem item, Color color, bool isDark) {
-    Navigator.push(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (_, anim, __) => FadeTransition(
-          opacity: anim,
-          child: _DetailPage(
-            item: item,
-            color: color,
-            isFav: _favorites.contains(item.number),
-            onFav: () => _toggleFavorite(item.number),
-          ),
+  // ── loader / error ─────────────────────────────────────────────────────────
+  Widget _buildLoader(_TC tc) => Center(child: Column(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      SizedBox(width: 48, height: 48,
+        child: CircularProgressIndicator(
+          strokeWidth: 3,
+          valueColor: AlwaysStoppedAnimation(tc.gold))),
+      const SizedBox(height: 16),
+      Text('লোড হচ্ছে…',
+        style: GoogleFonts.hindSiliguri(color: tc.sub, fontSize: 14)),
+    ],
+  ));
+
+  Widget _buildError(_TC tc) => Center(child: Column(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Icon(Icons.wifi_off_rounded, color: tc.sub, size: 56),
+      const SizedBox(height: 12),
+      Text('ডেটা লোড হয়নি',
+        style: GoogleFonts.hindSiliguri(color: tc.text, fontSize: 16,
+            fontWeight: FontWeight.w600)),
+      const SizedBox(height: 6),
+      Text('ইন্টারনেট সংযোগ চেক করুন',
+        style: GoogleFonts.hindSiliguri(color: tc.sub, fontSize: 13)),
+      const SizedBox(height: 20),
+      ElevatedButton.icon(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: tc.teal, foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         ),
-        transitionDuration: const Duration(milliseconds: 300),
+        icon: const Icon(Icons.refresh_rounded),
+        label: Text('আবার চেষ্টা করুন',
+          style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.w600)),
+        onPressed: _fetchData,
       ),
-    );
-  }
+    ],
+  ));
 }
 
-// ─── Name Card ────────────────────────────────────────────────────────────────
-class _NameCard extends StatelessWidget {
-  final AsmaulHusnaItem item;
-  final Color color;
-  final bool isFav;
-  final bool isPlaying;
+// ─── Language chip ────────────────────────────────────────────────────────────
+class _LangChip extends StatelessWidget {
+  final String label;
+  final bool   selected;
+  final _TC    tc;
   final VoidCallback onTap;
-  final VoidCallback onFav;
-  final VoidCallback onAudio;
-
-  const _NameCard({
-    required this.item,
-    required this.color,
-    required this.isFav,
-    required this.isPlaying,
-    required this.onTap,
-    required this.onFav,
-    required this.onAudio,
-  });
+  const _LangChip({required this.label, required this.selected,
+      required this.tc, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        margin: const EdgeInsets.only(right: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [color, color.withValues(alpha: 0.75)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.3),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          color: selected ? tc.gold : tc.card,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? tc.gold : tc.divider, width: 1),
         ),
-        child: Stack(
-          children: [
-            // Number badge
-            Positioned(
-              top: 8, left: 8,
-              child: Container(
-                width: 24, height: 24,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.25),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    '${item.number}',
-                    style: const TextStyle(
-                      fontSize: 10,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-            ),
+        child: Text(label,
+          style: GoogleFonts.poppins(
+            fontSize: 11, fontWeight: FontWeight.w600,
+            color: selected ? Colors.white : tc.sub)),
+      ),
+    );
+  }
+}
 
-            // Fav button
-            Positioned(
-              top: 4, right: 4,
-              child: GestureDetector(
-                onTap: onFav,
-                child: Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: Icon(
-                    isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                    color: isFav ? Colors.red[300] : Colors.white.withValues(alpha: 0.6),
-                    size: 16,
-                  ),
-                ),
-              ),
-            ),
+// ─── Name card ────────────────────────────────────────────────────────────────
+class _NameCard extends StatelessWidget {
+  final Map  item;
+  final _Lang lang;
+  final _TC   tc;
+  final bool  isPlaying;
+  final bool  isPaused;
+  final AnimationController pulseCtrl;
+  final VoidCallback onPlay;
+  final VoidCallback onTap;
 
-            // Main content
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 32, 8, 8),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: Center(
-                      child: Text(
-                        item.arabic,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          color: Colors.white,
-                          height: 1.5,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        textAlign: TextAlign.center,
-                        textDirection: TextDirection.rtl,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    item.banglaName,
+  const _NameCard({
+    required this.item, required this.lang, required this.tc,
+    required this.isPlaying, required this.isPaused,
+    required this.pulseCtrl, required this.onPlay, required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final num     = item['number'] ?? 0;
+    final ar      = item['name']?['arabic'] ?? '';
+    final tr      = item['name']?['transliteration'] ?? '';
+    final trans   = item['translations']?[lang.key];
+    final name    = trans?['name'] ?? '';
+    final meaning = trans?['meaning'] ?? '';
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        margin: const EdgeInsets.only(bottom: 10),
+        decoration: BoxDecoration(
+          color: tc.card,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isPlaying ? tc.gold.withValues(alpha: 0.6) : tc.divider,
+            width: isPlaying ? 1.5 : 1),
+          boxShadow: isPlaying
+              ? [BoxShadow(color: tc.gold.withValues(alpha: 0.18), blurRadius: 16, spreadRadius: 1)]
+              : tc.cardShadow,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+            _NumberBadge(num: num, isPlaying: isPlaying, tc: tc, pulseCtrl: pulseCtrl),
+            const SizedBox(width: 14),
+            Expanded(child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Expanded(
+                      child: Text(ar,
+                        style: GoogleFonts.amiri(
+                          fontSize: 22, color: tc.gold,
+                          fontWeight: FontWeight.bold),
+                        textDirection: TextDirection.rtl)),
+                    const SizedBox(width: 8),
+                    Text(tr,
+                      style: GoogleFonts.poppins(
+                        fontSize: 10, color: tc.teal,
+                        fontStyle: FontStyle.italic)),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(name,
+                  style: GoogleFonts.hindSiliguri(
+                    fontSize: 14, color: tc.text,
+                    fontWeight: FontWeight.w600)),
+                if (meaning.isNotEmpty) ...[
+                  const SizedBox(height: 3),
+                  Text(meaning,
+                    maxLines: 2, overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.hindSiliguri(
-                      fontSize: 11,
-                      color: Colors.white.withValues(alpha: 0.9),
-                      fontWeight: FontWeight.w600,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    item.transliteration,
-                    style: const TextStyle(
-                      fontSize: 9,
-                      color: Colors.white60,
-                      fontStyle: FontStyle.italic,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 6),
-                  // Audio button
-                  if (item.audioUrl.isNotEmpty)
-                    GestureDetector(
-                      onTap: onAudio,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                              color: Colors.white,
-                              size: 14,
-                            ),
-                            const SizedBox(width: 2),
-                            Text(
-                              isPlaying ? 'বিরতি' : 'শুনুন',
-                              style: GoogleFonts.hindSiliguri(
-                                fontSize: 9,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                      fontSize: 11, color: tc.sub, height: 1.4)),
                 ],
-              ),
-            ),
-          ],
+              ],
+            )),
+            const SizedBox(width: 10),
+            _PlayButton(
+              isPlaying: isPlaying, isPaused: isPaused,
+              tc: tc, pulseCtrl: pulseCtrl, onTap: onPlay),
+          ]),
         ),
       ),
     );
   }
 }
 
-// ─── Detail Page ──────────────────────────────────────────────────────────────
+// ─── Number badge ─────────────────────────────────────────────────────────────
+class _NumberBadge extends StatelessWidget {
+  final int num;
+  final bool isPlaying;
+  final _TC  tc;
+  final AnimationController pulseCtrl;
+  const _NumberBadge({required this.num, required this.isPlaying,
+      required this.tc, required this.pulseCtrl});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: pulseCtrl,
+      builder: (_, __) {
+        final scale = isPlaying ? 1.0 + pulseCtrl.value * 0.08 : 1.0;
+        return Transform.scale(
+          scale: scale,
+          child: Container(
+            width: 44, height: 44,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: isPlaying
+                    ? [tc.gold, tc.goldLight]
+                    : [tc.card2, tc.divider],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight),
+              boxShadow: isPlaying
+                  ? [BoxShadow(color: tc.gold.withValues(alpha: 0.4), blurRadius: 10)]
+                  : [],
+            ),
+            child: Center(child: Text('$num',
+              style: GoogleFonts.poppins(
+                fontSize: 13, fontWeight: FontWeight.bold,
+                color: isPlaying ? Colors.white : tc.sub))),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ─── Play button ──────────────────────────────────────────────────────────────
+class _PlayButton extends StatelessWidget {
+  final bool isPlaying;
+  final bool isPaused;
+  final _TC  tc;
+  final AnimationController pulseCtrl;
+  final VoidCallback onTap;
+  const _PlayButton({required this.isPlaying, required this.isPaused,
+      required this.tc, required this.pulseCtrl, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedBuilder(
+        animation: pulseCtrl,
+        builder: (_, __) => Container(
+          width: 40, height: 40,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              colors: isPlaying
+                  ? [tc.teal, tc.tealDark]
+                  : [tc.card2, tc.divider]),
+            boxShadow: isPlaying
+                ? [BoxShadow(color: tc.teal.withValues(alpha: 0.4), blurRadius: 10)]
+                : [],
+          ),
+          child: Icon(
+            isPlaying ? Icons.pause_rounded
+                : isPaused ? Icons.play_arrow_rounded
+                : Icons.volume_up_rounded,
+            color: isPlaying ? Colors.white : tc.sub,
+            size: 20),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Detail page ──────────────────────────────────────────────────────────────
 class _DetailPage extends StatefulWidget {
-  final AsmaulHusnaItem item;
-  final Color color;
-  final bool isFav;
-  final VoidCallback onFav;
+  final Map  item;
+  final _Lang lang;
+  final AudioPlayer player;
+  final String? playingUrl;
+  final bool    isPlaying;
+  final Future<void> Function(String) onToggle;
 
   const _DetailPage({
-    required this.item,
-    required this.color,
-    required this.isFav,
-    required this.onFav,
+    required this.item, required this.lang, required this.player,
+    required this.playingUrl, required this.isPlaying, required this.onToggle,
   });
 
   @override
   State<_DetailPage> createState() => _DetailPageState();
 }
 
-class _DetailPageState extends State<_DetailPage> {
-  bool _isFav = false;
-  final AudioPlayer _audio = AudioPlayer();
-  bool _isPlaying = false;
-  bool _isLoading = false;
+class _DetailPageState extends State<_DetailPage> with TickerProviderStateMixin {
+  late _Lang _lang;
+  late AnimationController _fadeCtrl;
+  late Animation<double>   _fadeAnim;
+  late AnimationController _pulseCtrl;
+
+  String? _playingUrl;
+  bool    _isPlaying = false;
 
   @override
   void initState() {
     super.initState();
-    _isFav = widget.isFav;
-    _audio.onPlayerStateChanged.listen((s) {
-      if (mounted) {
-        setState(() {
-          _isPlaying = s == PlayerState.playing;
-          _isLoading = false;
-        });
-      }
+    _lang       = widget.lang;
+    _playingUrl = widget.playingUrl;
+    _isPlaying  = widget.isPlaying;
+
+    _fadeCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 350));
+    _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut);
+    _fadeCtrl.forward();
+
+    _pulseCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))
+      ..repeat(reverse: true);
+
+    widget.player.onPlayerStateChanged.listen((s) {
+      if (mounted) setState(() => _isPlaying = s == PlayerState.playing);
     });
-    _audio.onPlayerComplete.listen((_) {
-      if (mounted) { setState(() { _isPlaying = false; _isLoading = false; }); }
+    widget.player.onPlayerComplete.listen((_) {
+      if (mounted) setState(() { _playingUrl = null; _isPlaying = false; });
     });
   }
 
   @override
   void dispose() {
-    _audio.dispose();
+    _fadeCtrl.dispose();
+    _pulseCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _toggleAudio() async {
-    final url = widget.item.audioUrl;
-    if (url.isEmpty) return;
-    try {
-      if (_isPlaying) {
-        await _audio.pause();
-      } else if (!_isPlaying && _isLoading == false) {
-        setState(() => _isLoading = true);
-        await _audio.stop();
-        await _audio.play(UrlSource(url));
-      } else {
-        await _audio.resume();
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() { _isPlaying = false; _isLoading = false; });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('অডিও চালাতে সমস্যা হয়েছে', style: GoogleFonts.hindSiliguri()),
-            backgroundColor: Colors.red[700],
-          ),
-        );
-      }
-    }
+  Future<void> _toggle() async {
+    final url = widget.item['audio_url'] as String? ?? '';
+    setState(() => _playingUrl = url);
+    await widget.onToggle(url);
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? AppColors.darkBg : AppColors.lightBg;
-    final cardBg = isDark ? AppColors.darkCard : Colors.white;
-    final textColor = isDark ? AppColors.darkText : AppColors.lightText;
-    final subColor = isDark ? AppColors.darkSubText : AppColors.lightSubText;
-    final color = widget.color;
+    final isDark = context.watch<ThemeProvider>().isDark;
+    final tc     = _TC(isDark);
+
+    final item    = widget.item;
+    final num     = item['number'] ?? 0;
+    final ar      = item['name']?['arabic'] ?? '';
+    final tr      = item['name']?['transliteration'] ?? '';
+    final url     = item['audio_url'] as String? ?? '';
+    final isThis  = _playingUrl == url;
+    final trans   = item['translations']?[_lang.key] as Map? ?? {};
+    final name    = trans['name']    ?? '';
+    final meaning = trans['meaning'] ?? '';
+    final details = trans['details'] ?? '';
 
     return Scaffold(
-      backgroundColor: bg,
-      body: CustomScrollView(
-        slivers: [
-          // Hero header
-          SliverAppBar(
-            expandedHeight: 260,
-            pinned: true,
-            backgroundColor: color,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
-              onPressed: () => Navigator.pop(context),
-            ),
-            actions: [
-              IconButton(
-                icon: Icon(
-                  _isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                  color: _isFav ? Colors.red[300] : Colors.white,
-                ),
-                onPressed: () {
-                  setState(() => _isFav = !_isFav);
-                  widget.onFav();
-                },
+      backgroundColor: tc.bg,
+      body: FadeTransition(
+        opacity: _fadeAnim,
+        child: CustomScrollView(
+          slivers: [
+            // ── hero header ──────────────────────────────────────────────────
+            SliverAppBar(
+              expandedHeight: 250,
+              pinned: true,
+              backgroundColor: tc.bg,
+              elevation: 0,
+              leading: IconButton(
+                icon: Icon(Icons.arrow_back_ios_new_rounded,
+                    color: isDark ? tc.gold : Colors.white),
+                onPressed: () => Navigator.pop(context),
               ),
-              IconButton(
-                icon: const Icon(Icons.copy_rounded, color: Colors.white, size: 20),
-                onPressed: () {
-                  Clipboard.setData(ClipboardData(
-                    text: '${widget.item.arabic}\n${widget.item.transliteration}\n${widget.item.banglaName}: ${widget.item.banglaMeaning}',
-                  ));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('কপি হয়েছে', style: GoogleFonts.hindSiliguri()),
-                      backgroundColor: color,
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                },
-              ),
-            ],
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      color.withValues(alpha: 0.9),
-                      color,
-                      color.withValues(alpha: 0.8),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: SafeArea(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 40),
-                      // Number circle
-                      Container(
-                        width: 44, height: 44,
+              flexibleSpace: FlexibleSpaceBar(
+                collapseMode: CollapseMode.parallax,
+                background: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: tc.headerGrad,
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter)),
+                  child: Stack(children: [
+                    Positioned(top: -40, right: -40,
+                      child: Container(width: 160, height: 160,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.2),
-                          border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 1.5),
-                        ),
-                        child: Center(
-                          child: Text(
-                            '${widget.item.number}',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      // Arabic name
-                      Text(
-                        widget.item.arabic,
-                        style: const TextStyle(
-                          fontSize: 40,
-                          color: Colors.white,
-                          height: 1.5,
-                          fontWeight: FontWeight.w400,
-                        ),
-                        textDirection: TextDirection.rtl,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        widget.item.transliteration,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.white70,
-                          fontStyle: FontStyle.italic,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        widget.item.banglaName,
-                        style: GoogleFonts.hindSiliguri(
-                          fontSize: 18,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
+                          color: Colors.white.withValues(alpha: 0.05)))),
+                    Positioned(bottom: -30, left: -30,
+                      child: Container(width: 120, height: 120,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: tc.gold.withValues(alpha: 0.07)))),
+                    Center(child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const SizedBox(height: 50),
+                        AnimatedBuilder(
+                          animation: _pulseCtrl,
+                          builder: (_, __) {
+                            final s = isThis && _isPlaying
+                                ? 1.0 + _pulseCtrl.value * 0.06 : 1.0;
+                            return Transform.scale(
+                              scale: s,
+                              child: Container(
+                                width: 60, height: 60,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: LinearGradient(
+                                    colors: [tc.gold, tc.goldLight]),
+                                  boxShadow: [BoxShadow(
+                                    color: tc.gold.withValues(alpha: 0.4),
+                                    blurRadius: 20)]),
+                                child: Center(child: Text('$num',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 20, fontWeight: FontWeight.bold,
+                                    color: Colors.white)))));
+                          }),
+                        const SizedBox(height: 12),
+                        Text(ar,
+                          style: GoogleFonts.amiri(
+                            fontSize: 36, color: tc.gold,
+                            fontWeight: FontWeight.bold,
+                            shadows: [Shadow(
+                              color: tc.gold.withValues(alpha: 0.4),
+                              blurRadius: 14)])),
+                        const SizedBox(height: 6),
+                        Text(tr,
+                          style: GoogleFonts.poppins(
+                            fontSize: 13, color: Colors.white.withValues(alpha: 0.8),
+                            fontStyle: FontStyle.italic, letterSpacing: 0.5)),
+                      ],
+                    )),
+                  ]),
+                ),
+                title: Text(ar,
+                  style: GoogleFonts.amiri(
+                    color: tc.gold, fontSize: 20, fontWeight: FontWeight.bold)),
+                centerTitle: true,
+              ),
+            ),
+
+            // ── body ─────────────────────────────────────────────────────────
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 16),
+                    _buildDetailLangBar(tc),
+                    const SizedBox(height: 14),
+                    _buildNameAudioCard(name, url, isThis, tc),
+                    const SizedBox(height: 12),
+                    if (meaning.isNotEmpty) _buildSection(
+                      icon: Icons.auto_awesome_rounded,
+                      title: 'অর্থ / Meaning',
+                      content: meaning, tc: tc,
+                      accentColor: tc.teal),
+                    const SizedBox(height: 12),
+                    if (details.isNotEmpty) _buildDetailsCard(details, tc),
+                    const SizedBox(height: 12),
+                    _buildInfoRow('Transliteration', tr, Icons.translate_rounded, tc),
+                    const SizedBox(height: 8),
+                    _buildInfoRow('Number', '$num / 99', Icons.tag_rounded, tc),
+                  ],
                 ),
               ),
             ),
-          ),
-
-          // Content
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Audio player card
-                  if (widget.item.audioUrl.isNotEmpty)
-                    _AudioCard(
-                      color: color,
-                      isPlaying: _isPlaying,
-                      isLoading: _isLoading,
-                      onTap: _toggleAudio,
-                      isDark: isDark,
-                    ),
-
-                  const SizedBox(height: 20),
-
-                  // Bangla meaning
-                  _SectionCard(
-                    title: 'অর্থ',
-                    icon: Icons.translate_rounded,
-                    color: color,
-                    cardBg: cardBg,
-                    textColor: textColor,
-                    subColor: subColor,
-                    child: Text(
-                      widget.item.banglaMeaning,
-                      style: GoogleFonts.hindSiliguri(
-                        fontSize: 15,
-                        color: textColor,
-                        height: 1.7,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // English meaning
-                  _SectionCard(
-                    title: 'English Meaning',
-                    icon: Icons.language_rounded,
-                    color: color,
-                    cardBg: cardBg,
-                    textColor: textColor,
-                    subColor: subColor,
-                    child: Text(
-                      '${widget.item.englishName} — ${widget.item.englishMeaning}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: textColor,
-                        height: 1.6,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Details with markdown
-                  if (widget.item.banglaDetails.isNotEmpty)
-                    _SectionCard(
-                      title: 'বিস্তারিত ও ফজিলত',
-                      icon: Icons.auto_stories_rounded,
-                      color: color,
-                      cardBg: cardBg,
-                      textColor: textColor,
-                      subColor: subColor,
-                      child: MarkdownBody(
-                        data: widget.item.banglaDetails,
-                        styleSheet: MarkdownStyleSheet(
-                          p: GoogleFonts.hindSiliguri(
-                            fontSize: 14,
-                            color: textColor,
-                            height: 1.7,
-                          ),
-                          strong: GoogleFonts.hindSiliguri(
-                            fontSize: 14,
-                            color: color,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                  const SizedBox(height: 32),
-                ],
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
-}
 
-// ─── Audio Card ───────────────────────────────────────────────────────────────
-class _AudioCard extends StatelessWidget {
-  final Color color;
-  final bool isPlaying;
-  final bool isLoading;
-  final VoidCallback onTap;
-  final bool isDark;
+  Widget _buildDetailLangBar(_TC tc) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: _Lang.values.map((l) => _LangChip(
+          label: l.label, selected: _lang == l, tc: tc,
+          onTap: () => setState(() => _lang = l),
+        )).toList(),
+      ),
+    );
+  }
 
-  const _AudioCard({
-    required this.color,
-    required this.isPlaying,
-    this.isLoading = false,
-    required this.onTap,
-    required this.isDark,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cardBg = isDark ? AppColors.darkCard : Colors.white;
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: cardBg,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.15),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
+  Widget _buildNameAudioCard(String name, String url, bool isThis, _TC tc) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: tc.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isThis && _isPlaying
+              ? tc.gold.withValues(alpha: 0.5) : tc.divider),
+        boxShadow: isThis && _isPlaying
+            ? [BoxShadow(color: tc.gold.withValues(alpha: 0.15), blurRadius: 16)]
+            : tc.cardShadow,
+      ),
+      child: Row(children: [
+        Expanded(child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 52, height: 52,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [color, color.withValues(alpha: 0.7)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: color.withValues(alpha: 0.4),
-                    blurRadius: 12,
-                    spreadRadius: 1,
-                  ),
-                ],
-              ),
-              child: isLoading
-                ? const Padding(
-                    padding: EdgeInsets.all(14),
-                    child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
-                  )
-                : Icon(
-                    isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                    color: Colors.white,
-                    size: 28,
-                  ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    isLoading ? 'লোড হচ্ছে...' : isPlaying ? 'চলছে...' : 'উচ্চারণ শুনুন',
-                    style: GoogleFonts.hindSiliguri(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: color,
-                    ),
-                  ),
-                  Text(
-                    'IslamCity Audio',
-                    style: GoogleFonts.hindSiliguri(
-                      fontSize: 12,
-                      color: isDark ? AppColors.darkSubText : AppColors.lightSubText,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.volume_up_rounded,
-              color: color.withValues(alpha: 0.5),
-            ),
+            Text('নাম', style: GoogleFonts.hindSiliguri(color: tc.sub, fontSize: 11)),
+            const SizedBox(height: 4),
+            Text(name, style: GoogleFonts.hindSiliguri(
+              color: tc.text, fontSize: 18, fontWeight: FontWeight.w700)),
           ],
+        )),
+        GestureDetector(
+          onTap: _toggle,
+          child: AnimatedBuilder(
+            animation: _pulseCtrl,
+            builder: (_, __) {
+              final s = isThis && _isPlaying
+                  ? 1.0 + _pulseCtrl.value * 0.1 : 1.0;
+              return Transform.scale(
+                scale: s,
+                child: Container(
+                  width: 52, height: 52,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: isThis && _isPlaying
+                          ? [tc.teal, tc.tealDark]
+                          : [tc.gold, tc.goldLight]),
+                    boxShadow: [BoxShadow(
+                      color: (isThis && _isPlaying ? tc.teal : tc.gold)
+                          .withValues(alpha: 0.4),
+                      blurRadius: 14)]),
+                  child: Icon(
+                    isThis && _isPlaying
+                        ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                    color: Colors.white, size: 26)));
+            }),
         ),
-      ),
+      ]),
     );
   }
-}
 
-// ─── Section Card ─────────────────────────────────────────────────────────────
-class _SectionCard extends StatelessWidget {
-  final String title;
-  final IconData icon;
-  final Color color;
-  final Color cardBg;
-  final Color textColor;
-  final Color subColor;
-  final Widget child;
-
-  const _SectionCard({
-    required this.title,
-    required this.icon,
-    required this.color,
-    required this.cardBg,
-    required this.textColor,
-    required this.subColor,
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildSection({
+    required IconData icon, required String title,
+    required String content, required _TC tc, required Color accentColor,
+  }) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: cardBg,
+        color: tc.card,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        border: Border.all(color: tc.divider),
+        boxShadow: tc.cardShadow,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 32, height: 32,
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Icon(icon, color: accentColor, size: 16),
+          const SizedBox(width: 6),
+          Text(title, style: GoogleFonts.poppins(
+            color: accentColor, fontSize: 12,
+            fontWeight: FontWeight.w600, letterSpacing: 0.4)),
+        ]),
+        const SizedBox(height: 10),
+        Text(content, style: GoogleFonts.hindSiliguri(
+          color: tc.text, fontSize: 14, height: 1.6)),
+      ]),
+    );
+  }
+
+  Widget _buildDetailsCard(String details, _TC tc) {
+    final parts = details.split('\n');
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: tc.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: tc.divider),
+        boxShadow: tc.cardShadow,
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Icon(Icons.menu_book_rounded, color: tc.gold, size: 16),
+          const SizedBox(width: 6),
+          Text('বিস্তারিত / Details',
+            style: GoogleFonts.poppins(
+              color: tc.gold, fontSize: 12,
+              fontWeight: FontWeight.w600, letterSpacing: 0.4)),
+        ]),
+        const SizedBox(height: 12),
+        ...parts.map((line) {
+          if (line.trim().isEmpty) return const SizedBox(height: 6);
+          if (line.contains('**')) {
+            final clean = line.replaceAll('**', '');
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
+                  color: tc.gold.withValues(alpha: tc.isDark ? 0.08 : 0.06),
                   borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, color: color, size: 18),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                title,
-                style: GoogleFonts.hindSiliguri(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: color,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          child,
-        ],
+                  border: Border.all(
+                    color: tc.gold.withValues(alpha: 0.25))),
+                child: Text(clean,
+                  style: GoogleFonts.hindSiliguri(
+                    color: tc.isDark ? tc.goldLight : const Color(0xFF8B6914),
+                    fontSize: 13, fontWeight: FontWeight.w600, height: 1.5))));
+          }
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Text(line,
+              style: GoogleFonts.hindSiliguri(
+                color: tc.text, fontSize: 13, height: 1.65)));
+        }),
+      ]),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value, IconData icon, _TC tc) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: tc.card,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: tc.divider),
+        boxShadow: tc.cardShadow,
       ),
+      child: Row(children: [
+        Icon(icon, color: tc.sub, size: 16),
+        const SizedBox(width: 10),
+        Text('$label  ', style: GoogleFonts.poppins(color: tc.sub, fontSize: 12)),
+        Expanded(child: Text(value,
+          style: GoogleFonts.poppins(
+            color: tc.text, fontSize: 13, fontWeight: FontWeight.w600))),
+      ]),
     );
   }
 }
-
-// ─── Shimmer Card ─────────────────────────────────────────────────────────────
-class _ShimmerCard extends StatefulWidget {
-  final Color color;
-  const _ShimmerCard({required this.color});
-
-  @override
-  State<_ShimmerCard> createState() => _ShimmerCardState();
-}
-
-class _ShimmerCardState extends State<_ShimmerCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _anim;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200))
-      ..repeat(reverse: true);
-    _anim = CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut);
-  }
-
-  @override
-  void dispose() { _ctrl.dispose(); super.dispose(); }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _anim,
-      builder: (_, __) => Container(
-        decoration: BoxDecoration(
-          color: widget.color.withValues(alpha: 0.3 + 0.2 * _anim.value),
-          borderRadius: BorderRadius.circular(16),
-        ),
-      ),
-    );
-  }
-}
-     

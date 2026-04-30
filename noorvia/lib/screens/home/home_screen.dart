@@ -12,9 +12,7 @@ import '../IslamicFeatures/NamazNiyom.dart';
 import '../IslamicFeatures/hidithdemo.dart';
 import '../IslamicFeatures/islamciradio.dart';
 import '../IslamicFeatures/ramadancalender.dart';
-import '../IslamicFeatures/calendar.dart';
 import '../IslamicFeatures/AsmaulHusna/asmaul_husna_page.dart';
-import '../IslamicFeatures/qibla_direction_page.dart';
 import '../common/coming_soon_page.dart';
 import '../../widgets/shimmer.dart';
 import 'widgets/section_header.dart';
@@ -349,7 +347,8 @@ class HomeScreen extends StatelessWidget {
         FeatureItem(
           emoji: '🧭',
           label: 'কিবলা',
-          onTap: () => _go(context, const QiblaDirectionPage()),
+          onTap: () => _soon(context, 'কিবলা নির্দেশক', '🧭',
+              'আপনার অবস্থান থেকে কিবলার দিক নির্ণয় করুন'),
         ),
         FeatureItem(
           emoji: '📍',
@@ -393,7 +392,7 @@ class HomeScreen extends StatelessWidget {
         FeatureItem(
           emoji: '📅',
           label: 'ক্যালেন্ডার',
-          onTap: () => _go(context, const PrayerTimesCalendarPage()),
+          onTap: () => _go(context, RamadanCalendarPage()),
         ),
         FeatureItem(
           emoji: '⭐',
