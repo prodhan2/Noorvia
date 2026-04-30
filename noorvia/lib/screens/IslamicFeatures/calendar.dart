@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:geolocator/geolocator.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/theme/gradient_helper.dart';
 
 // ═══════════════════════════════════════════════════════════════
 //  Prayer Times Calendar  —  Noorvia Islamic App
@@ -259,9 +261,12 @@ class _PrayerTimesCalendarPageState extends State<PrayerTimesCalendarPage>
 
   AppBar _buildAppBar() {
     return AppBar(
-      backgroundColor: _kGreen1,
+      backgroundColor: Colors.transparent,
       foregroundColor: Colors.white,
       elevation: 0,
+      flexibleSpace: Container(
+        decoration: GradientHelper.boxDecoration(),
+      ),
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -304,17 +309,24 @@ class _PrayerTimesCalendarPageState extends State<PrayerTimesCalendarPage>
         return StatefulBuilder(
           builder: (ctx, setLocal) {
             return AlertDialog(
-              backgroundColor: _kGreen1,
+              backgroundColor: Colors.transparent,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
-              title: const Text(
-                'মাস ও বছর বেছে নিন',
-                style: TextStyle(color: Colors.white, fontSize: 16),
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
+              title: null,
+              content: Container(
+                decoration: GradientHelper.boxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'মাস ও বছর বেছে নিন',
+                      style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 12),
                   // ── Year row ──────────────────────────────
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -370,12 +382,12 @@ class _PrayerTimesCalendarPageState extends State<PrayerTimesCalendarPage>
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
                             color: selected
-                                ? _kGreenAccent
+                                ? AppColors.gradientStart
                                 : Colors.white.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: selected
-                                  ? _kGreenAccent
+                                  ? AppColors.gradientStart
                                   : Colors.white.withValues(alpha: 0.2),
                             ),
                           ),
@@ -393,32 +405,39 @@ class _PrayerTimesCalendarPageState extends State<PrayerTimesCalendarPage>
                       );
                     },
                   ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: const Text('বাতিল',
+                            style: TextStyle(color: Colors.white54)),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.gradientStart,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8)),
+                        ),
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          setState(() {
+                            _month = tempMonth;
+                            _year = tempYear;
+                          });
+                          _fetchCalendar();
+                        },
+                        child: const Text('দেখুন'),
+                      ),
+                    ],
+                  ),
                 ],
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: const Text('বাতিল',
-                      style: TextStyle(color: Colors.white54)),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _kGreenAccent,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8)),
-                  ),
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    setState(() {
-                      _month = tempMonth;
-                      _year = tempYear;
-                    });
-                    _fetchCalendar();
-                  },
-                  child: const Text('দেখুন'),
-                ),
-              ],
+              ),
+              actions: const [],
             );
           },
         );
@@ -428,7 +447,7 @@ class _PrayerTimesCalendarPageState extends State<PrayerTimesCalendarPage>
 
   Widget _buildFilterBar() {
     return Container(
-      color: _kGreen2,
+      decoration: GradientHelper.darkBoxDecoration(),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
         children: [
@@ -479,9 +498,9 @@ class _PrayerTimesCalendarPageState extends State<PrayerTimesCalendarPage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(color: _kGreen2),
+            CircularProgressIndicator(color: AppColors.gradientStart),
             SizedBox(height: 16),
-            Text('ডেটা লোড হচ্ছে...', style: TextStyle(color: _kGreen2)),
+            Text('ডেটা লোড হচ্ছে...', style: TextStyle(color: AppColors.gradientStart)),
           ],
         ),
       );
@@ -503,7 +522,7 @@ class _PrayerTimesCalendarPageState extends State<PrayerTimesCalendarPage>
               ),
               const SizedBox(height: 24),
               ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(backgroundColor: _kGreen2),
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.gradientStart),
                 onPressed: _fetchCalendar,
                 icon: const Icon(Icons.refresh, color: Colors.white),
                 label: const Text(
@@ -605,12 +624,18 @@ class _DayCard extends StatelessWidget {
           // ── Header ──────────────────────────────────────────
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
-              color: isToday ? Colors.red[700] : _kGreen1,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(16),
-              ),
-            ),
+            decoration: isToday
+                ? BoxDecoration(
+                    color: Colors.red[700],
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(16),
+                    ),
+                  )
+                : GradientHelper.boxDecoration(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(16),
+                    ),
+                  ),
             child: Row(
               children: [
                 // Day number circle
@@ -661,7 +686,7 @@ class _DayCard extends StatelessWidget {
                       vertical: 3,
                     ),
                     decoration: BoxDecoration(
-                      color: _kGreenAccent,
+                      color: AppColors.gradientStart,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Text(
@@ -680,7 +705,7 @@ class _DayCard extends StatelessWidget {
                       vertical: 3,
                     ),
                     decoration: BoxDecoration(
-                      color: _kFridayBorder,
+                      color: AppColors.gradientEnd,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Text(
@@ -847,7 +872,7 @@ class _Dropdown<T> extends StatelessWidget {
         child: DropdownButton<T>(
           value: value,
           isExpanded: true,
-          dropdownColor: _kGreen2,
+          dropdownColor: AppColors.gradientStart,
           style: const TextStyle(color: Colors.white, fontSize: 13),
           icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
           items: items

@@ -5,7 +5,7 @@ import '../../../core/theme/app_theme.dart';
 class FeatureItem {
   final String emoji;
   final String label;
-  final VoidCallback? onTap; // ← navigation callback
+  final VoidCallback? onTap;
 
   const FeatureItem({
     required this.emoji,
@@ -27,25 +27,51 @@ class FeatureGridItem extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: isDark ? AppColors.darkCard : Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
+              color: isDark
+                  ? Colors.black.withValues(alpha: 0.25)
+                  : AppColors.primary.withValues(alpha: 0.07),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
             ),
           ],
+          border: Border.all(
+            color: isDark
+                ? AppColors.primary.withValues(alpha: 0.12)
+                : AppColors.primary.withValues(alpha: 0.08),
+            width: 1,
+          ),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(item.emoji, style: const TextStyle(fontSize: 28)),
-            const SizedBox(height: 6),
+            // Emoji in a soft gradient circle
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.primary.withValues(alpha: isDark ? 0.25 : 0.10),
+                    AppColors.accent.withValues(alpha: isDark ? 0.20 : 0.08),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(
+                child: Text(item.emoji, style: const TextStyle(fontSize: 22)),
+              ),
+            ),
+            const SizedBox(height: 7),
             Text(
               item.label,
               style: GoogleFonts.hindSiliguri(
                 fontSize: 11,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
                 color: isDark ? AppColors.darkText : AppColors.lightText,
                 height: 1.3,
               ),
@@ -68,7 +94,7 @@ class FeatureGridItem extends StatelessWidget {
         backgroundColor: AppColors.primary,
         duration: const Duration(seconds: 1),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }

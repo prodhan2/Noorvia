@@ -24,11 +24,16 @@ class SectionHeader extends StatelessWidget {
       children: [
         Row(
           children: [
+            // Airkom style: gradient left bar
             Container(
-              width: 5,
-              height: 28,
+              width: 4,
+              height: 26,
               decoration: BoxDecoration(
-                color: color,
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF6C3CE1), Color(0xFF4A90D9)],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
                 borderRadius: BorderRadius.circular(3),
               ),
             ),
@@ -36,7 +41,7 @@ class SectionHeader extends StatelessWidget {
             Text(
               title,
               style: GoogleFonts.hindSiliguri(
-                fontSize: 22,
+                fontSize: 20,
                 fontWeight: FontWeight.w700,
                 color: isDark ? AppColors.darkText : AppColors.lightText,
               ),
@@ -47,13 +52,31 @@ class SectionHeader extends StatelessWidget {
           GestureDetector(
             onTap: onSearch,
             child: Container(
-              width: 38,
-              height: 38,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: AppColors.primary,
-                shape: BoxShape.circle,
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF6C3CE1), Color(0xFF4A90D9)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
               ),
-              child: const Icon(Icons.search, color: Colors.white, size: 20),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'সব দেখুন',
+                    style: GoogleFonts.hindSiliguri(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  const Icon(Icons.arrow_forward_ios,
+                      color: Colors.white, size: 10),
+                ],
+              ),
             ),
           ),
       ],

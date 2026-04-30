@@ -5,6 +5,8 @@ import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import '../../core/theme/app_theme.dart';
+import '../../core/theme/gradient_helper.dart';
 
 // ═══════════════════════════════════════════════════════════════
 // Ramadan Calendar — Multi-year, scroll up/down for prev/next year
@@ -393,13 +395,7 @@ class _RamadanCalendarPageState extends State<RamadanCalendarPage> {
       backgroundColor: _kCream,
       appBar: AppBar(
         flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [_kEmerald, _kEmeraldLight],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
+          decoration: GradientHelper.boxDecoration(),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -431,14 +427,14 @@ class _RamadanCalendarPageState extends State<RamadanCalendarPage> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: _kGold.withValues(alpha: 0.25),
+                      color: AppColors.gradientStart.withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: _kGoldLight.withValues(alpha: 0.5), width: 1),
+                      border: Border.all(color: AppColors.gradientEnd.withValues(alpha: 0.5), width: 1),
                     ),
                     child: Text(
                       '${_bn(_visibleHijriYear.toString())} হি.',
                       style: GoogleFonts.hindSiliguri(
-                        color: _kGoldLight,
+                        color: AppColors.gradientEnd,
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                       ),
@@ -469,7 +465,7 @@ class _RamadanCalendarPageState extends State<RamadanCalendarPage> {
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: _city,
-                dropdownColor: _kEmerald,
+                dropdownColor: AppColors.gradientStart,
                 icon: const Icon(Icons.keyboard_arrow_down_rounded,
                     color: Colors.white, size: 20),
                 style: GoogleFonts.hindSiliguri(
@@ -512,7 +508,7 @@ class _RamadanCalendarPageState extends State<RamadanCalendarPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _scrollToToday,
-        backgroundColor: _kGold,
+        backgroundColor: AppColors.gradientStart,
         foregroundColor: Colors.white,
         elevation: 4,
         child: const Icon(Icons.today_rounded, color: Colors.white),
@@ -524,13 +520,7 @@ class _RamadanCalendarPageState extends State<RamadanCalendarPage> {
   // ── Column header (sticky-like, always at top of list) ────
   Widget _buildColumnHeader() {
     return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [_kEmerald, _kEmeraldLight],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-      ),
+      decoration: GradientHelper.boxDecoration(),
       padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 4),
       child: Row(
         children: [
@@ -574,13 +564,13 @@ class _RamadanCalendarPageState extends State<RamadanCalendarPage> {
         Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: isCurrent
-                  ? [_kEmerald, _kEmeraldLight]
-                  : [_kNavy, const Color(0xFF2A3F6B)],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-            ),
+            gradient: isCurrent
+                ? AppColors.gradient
+                : const LinearGradient(
+                    colors: [Color(0xFF1A2744), Color(0xFF2A3F6B)],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
           ),
           padding: const EdgeInsets.symmetric(vertical: 11),
           child: Row(
@@ -589,7 +579,7 @@ class _RamadanCalendarPageState extends State<RamadanCalendarPage> {
               Container(
                 width: 6, height: 6,
                 decoration: BoxDecoration(
-                  color: isCurrent ? _kGoldLight : Colors.white54,
+                  color: isCurrent ? AppColors.gradientEnd : Colors.white54,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -607,7 +597,7 @@ class _RamadanCalendarPageState extends State<RamadanCalendarPage> {
               Container(
                 width: 6, height: 6,
                 decoration: BoxDecoration(
-                  color: isCurrent ? _kGoldLight : Colors.white54,
+                  color: isCurrent ? AppColors.gradientEnd : Colors.white54,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -621,7 +611,7 @@ class _RamadanCalendarPageState extends State<RamadanCalendarPage> {
             padding: EdgeInsets.symmetric(vertical: 32),
             child: Center(
               child: CircularProgressIndicator(
-                color: Color(0xFF0D5C3A),
+                color: AppColors.gradientStart,
                 strokeWidth: 2,
               ),
             ),
@@ -639,7 +629,7 @@ class _RamadanCalendarPageState extends State<RamadanCalendarPage> {
                   onPressed: () => _fetchYear(hijriYear),
                   child: Text('আবার চেষ্টা',
                       style: GoogleFonts.hindSiliguri(
-                          color: _kEmerald)),
+                          color: AppColors.gradientStart)),
                 ),
               ],
             ),
@@ -719,17 +709,17 @@ class _RamadanCalendarPageState extends State<RamadanCalendarPage> {
     Color textColor;
     Color? dayNumColor;
     if (isToday) {
-      rowBg       = const Color(0xFF0D5C3A);   // deep emerald for today
+      rowBg       = AppColors.gradientStart;
       textColor   = Colors.white;
-      dayNumColor = _kGoldLight;
+      dayNumColor = AppColors.gradientEnd;
     } else if (index.isEven) {
       rowBg       = Colors.white;
       textColor   = const Color(0xFF1A1A1A);
-      dayNumColor = _kEmerald;
+      dayNumColor = AppColors.gradientStart;
     } else {
       rowBg       = _kCream;
       textColor   = const Color(0xFF1A1A1A);
-      dayNumColor = _kEmerald;
+      dayNumColor = AppColors.gradientStart;
     }
 
     return InkWell(
@@ -740,11 +730,11 @@ class _RamadanCalendarPageState extends State<RamadanCalendarPage> {
           border: Border(
             bottom: BorderSide(
                 color: isToday
-                    ? _kEmeraldLight.withValues(alpha: 0.4)
+                    ? AppColors.gradientEnd.withValues(alpha: 0.4)
                     : Colors.grey.withValues(alpha: 0.12),
                 width: 0.8),
             left: isToday
-                ? const BorderSide(color: _kGold, width: 3)
+                ? BorderSide(color: AppColors.gradientEnd, width: 3)
                 : BorderSide.none,
           ),
         ),

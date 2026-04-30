@@ -58,9 +58,9 @@ class _NoorviaAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = isDark ? AppColors.darkBg : Colors.white;
-    final textColor = isDark ? AppColors.darkText : AppColors.lightText;
-    final subColor = isDark ? AppColors.darkSubText : AppColors.lightSubText;
+    final bgColor = Colors.white;
+    final textColor = AppColors.lightText;
+    final subColor = AppColors.lightSubText;
     final prayer = context.watch<PrayerProvider>();
     final screenW = MediaQuery.of(context).size.width;
     final isSmall = screenW < 360;
@@ -142,8 +142,12 @@ class _NoorviaAppBar extends StatelessWidget implements PreferredSizeWidget {
               context,
               MaterialPageRoute(builder: (_) => const LocationScreen()),
             ),
-            child: _Pill(
-              color: isDark ? AppColors.darkCard : Colors.black87,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                gradient: AppColors.gradient,
+                borderRadius: BorderRadius.circular(20),
+              ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -186,7 +190,7 @@ class _NoorviaAppBar extends StatelessWidget implements PreferredSizeWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkCard : Colors.white,
+                  color: Colors.grey[100],
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
@@ -269,7 +273,7 @@ class _NoorviaDrawer extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0xFF0F4D2A), Color(0xFF2E8B57)],
+                  colors: [Color(0xFF6C3CE1), Color(0xFF4A90D9)],
                 ),
               ),
               child: Column(
@@ -435,19 +439,19 @@ class _NoorviaBottomNav extends StatelessWidget {
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCard : Colors.white,
         borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(24),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.10),
-            blurRadius: 20,
-            offset: const Offset(0, -4),
+            color: AppColors.primary.withValues(alpha: 0.12),
+            blurRadius: 24,
+            offset: const Offset(0, -6),
           ),
         ],
         border: Border(
           top: BorderSide(
-            color: AppColors.primary.withValues(alpha: 0.15),
+            color: AppColors.primary.withValues(alpha: 0.18),
             width: 1.5,
           ),
         ),
@@ -467,34 +471,43 @@ class _NoorviaBottomNav extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Top indicator
+                      // Top indicator — gradient bar
                       AnimatedContainer(
                         duration: const Duration(milliseconds: 220),
                         height: 3,
                         width: isSelected ? 28 : 0,
                         margin: const EdgeInsets.only(bottom: 5),
                         decoration: BoxDecoration(
-                          color: AppColors.primary,
+                          gradient: isSelected ? AppColors.gradient : null,
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
-                      // Icon pill
+                      // Icon pill — gradient background when selected
                       AnimatedContainer(
                         duration: const Duration(milliseconds: 220),
                         padding: isSelected
                             ? const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 4)
+                                horizontal: 14, vertical: 5)
                             : EdgeInsets.zero,
                         decoration: BoxDecoration(
-                          color: isSelected
-                              ? AppColors.primary.withValues(alpha: 0.12)
-                              : Colors.transparent,
+                          gradient: isSelected ? AppColors.gradient : null,
+                          color: isSelected ? null : Colors.transparent,
                           borderRadius: BorderRadius.circular(20),
+                          boxShadow: isSelected
+                              ? [
+                                  BoxShadow(
+                                    color: AppColors.primary
+                                        .withValues(alpha: 0.30),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 3),
+                                  )
+                                ]
+                              : null,
                         ),
                         child: Icon(
                           isSelected ? cfg.activeIcon : cfg.icon,
                           color: isSelected
-                              ? AppColors.primary
+                              ? Colors.white
                               : (isDark
                                   ? AppColors.darkSubText
                                   : AppColors.lightSubText),

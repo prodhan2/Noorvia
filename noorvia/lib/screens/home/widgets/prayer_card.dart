@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/gradient_helper.dart';
 import '../../../core/providers/prayer_provider.dart';
 import '../../../widgets/shimmer.dart';
 
@@ -127,7 +128,7 @@ class _PrayerCardState extends State<PrayerCard>
   }
 
   // ─────────────────────────────────────────────────────────────
-  // TOP CARD — green background
+  // TOP CARD — Airkom purple/blue gradient background
   // ─────────────────────────────────────────────────────────────
   Widget _buildTopCard(
       BuildContext context, PrayerProvider prayer, PrayerTimeModel? pt) {
@@ -135,11 +136,22 @@ class _PrayerCardState extends State<PrayerCard>
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: AppColors.primary,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(16),
-          topRight: Radius.circular(16),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF6C3CE1), Color(0xFF4A6FE3), Color(0xFF4A90D9)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF6C3CE1).withValues(alpha: 0.35),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -246,27 +258,32 @@ class _PrayerCardState extends State<PrayerCard>
   }
 
   // ─────────────────────────────────────────────────────────────
-  // BOTTOM CARD — dark background
+  // BOTTOM CARD — White background (light design)
   // ─────────────────────────────────────────────────────────────
   Widget _buildBottomCard(
       BuildContext context, PrayerProvider prayer, PrayerTimeModel? pt) {
-    final darkBg = isDark
-        ? const Color(0xFF1A1A2E)
-        : const Color(0xFF1E2235);
+    const cardBg = Colors.white;
 
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: darkBg,
+        color: cardBg,
         borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(16),
-          bottomRight: Radius.circular(16),
+          bottomLeft: Radius.circular(20),
+          bottomRight: Radius.circular(20),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: prayer.isLoading && pt == null
           ? Padding(
               padding: const EdgeInsets.all(20),
-              child: PrayerCardShimmer(isDark: true),
+              child: PrayerCardShimmer(isDark: false),
             )
           : pt == null
               ? const SizedBox(height: 80)
@@ -275,12 +292,12 @@ class _PrayerCardState extends State<PrayerCard>
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       // ── Left: circular timer ───────────────
-                      _buildTimerSection(prayer, pt, darkBg),
+                      _buildTimerSection(prayer, pt, cardBg),
 
                       // ── Vertical divider ───────────────────
                       Container(
                         width: 1,
-                        color: Colors.white.withValues(alpha: 0.12),
+                        color: Colors.grey.withValues(alpha: 0.15),
                       ),
 
                       // ── Right: prayer list ─────────────────
@@ -311,7 +328,7 @@ class _PrayerCardState extends State<PrayerCard>
               style: GoogleFonts.hindSiliguri(
                 fontSize: 20,
                 fontWeight: FontWeight.w800,
-                color: Colors.white,
+                color: const Color(0xFF1A1836),
               ),
             ),
             const SizedBox(height: 2),
@@ -319,7 +336,7 @@ class _PrayerCardState extends State<PrayerCard>
               'শেষ হতে বাকি',
               style: GoogleFonts.hindSiliguri(
                 fontSize: 12,
-                color: Colors.white.withValues(alpha: 0.6),
+                color: Colors.black,
               ),
             ),
             const SizedBox(height: 14),
@@ -343,7 +360,7 @@ class _PrayerCardState extends State<PrayerCard>
                           width: 7,
                           height: 7,
                           decoration: BoxDecoration(
-                            color: AppColors.primary,
+                            color: AppColors.gradientStart,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -354,7 +371,7 @@ class _PrayerCardState extends State<PrayerCard>
                         style: GoogleFonts.hindSiliguri(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                          color: const Color(0xFF1A1836),
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -429,27 +446,30 @@ class _PrayerCardState extends State<PrayerCard>
     required bool isLast,
     required PrayerTimeModel pt,
   }) {
-    final bg = isActive ? AppColors.primary : Colors.transparent;
-    final textColor = Colors.white;
+    // Active row: light peach/orange background like 2nd image
+    final bgDecoration = isActive
+        ? const BoxDecoration(
+            color: Color(0xFFFFF3E8),
+          )
+        : BoxDecoration(
+            color: Colors.transparent,
+            border: isLast
+                ? null
+                : Border(
+                    bottom: BorderSide(
+                      color: Colors.grey.withValues(alpha: 0.12),
+                      width: 0.8,
+                    ),
+                  ),
+          );
+
+    final textColor = const Color(0xFF1A1836);
     final subColor = isActive
-        ? Colors.white.withValues(alpha: 0.9)
-        : Colors.white.withValues(alpha: 0.55);
+        ? const Color(0xFF6C3CE1)
+        : Colors.black;
 
     return Container(
-      decoration: BoxDecoration(
-        color: bg,
-        border: isLast
-            ? null
-            : Border(
-                bottom: BorderSide(
-                  color: Colors.white.withValues(alpha: 0.08),
-                  width: 0.8,
-                ),
-              ),
-        borderRadius: isActive
-            ? BorderRadius.zero
-            : null,
-      ),
+      decoration: bgDecoration,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -470,7 +490,7 @@ class _PrayerCardState extends State<PrayerCard>
                 style: GoogleFonts.hindSiliguri(
                   fontSize: 13,
                   fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
-                  color: isActive ? Colors.white : subColor,
+                  color: subColor,
                 ),
               ),
             ],
@@ -483,7 +503,7 @@ class _PrayerCardState extends State<PrayerCard>
                 'মাকরুহ: রাত ${_fmt(pt.tahajjud)}',
                 style: GoogleFonts.hindSiliguri(
                   fontSize: 11,
-                  color: Colors.white.withValues(alpha: 0.45),
+                  color: Colors.black,
                 ),
                 textAlign: TextAlign.right,
               ),
@@ -508,7 +528,7 @@ class _CircularTimerPainter extends CustomPainter {
 
     // Background track
     final trackPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.15)
+      ..color = Colors.grey.withValues(alpha: 0.15)
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round;
@@ -516,14 +536,12 @@ class _CircularTimerPainter extends CustomPainter {
     canvas.drawCircle(center, radius, trackPaint);
 
     // Progress arc — starts from top (-π/2), goes clockwise
-    final progressPaint = Paint()
-      ..color = AppColors.primary
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round;
+    final arcRect = Rect.fromCircle(center: center, radius: radius);
+    final progressPaint = GradientHelper.gradientPaint(arcRect)
+      ..strokeWidth = strokeWidth;
 
     canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
+      arcRect,
       -math.pi / 2,
       2 * math.pi * progress,
       false,
@@ -709,14 +727,21 @@ class _RamadanMiniCardState extends State<RamadanMiniCard>
 
   @override
   Widget build(BuildContext context) {
-    const darkBg = Color(0xFF1E2235);
+    const cardBg = Colors.white;
 
     if (_loading) {
       return Container(
         height: 110,
         decoration: BoxDecoration(
-          color: darkBg,
+          color: cardBg,
           borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: const Center(
           child: CircularProgressIndicator(
@@ -731,14 +756,14 @@ class _RamadanMiniCardState extends State<RamadanMiniCard>
       return Container(
         height: 80,
         decoration: BoxDecoration(
-          color: darkBg,
+          color: cardBg,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Center(
           child: Text(
             _error!,
             style: GoogleFonts.hindSiliguri(
-              color: Colors.white54,
+              color: Colors.black,
               fontSize: 13,
             ),
           ),
@@ -749,7 +774,27 @@ class _RamadanMiniCardState extends State<RamadanMiniCard>
     // Determine active countdown (the one still in future, or next sehri)
     final now = DateTime.now();
     final sehriPast = _isPast(_sehriTime, now);
+    final iftarPast = _isPast(_iftarTime, now);
     final activeCountdown = sehriPast ? _iftarCountdown : _sehriCountdown;
+
+    // Build human-readable countdown pill text
+    String _pillText(String countdownHHMMSS) {
+      // countdownHHMMSS is in Bangla digits "HH:MM:SS"
+      // Convert back to parse
+      String ascii = countdownHHMMSS;
+      const b = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+      const e = ['0','1','2','3','4','5','6','7','8','9'];
+      for (int i = 0; i < b.length; i++) ascii = ascii.replaceAll(b[i], e[i]);
+      final parts = ascii.split(':');
+      if (parts.length < 2) return countdownHHMMSS;
+      final h = int.tryParse(parts[0]) ?? 0;
+      final m = int.tryParse(parts[1]) ?? 0;
+      if (h > 0) return _bn('আর $h ঘণ্টা $m মিনিট');
+      return _bn('আর $m মিনিট');
+    }
+
+    final sehriPill = _pillText(_sehriCountdown);
+    final iftarPill = _pillText(_iftarCountdown);
 
     return FadeTransition(
       opacity: _enterFade,
@@ -757,167 +802,148 @@ class _RamadanMiniCardState extends State<RamadanMiniCard>
         position: _enterSlide,
         child: Container(
           decoration: BoxDecoration(
-            color: darkBg,
+            color: cardBg,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.18),
+                color: Colors.black.withValues(alpha: 0.06),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
             ],
           ),
-          child: Stack(
-            children: [
-              // ── Main content ─────────────────────────────
-              Padding(
-                padding: const EdgeInsets.fromLTRB(0, 14, 0, 14),
-                child: IntrinsicHeight(
-                  child: Row(
-                    children: [
-                      // ── Col 1: সাহরি ──────────────────────
-                      Expanded(
-                        child: _buildTimeColumn(
-                          icon: '🌙',
-                          time: _fmt(_sehriTime),
-                          label: 'পরবর্তী সাহরি',
-                          isPast: sehriPast,
-                        ),
-                      ),
-
-                      // ── Divider ────────────────────────────
-                      _vDivider(),
-
-                      // ── Col 2: ইফতার ──────────────────────
-                      Expanded(
-                        child: _buildTimeColumn(
-                          icon: '🌅',
-                          time: _fmt(_iftarTime),
-                          label: 'পরবর্তী ইফতার',
-                          isPast: _isPast(_iftarTime, now),
-                        ),
-                      ),
-
-                      // ── Divider ────────────────────────────
-                      _vDivider(),
-
-                      // ── Col 3: Active countdown ────────────
-                      Expanded(
-                        child: _buildCountdownColumn(
-                          countdown: activeCountdown,
-                          label: _activeLabel,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // ── Expand icon (top-right) ───────────────────
-              Positioned(
-                top: 8,
-                right: 10,
-                child: GestureDetector(
-                  onTap: widget.onExpand,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    child: Icon(
-                      Icons.open_in_full_rounded,
-                      color: Colors.white.withValues(alpha: 0.45),
-                      size: 18,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 16),
+            child: Row(
+              children: [
+                // ── Col 1: সাহরি ────────────────────────────
+                Expanded(
+                  child: _buildIconColumn(
+                    iconWidget: _circleIcon(
+                      icon: Icons.nightlight_round,
+                      bgColor: const Color(0xFF6C3CE1),
+                      iconColor: Colors.white,
                     ),
+                    time: _fmt(_sehriTime),
+                    label: 'পরবর্তী সাহরি',
+                    pillText: sehriPill,
+                    pillBg: const Color(0xFFEDE7FF),
+                    pillTextColor: const Color(0xFF6C3CE1),
+                    isPast: sehriPast,
                   ),
                 ),
-              ),
-            ],
+
+                _vDivider(),
+
+                // ── Col 2: ইফতার ────────────────────────────
+                Expanded(
+                  child: _buildIconColumn(
+                    iconWidget: _circleIcon(
+                      icon: Icons.wb_twilight_rounded,
+                      bgColor: const Color(0xFFFF8C00),
+                      iconColor: Colors.white,
+                    ),
+                    time: _fmt(_iftarTime),
+                    label: 'পরবর্তী ইফতার',
+                    pillText: iftarPill,
+                    pillBg: const Color(0xFFFFF0E0),
+                    pillTextColor: const Color(0xFFFF6B00),
+                    isPast: iftarPast,
+                  ),
+                ),
+
+                _vDivider(),
+
+                // ── Col 3: Countdown ─────────────────────────
+                Expanded(
+                  child: _buildIconColumn(
+                    iconWidget: _circleIcon(
+                      icon: Icons.access_time_rounded,
+                      bgColor: const Color(0xFF2979FF),
+                      iconColor: Colors.white,
+                    ),
+                    time: activeCountdown,
+                    label: _activeLabel,
+                    pillText: 'মধ্যরাত শেষ',
+                    pillBg: const Color(0xFFE3EEFF),
+                    pillTextColor: const Color(0xFF2979FF),
+                    isPast: false,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildTimeColumn({
-    required String icon,
-    required String time,
-    required String label,
-    required bool isPast,
+  /// Colored circle with icon inside
+  Widget _circleIcon({
+    required IconData icon,
+    required Color bgColor,
+    required Color iconColor,
   }) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(icon, style: const TextStyle(fontSize: 20)),
-        const SizedBox(height: 6),
-        Text(
-          time,
-          style: GoogleFonts.hindSiliguri(
-            fontSize: 22,
-            fontWeight: FontWeight.w800,
-            color: isPast
-                ? Colors.white.withValues(alpha: 0.35)
-                : Colors.white,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: GoogleFonts.hindSiliguri(
-            fontSize: 11,
-            color: Colors.white.withValues(alpha: 0.55),
-          ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 8),
-        // অ্যালার্ম button
-        GestureDetector(
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'অ্যালার্ম সেট করা হয়েছে: $time',
-                  style: GoogleFonts.hindSiliguri(),
-                ),
-                backgroundColor: AppColors.primary,
-                duration: const Duration(seconds: 2),
-              ),
-            );
-          },
-          child: Text(
-            'অ্যালার্ম',
-            style: GoogleFonts.hindSiliguri(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: AppColors.primary,
-            ),
-          ),
-        ),
-      ],
+    return Container(
+      width: 48,
+      height: 48,
+      decoration: BoxDecoration(
+        color: bgColor,
+        shape: BoxShape.circle,
+      ),
+      child: Icon(icon, color: iconColor, size: 24),
     );
   }
 
-  Widget _buildCountdownColumn({
-    required String countdown,
+  /// One column: icon + time + label + pill
+  Widget _buildIconColumn({
+    required Widget iconWidget,
+    required String time,
     required String label,
+    required String pillText,
+    required Color pillBg,
+    required Color pillTextColor,
+    required bool isPast,
   }) {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        const SizedBox(height: 26), // align with time columns
+        iconWidget,
+        const SizedBox(height: 8),
         Text(
-          countdown,
+          time,
           style: GoogleFonts.hindSiliguri(
-            fontSize: 20,
+            fontSize: 18,
             fontWeight: FontWeight.w800,
-            color: Colors.white,
+            color: isPast ? Colors.black38 : const Color(0xFF1A1836),
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 2),
         Text(
           label,
           style: GoogleFonts.hindSiliguri(
             fontSize: 11,
-            color: Colors.white.withValues(alpha: 0.55),
+            color: Colors.black87,
           ),
           textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 10),
+        // Pill button
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: pillBg,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            pillText,
+            style: GoogleFonts.hindSiliguri(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: pillTextColor,
+            ),
+            textAlign: TextAlign.center,
+          ),
         ),
       ],
     );
@@ -926,7 +952,7 @@ class _RamadanMiniCardState extends State<RamadanMiniCard>
   Widget _vDivider() {
     return Container(
       width: 1,
-      color: Colors.white.withValues(alpha: 0.1),
+      color: Colors.grey.withValues(alpha: 0.15),
     );
   }
 }
