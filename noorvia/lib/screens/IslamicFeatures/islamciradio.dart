@@ -3,34 +3,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Islamic Radio',
-      theme: ThemeData(
-        primarySwatch: Colors.green,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF0C3A25),
-          titleTextStyle: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-      home: const RadioScreen(),
-      debugShowCheckedModeBanner: false,
-    );
-  }
-}
+import 'package:provider/provider.dart';
+import '../../core/providers/audio_provider.dart';
 
 class RadioScreen extends StatefulWidget {
   const RadioScreen({super.key});
@@ -156,6 +130,14 @@ class _RadioScreenState extends State<RadioScreen> {
         const SnackBar(content: Text('No internet connection')),
       );
       return;
+    }
+
+    // Stop Quran/verse audio if playing
+    if (context.mounted) {
+      final audioProvider = context.read<AudioProvider>();
+      if (audioProvider.isPlaying || audioProvider.isVisible) {
+        await audioProvider.stop();
+      }
     }
 
     if (currentlyPlayingId == station.id) {

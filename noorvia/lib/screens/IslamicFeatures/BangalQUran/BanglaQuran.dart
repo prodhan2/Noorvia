@@ -385,7 +385,7 @@ class _SurahListPageState extends State<SurahListPage>
 
   Widget _buildSliverAppBar() {
     return SliverAppBar(
-      expandedHeight: 140,
+      expandedHeight: 160,
       pinned: true,
       backgroundColor: _kPrimary,
       leading: Navigator.canPop(context)
@@ -424,14 +424,14 @@ class _SurahListPageState extends State<SurahListPage>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 40),
-                const Text('📖', style: TextStyle(fontSize: 36)),
+                const Text('📖', style: TextStyle(fontSize: 34)),
                 const SizedBox(height: 6),
                 Text('পবিত্র কুরআন',
                     style: GoogleFonts.hindSiliguri(
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
                         color: Colors.white)),
+                const SizedBox(height: 2),
                 Text('বাংলা অনুবাদ ও তিলাওয়াত',
                     style: GoogleFonts.hindSiliguri(
                         fontSize: 12, color: Colors.white70)),

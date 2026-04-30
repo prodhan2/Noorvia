@@ -438,8 +438,37 @@ class PrayerProvider extends ChangeNotifier {
       'Sylhet': 'সিলেট', 'Rajshahi': 'রাজশাহী',
       'Khulna': 'খুলনা', 'Barisal': 'বরিশাল',
       'Rangpur': 'রংপুর', 'Mymensingh': 'ময়মনসিংহ',
+      'Comilla': 'কুমিল্লা', 'Narayanganj': 'নারায়ণগঞ্জ',
+      'Gazipur': 'গাজীপুর', 'Jessore': 'যশোর',
+      'Bogra': 'বগুড়া', 'Dinajpur': 'দিনাজপুর',
+      'Cox\'s Bazar': 'কক্সবাজার',
+      'Mecca': 'মক্কা', 'Medina': 'মদিনা', 'Riyadh': 'রিয়াদ',
+      'Dubai': 'দুবাই', 'London': 'লন্ডন',
+      'New York': 'নিউ ইয়র্ক', 'Kuala Lumpur': 'কুয়ালালামপুর',
+      'Jakarta': 'জাকার্তা', 'Istanbul': 'ইস্তাম্বুল',
+      'Cairo': 'কায়রো', 'Karachi': 'করাচি',
+      'Lahore': 'লাহোর', 'Delhi': 'দিল্লি', 'Kolkata': 'কলকাতা',
     };
     return map[cityName] ?? cityName;
+  }
+
+  // ── Manual city selection ─────────────────────────────────
+  Future<void> selectCity(String city, String country) async {
+    cityName = city;
+    countryName = country;
+    isLoading = true;
+    notifyListeners();
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('prayer_city', city);
+    await prefs.setString('prayer_country', country);
+    // Clear lat/lon so next auto-detect starts fresh
+    await prefs.remove('prayer_lat');
+    await prefs.remove('prayer_lon');
+    latitude = null;
+    longitude = null;
+
+    await _fetchByCity(city, country);
   }
 
   String get hijriDisplayDate {

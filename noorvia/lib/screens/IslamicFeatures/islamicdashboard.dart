@@ -4,6 +4,7 @@ import 'NamazNiyom.dart';
 import 'islamciradio.dart';
 import 'otherpage.dart';
 import 'ramadancalender.dart';
+import 'calendar.dart';
 import 'tashbi.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -24,7 +25,7 @@ class IslamicApp extends StatelessWidget {
       routes: {
         '/audio': (_) => QuranApp(),
         '/bangkay-quran': (_) => QuranApp(),
-        '/calendar': (_) => RamadanCalendarPage(),
+        '/calendar': (_) => const PrayerTimesCalendarPage(),
         '/namaz': (_) => ChapterListPage(),
         '/radio': (_) => RadioScreen(),
         '/tasbih': (_) => TasbihCounter(),

@@ -14,7 +14,6 @@ import 'widgets/floating_audio_player.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Firebase — skip on web (needs FirebaseOptions config for web)
   if (!kIsWeb) {
     try {
       await Firebase.initializeApp();
@@ -31,6 +30,9 @@ void main() async {
   runApp(const NoorviaApp());
 }
 
+// Global navigator key — used to access root Overlay from anywhere
+final GlobalKey<NavigatorState> _navKey = GlobalKey<NavigatorState>();
+
 class NoorviaApp extends StatelessWidget {
   const NoorviaApp({super.key});
 
@@ -43,17 +45,19 @@ class NoorviaApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => PrayerProvider()),
         ChangeNotifierProvider(create: (_) => AudioProvider()),
       ],
-      child: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, _) {
-          return MaterialApp(
-            title: 'নূরভিয়া',
-            debugShowCheckedModeBanner: false,
-            theme: AppTheme.lightTheme,
-            darkTheme: AppTheme.darkTheme,
-            themeMode: themeProvider.themeMode,
-            // Use navigatorObservers to inject FAB via Overlay
-            // after the Navigator (and its Overlay) is ready
-            home: const _AudioOverlayWrapper(child: SplashScreen()),
+      child: Consumer2<ThemeProvider, AudioProvider>(
+        builder: (context, themeProvider, audioProvider, _) {
+          return _AudioOverlayInjector(
+            audioProvider: audioProvider,
+            child: MaterialApp(
+              navigatorKey: _navKey,
+              title: 'নূরভিয়া',
+              debugShowCheckedModeBanner: false,
+              theme: AppTheme.lightTheme,
+              darkTheme: AppTheme.darkTheme,
+              themeMode: themeProvider.themeMode,
+              home: const SplashScreen(),
+            ),
           );
         },
       ),
@@ -61,35 +65,59 @@ class NoorviaApp extends StatelessWidget {
   }
 }
 
-// Injects the FloatingAudioPlayer into the Navigator's Overlay
-// so SnackBars and other Overlay-dependent widgets work correctly.
-class _AudioOverlayWrapper extends StatefulWidget {
+// ─────────────────────────────────────────────────────────────
+// _AudioOverlayInjector
+// Waits for the Navigator's Overlay to be ready, then inserts
+// FloatingAudioPlayer into it. Uses navigatorKey so it survives
+// all route changes. ListenableBuilder ensures the OverlayEntry
+// rebuilds whenever AudioProvider notifies.
+// ─────────────────────────────────────────────────────────────
+class _AudioOverlayInjector extends StatefulWidget {
+  final AudioProvider audioProvider;
   final Widget child;
-  const _AudioOverlayWrapper({required this.child});
+
+  const _AudioOverlayInjector({
+    required this.audioProvider,
+    required this.child,
+  });
 
   @override
-  State<_AudioOverlayWrapper> createState() => _AudioOverlayWrapperState();
+  State<_AudioOverlayInjector> createState() => _AudioOverlayInjectorState();
 }
 
-class _AudioOverlayWrapperState extends State<_AudioOverlayWrapper> {
+class _AudioOverlayInjectorState extends State<_AudioOverlayInjector> {
   OverlayEntry? _entry;
 
   @override
   void initState() {
     super.initState();
-    // Insert after first frame so Overlay is ready
-    WidgetsBinding.instance.addPostFrameCallback((_) => _insertOverlay());
+    // Wait for MaterialApp + Navigator + Overlay to be fully built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _insertEntry());
+    });
   }
 
-  void _insertOverlay() {
-    final providerContext = context; // capture context with providers
+  void _insertEntry() {
+    if (!mounted) return;
+
+    final overlay = _navKey.currentState?.overlay;
+    if (overlay == null) {
+      // Retry once more if overlay not ready yet
+      WidgetsBinding.instance.addPostFrameCallback((_) => _insertEntry());
+      return;
+    }
+
+    _entry?.remove();
     _entry = OverlayEntry(
-      builder: (overlayCtx) => ChangeNotifierProvider.value(
-        value: Provider.of<AudioProvider>(providerContext, listen: false),
-        child: const FloatingAudioPlayer(),
+      builder: (_) => ListenableBuilder(
+        listenable: widget.audioProvider,
+        builder: (ctx, __) => ChangeNotifierProvider.value(
+          value: widget.audioProvider,
+          child: const FloatingAudioPlayer(),
+        ),
       ),
     );
-    Overlay.of(context).insert(_entry!);
+    overlay.insert(_entry!);
   }
 
   @override
