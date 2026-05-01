@@ -40,6 +40,8 @@ class HijriDateModel {
 class PrayerProvider extends ChangeNotifier {
   // State
   bool isLoading = true;
+  bool isOffline = false;        // true when network failed & no fresh data
+  bool hasCachedData = false;    // true when cache was loaded successfully
   bool locationDenied = false;
   bool locationDeniedForever = false;
   String cityName = 'ঢাকা';
@@ -114,6 +116,7 @@ class PrayerProvider extends ChangeNotifier {
       if (cached != null) {
         final data = json.decode(cached);
         _parsePrayerData(data);
+        hasCachedData = true;
         isLoading = false;
         notifyListeners();
       }
@@ -208,6 +211,8 @@ class PrayerProvider extends ChangeNotifier {
       if (prayerRes.statusCode == 200) {
         final data = json.decode(prayerRes.body);
         _parsePrayerData(data);
+        hasCachedData = true;
+        isOffline = false;
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('prayer_data', prayerRes.body);
       }
@@ -218,6 +223,8 @@ class PrayerProvider extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
     } catch (_) {
+      // Network failed — show cached data if available, else offline UI
+      if (!hasCachedData) isOffline = true;
       isLoading = false;
       notifyListeners();
     }
@@ -238,6 +245,8 @@ class PrayerProvider extends ChangeNotifier {
       if (res.statusCode == 200) {
         final data = json.decode(res.body);
         _parsePrayerData(data);
+        hasCachedData = true;
+        isOffline = false;
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('prayer_data', res.body);
       }
@@ -246,6 +255,7 @@ class PrayerProvider extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
     } catch (_) {
+      if (!hasCachedData) isOffline = true;
       isLoading = false;
       notifyListeners();
     }
@@ -300,6 +310,23 @@ class PrayerProvider extends ChangeNotifier {
         isha: isha,
         tahajjud: tahajjud,
       );
+
+      // ── Parse hijri date from prayer API response ─────────
+      try {
+        final dateData = data['data']['date'];
+        if (dateData != null) {
+          final hijri = dateData['hijri'];
+          if (hijri != null) {
+            hijriDate = HijriDateModel(
+              day: hijri['day']?.toString() ?? '',
+              month: hijri['month']?['number']?.toString() ?? '',
+              year: hijri['year']?.toString() ?? '',
+              monthAr: hijri['month']?['ar'] ?? '',
+              weekday: hijri['weekday']?['ar'] ?? '',
+            );
+          }
+        }
+      } catch (_) {}
 
       _updatePrayerProgress();
     } catch (_) {}
@@ -457,6 +484,7 @@ class PrayerProvider extends ChangeNotifier {
     cityName = city;
     countryName = country;
     isLoading = true;
+    isOffline = false;
     notifyListeners();
 
     final prefs = await SharedPreferences.getInstance();

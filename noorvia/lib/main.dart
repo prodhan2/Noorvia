@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:async' show unawaited;
 import 'package:firebase_core/firebase_core.dart';
 import 'core/theme/app_theme.dart';
 import 'core/providers/theme_provider.dart';
@@ -9,6 +10,9 @@ import 'core/providers/nav_provider.dart';
 import 'core/providers/prayer_provider.dart';
 import 'core/providers/audio_provider.dart';
 import 'core/providers/settings_provider.dart';
+import 'core/providers/notification_provider.dart';
+import 'core/services/local_notification_service.dart';
+import 'core/services/data_sync_service.dart';
 import 'screens/splash/splash_screen.dart';
 import 'widgets/floating_audio_player.dart';
 
@@ -19,7 +23,12 @@ void main() async {
     try {
       await Firebase.initializeApp();
     } catch (_) {}
+    // Initialise local notifications (Android only)
+    await LocalNotificationService.init();
   }
+
+  // Background JSON sync — net পেলেই silently সব JSON reload করে
+  unawaited(DataSyncService.instance.init());
 
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   SystemChrome.setSystemUIOverlayStyle(
@@ -46,6 +55,7 @@ class NoorviaApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => PrayerProvider()),
         ChangeNotifierProvider(create: (_) => AudioProvider()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationProvider()),
       ],
       child: Consumer3<ThemeProvider, AudioProvider, SettingsProvider>(
         builder: (context, themeProvider, audioProvider, settings, _) {

@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:audioplayers/audioplayers.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/theme_provider.dart';
 
@@ -82,6 +83,7 @@ class _AsmaulHusnaPageState extends State<AsmaulHusnaPage>
   List _shown = [];
   bool _loading = true;
   bool _error   = false;
+  bool _offline = false;
 
   final _player     = AudioPlayer();
   String? _playingUrl;
@@ -118,19 +120,41 @@ class _AsmaulHusnaPageState extends State<AsmaulHusnaPage>
   }
 
   Future<void> _fetchData() async {
-    setState(() { _loading = true; _error = false; });
+    setState(() { _loading = true; _error = false; _offline = false; });
+
+    final prefs = await SharedPreferences.getInstance();
+
+    // ── ১. Cache থেকে তাৎক্ষণিক দেখাও ───────────────────────
+    final cached = prefs.getString('asmaul_husna_cache');
+    if (cached != null) {
+      try {
+        final d = json.decode(cached)['asmaul_husna'] as List;
+        setState(() { _all = d; _shown = d; _loading = false; _offline = true; });
+      } catch (_) {}
+    }
+
+    // ── ২. Network থেকে fresh data আনো ───────────────────────
     try {
       final res = await http.get(Uri.parse(
         'https://raw.githubusercontent.com/prodhan2/App_Backend_Data/main/MyApi/asmaul-husna.json',
       )).timeout(const Duration(seconds: 15));
       if (res.statusCode == 200) {
+        await prefs.setString('asmaul_husna_cache', res.body);
         final d = json.decode(res.body)['asmaul_husna'] as List;
-        setState(() { _all = d; _shown = d; _loading = false; });
+        setState(() { _all = d; _shown = d; _loading = false; _offline = false; });
       } else {
-        setState(() { _loading = false; _error = true; });
+        if (_all.isEmpty) {
+          setState(() { _loading = false; _error = true; });
+        } else {
+          setState(() { _loading = false; _offline = true; });
+        }
       }
     } catch (_) {
-      setState(() { _loading = false; _error = true; });
+      if (_all.isEmpty) {
+        setState(() { _loading = false; _error = true; });
+      } else {
+        setState(() { _loading = false; _offline = true; });
+      }
     }
   }
 
@@ -192,6 +216,25 @@ class _AsmaulHusnaPageState extends State<AsmaulHusnaPage>
             : _error
                 ? _buildError(tc)
                 : Column(children: [
+                    if (_offline)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 6),
+                        color: Colors.orange.withValues(alpha: 0.15),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.wifi_off_rounded,
+                                size: 14, color: Colors.orange),
+                            const SizedBox(width: 6),
+                            Text(
+                              'অফলাইন মোড — সংরক্ষিত ডেটা দেখাচ্ছে',
+                              style: GoogleFonts.hindSiliguri(
+                                  fontSize: 11, color: Colors.orange),
+                            ),
+                          ],
+                        ),
+                      ),
                     _buildSearchBar(tc),
                     _buildLangBar(tc),
                     Expanded(child: _buildList(tc)),

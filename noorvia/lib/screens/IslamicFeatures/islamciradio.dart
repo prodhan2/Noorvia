@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/providers/audio_provider.dart';
 import '../../core/theme/app_theme.dart';
 
@@ -49,18 +50,39 @@ class _RadioScreenState extends State<RadioScreen> {
   }
 
   Future<void> fetchRadioStations() async {
-    if (!isConnected) {
-      setState(() {
-        errorMessage = 'No internet connection';
-        isLoading = false;
-      });
-      return;
-    }
-
     setState(() {
       isLoading = true;
       errorMessage = '';
     });
+
+    final prefs = await SharedPreferences.getInstance();
+
+    // ── ১. Cache থেকে তাৎক্ষণিক দেখাও ───────────────────────
+    final cached = prefs.getString('radio_cache');
+    if (cached != null) {
+      try {
+        final data = json.decode(cached);
+        setState(() {
+          radioStations = (data['radios'] as List)
+              .map((s) => RadioStation.fromJson(s))
+              .toList();
+          isLoading = false;
+        });
+      } catch (_) {}
+    }
+
+    // ── ২. Network থেকে fresh data আনো ───────────────────────
+    if (!isConnected) {
+      if (radioStations.isEmpty) {
+        setState(() {
+          errorMessage = 'ইন্টারনেট সংযোগ নেই';
+          isLoading = false;
+        });
+      } else {
+        setState(() { isLoading = false; });
+      }
+      return;
+    }
 
     try {
       final response = await http.get(
@@ -68,6 +90,7 @@ class _RadioScreenState extends State<RadioScreen> {
       ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
+        await prefs.setString('radio_cache', response.body);
         final data = json.decode(response.body);
         setState(() {
           radioStations = (data['radios'] as List)
@@ -76,16 +99,24 @@ class _RadioScreenState extends State<RadioScreen> {
           isLoading = false;
         });
       } else {
-        setState(() {
-          isLoading = false;
-          errorMessage = 'Failed to load radio stations (${response.statusCode})';
-        });
+        if (radioStations.isEmpty) {
+          setState(() {
+            isLoading = false;
+            errorMessage = 'Failed to load radio stations (${response.statusCode})';
+          });
+        } else {
+          setState(() { isLoading = false; });
+        }
       }
     } catch (e) {
-      setState(() {
-        isLoading = false;
-        errorMessage = 'Error: ${e.toString()}';
-      });
+      if (radioStations.isEmpty) {
+        setState(() {
+          isLoading = false;
+          errorMessage = 'Error: ${e.toString()}';
+        });
+      } else {
+        setState(() { isLoading = false; });
+      }
     }
   }
 

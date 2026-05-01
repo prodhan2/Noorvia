@@ -116,6 +116,17 @@ class _PrayerCardState extends State<PrayerCard>
     final prayer = context.watch<PrayerProvider>();
     final pt = prayer.prayerTimes;
 
+    // ── Full offline (no cache, no network) ───────────────────
+    if (prayer.isOffline && pt == null) {
+      return FadeTransition(
+        opacity: _enterFade,
+        child: SlideTransition(
+          position: _enterSlide,
+          child: _buildOfflineCard(context, prayer),
+        ),
+      );
+    }
+
     return FadeTransition(
       opacity: _enterFade,
       child: SlideTransition(
@@ -130,6 +141,182 @@ class _PrayerCardState extends State<PrayerCard>
           ],
         ),
       ),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // OFFLINE CARD — shown when no internet & no cache
+  // ─────────────────────────────────────────────────────────────
+  Widget _buildOfflineCard(BuildContext context, PrayerProvider prayer) {
+    final cardBg = isDark ? AppColors.darkCard : AppColors.lightCard;
+    final textColor = isDark ? AppColors.darkText : const Color(0xFF1A1836);
+    final subColor = isDark ? AppColors.darkSubText : Colors.black54;
+
+    return Column(
+      children: [
+        // Top gradient bar — same as online, shows date
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF6C3CE1), Color(0xFF4A6FE3), Color(0xFF4A90D9)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF6C3CE1).withValues(alpha: 0.35),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                flex: 5,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      prayer.hijriDisplayDate.isNotEmpty
+                          ? prayer.hijriDisplayDate
+                          : '-- -- ---- হিজরি',
+                      style: GoogleFonts.hindSiliguri(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      prayer.banglaDate,
+                      style: GoogleFonts.hindSiliguri(
+                        fontSize: 12,
+                        color: Colors.white.withValues(alpha: 0.85),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                width: 1,
+                height: 50,
+                color: Colors.white.withValues(alpha: 0.35),
+                margin: const EdgeInsets.symmetric(horizontal: 12),
+              ),
+              // Offline indicator on right side
+              Expanded(
+                flex: 4,
+                child: Column(
+                  children: [
+                    const Text('📡', style: TextStyle(fontSize: 26)),
+                    const SizedBox(height: 4),
+                    Text(
+                      'অফলাইন',
+                      style: GoogleFonts.hindSiliguri(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 2),
+        // Bottom card — offline message + retry button
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: cardBg,
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(20),
+              bottomRight: Radius.circular(20),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.06),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
+          child: Column(
+            children: [
+              Icon(
+                Icons.wifi_off_rounded,
+                size: 40,
+                color: isDark ? Colors.white30 : Colors.black26,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'ইন্টারনেট সংযোগ নেই',
+                style: GoogleFonts.hindSiliguri(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: textColor,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'নামাযের সময় দেখতে ইন্টারনেট চালু করুন',
+                style: GoogleFonts.hindSiliguri(
+                  fontSize: 12,
+                  color: subColor,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 18),
+              GestureDetector(
+                onTap: () => prayer.requestLocationAndFetch(),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 24, vertical: 10),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF6C3CE1), Color(0xFF4A90D9)],
+                    ),
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF6C3CE1).withValues(alpha: 0.30),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.refresh_rounded,
+                          color: Colors.white, size: 16),
+                      const SizedBox(width: 6),
+                      Text(
+                        'আবার চেষ্টা করুন',
+                        style: GoogleFonts.hindSiliguri(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -168,26 +355,57 @@ class _PrayerCardState extends State<PrayerCard>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                prayer.hijriDisplayDate.isNotEmpty
-                    ? Text(
-                        prayer.hijriDisplayDate,
-                        style: GoogleFonts.hindSiliguri(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                        ),
-                      )
-                    : NShimmer(width: 160, height: 18, isDark: true),
+                Text(
+                  prayer.hijriDisplayDate.isNotEmpty
+                      ? prayer.hijriDisplayDate
+                      : '...',
+                  style: GoogleFonts.hindSiliguri(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                prayer.banglaDate.isNotEmpty
-                    ? Text(
-                        prayer.banglaDate,
-                        style: GoogleFonts.hindSiliguri(
-                          fontSize: 12,
-                          color: Colors.white.withValues(alpha: 0.85),
+                Text(
+                  prayer.banglaDate.isNotEmpty
+                      ? prayer.banglaDate
+                      : '...',
+                  style: GoogleFonts.hindSiliguri(
+                    fontSize: 12,
+                    color: Colors.white.withValues(alpha: 0.85),
+                  ),
+                ),
+                // ── Offline badge (cache shown, no network) ──
+                if (prayer.isOffline && prayer.hasCachedData) ...[
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.40),
+                        width: 0.8,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.wifi_off_rounded,
+                            color: Colors.white70, size: 11),
+                        const SizedBox(width: 4),
+                        Text(
+                          'ক্যাশ ডেটা',
+                          style: GoogleFonts.hindSiliguri(
+                            fontSize: 10,
+                            color: Colors.white70,
+                          ),
                         ),
-                      )
-                    : NShimmer(width: 200, height: 13, isDark: true),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -208,7 +426,7 @@ class _PrayerCardState extends State<PrayerCard>
               children: [
                 // Sun icon
                 const Text('☀️', style: TextStyle(fontSize: 28)),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 if (pt != null)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -218,11 +436,13 @@ class _PrayerCardState extends State<PrayerCard>
                           Text(
                             _fmt(pt.sunrise),
                             style: GoogleFonts.hindSiliguri(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
                               color: Colors.white,
+                              letterSpacing: 0.5,
                             ),
                           ),
+                          const SizedBox(height: 2),
                           Text(
                             'সূর্যোদয়',
                             style: GoogleFonts.hindSiliguri(
@@ -232,16 +452,24 @@ class _PrayerCardState extends State<PrayerCard>
                           ),
                         ],
                       ),
+                      // Vertical divider between sunrise & sunset
+                      Container(
+                        width: 1,
+                        height: 32,
+                        color: Colors.white.withValues(alpha: 0.40),
+                      ),
                       Column(
                         children: [
                           Text(
                             _fmt(pt.maghrib),
                             style: GoogleFonts.hindSiliguri(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
                               color: Colors.white,
+                              letterSpacing: 0.5,
                             ),
                           ),
+                          const SizedBox(height: 2),
                           Text(
                             'সূর্যাস্ত',
                             style: GoogleFonts.hindSiliguri(
@@ -776,19 +1004,86 @@ class _RamadanMiniCardState extends State<RamadanMiniCard>
 
     if (_error != null) {
       return Container(
-        height: 80,
         decoration: BoxDecoration(
           color: cardBg,
           borderRadius: BorderRadius.circular(16),
-        ),
-        child: Center(
-          child: Text(
-            _error!,
-            style: GoogleFonts.hindSiliguri(
-              color: textColor,
-              fontSize: 13,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.20 : 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
-          ),
+          ],
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+        child: Row(
+          children: [
+            Icon(
+              Icons.wifi_off_rounded,
+              size: 28,
+              color: isDark ? Colors.white30 : Colors.black26,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'সাহরি ও ইফতারের সময় পাওয়া যায়নি',
+                    style: GoogleFonts.hindSiliguri(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: textColor,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'ইন্টারনেট চালু করে আবার চেষ্টা করুন',
+                    style: GoogleFonts.hindSiliguri(
+                      fontSize: 11,
+                      color: isDark ? AppColors.darkSubText : Colors.black54,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  _loading = true;
+                  _error = null;
+                });
+                _fetchTodayTimes();
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF6C3CE1), Color(0xFF4A90D9)],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.refresh_rounded,
+                        color: Colors.white, size: 14),
+                    const SizedBox(width: 4),
+                    Text(
+                      'রিট্রাই',
+                      style: GoogleFonts.hindSiliguri(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       );
     }

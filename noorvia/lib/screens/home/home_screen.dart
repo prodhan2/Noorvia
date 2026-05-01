@@ -17,6 +17,7 @@ import '../IslamicFeatures/AsmaulHusna/asmaul_husna_page.dart';
 import '../IslamicFeatures/qibla_direction_page.dart';
 import '../Ruqyah/ruqyah_list_page.dart';
 import '../IslamicNames/islamic_names_page.dart';
+import '../ArabicAlphabet/arabic_alphabet_home.dart';
 
 import '../common/coming_soon_page.dart';
 import 'widgets/section_header.dart';
@@ -317,7 +318,7 @@ class _HomeScreenState extends State<HomeScreen>
     FeatureItem(
       emoji: '🎓',
       label: 'কুরআন\nশিক্ষা',
-      onTap: () => _go(context, const SurahListPage()),
+      onTap: () => _go(context, const ArabicAlphabetHome()),
     ),
     FeatureItem(
       emoji: '🕌',

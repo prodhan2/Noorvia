@@ -5,14 +5,17 @@
 // ============================================================
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../core/theme/app_theme.dart';
 import '../core/providers/theme_provider.dart';
 import '../core/providers/nav_provider.dart';
 import '../core/providers/prayer_provider.dart';
+import '../core/providers/notification_provider.dart';
 import '../core/config/app_routes.dart';
 import 'location/location_screen.dart';
+import 'notifications/notification_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -25,6 +28,18 @@ class _MainShellState extends State<MainShell> {
   // Build pages once — IndexedStack keeps them alive
   late final List<Widget> _pages = AppRoutes.buildNavbarPages();
 
+  // ── Exit confirmation dialog ──────────────────────────────
+  Future<bool> _onWillPop(BuildContext context) async {
+    final isDark = context.read<ThemeProvider>().isDark;
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      barrierColor: Colors.black.withValues(alpha: 0.6),
+      builder: (ctx) => _ExitDialog(isDark: isDark),
+    );
+    return result ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final nav = context.watch<NavProvider>();
@@ -34,18 +49,28 @@ class _MainShellState extends State<MainShell> {
     final statusBarH = MediaQuery.of(context).padding.top;
     final appBarH = kToolbarHeight + statusBarH + 2;
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(appBarH),
-        child: _NoorviaAppBar(isDark: isDark, theme: theme, appBarHeight: appBarH),
-      ),
-      drawer: _NoorviaDrawer(isDark: isDark, theme: theme),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        final shouldExit = await _onWillPop(context);
+        if (shouldExit && context.mounted) {
+          SystemNavigator.pop();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        appBar: PreferredSize(
+          preferredSize: Size.fromHeight(appBarH),
+          child: _NoorviaAppBar(isDark: isDark, theme: theme, appBarHeight: appBarH),
+        ),
+        drawer: _NoorviaDrawer(isDark: isDark, theme: theme),
       body: IndexedStack(
-        index: nav.currentIndex,
-        children: _pages,
+          index: nav.currentIndex,
+          children: _pages,
+        ),
+        bottomNavigationBar: _NoorviaBottomNav(isDark: isDark),
       ),
-      bottomNavigationBar: _NoorviaBottomNav(isDark: isDark),
     );
   }
 }
@@ -80,7 +105,7 @@ class _NoorviaAppBar extends StatelessWidget implements PreferredSizeWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          height: appBarHeight,
+          height: appBarHeight - 2,
           decoration: BoxDecoration(
             gradient: AppColors.gradient,
             boxShadow: [
@@ -206,46 +231,64 @@ class _NoorviaAppBar extends StatelessWidget implements PreferredSizeWidget {
               const SizedBox(width: 6),
 
               // ── Notification bell ──────────────────────────
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: redBorder.withValues(alpha: 0.70),
-                        width: 1.4,
-                      ),
-                    ),
-                    child: const Icon(Icons.notifications_outlined,
-                        size: 18, color: Colors.white),
-                  ),
-                  Positioned(
-                    top: -3,
-                    right: -3,
-                    child: Container(
-                      width: 17,
-                      height: 17,
+              GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const NotificationScreen()),
+                ),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
                       decoration: BoxDecoration(
-                        color: AppColors.notifRed,
+                        color: Colors.white.withValues(alpha: 0.15),
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 1.5),
-                      ),
-                      child: const Center(
-                        child: Text(
-                          '৬',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 8,
-                              fontWeight: FontWeight.bold),
+                        border: Border.all(
+                          color: redBorder.withValues(alpha: 0.70),
+                          width: 1.4,
                         ),
                       ),
+                      child: const Icon(Icons.notifications_outlined,
+                          size: 18, color: Colors.white),
                     ),
-                  ),
-                ],
+                    // Badge — real count from NotificationProvider
+                    Builder(builder: (ctx) {
+                      final count =
+                          ctx.watch<NotificationProvider>().notifications.length;
+                      if (count == 0) return const SizedBox.shrink();
+                      final display =
+                          count > 99 ? '৯৯+' : _toBanglaNum(count);
+                      return Positioned(
+                        top: -3,
+                        right: -3,
+                        child: Container(
+                          constraints: const BoxConstraints(
+                              minWidth: 17, minHeight: 17),
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 3),
+                          decoration: BoxDecoration(
+                            color: AppColors.notifRed,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                                color: Colors.white, width: 1.5),
+                          ),
+                          child: Center(
+                            child: Text(
+                              display,
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ],
+                ),
               ),
 
               const SizedBox(width: 6),
@@ -622,6 +665,17 @@ class _NoorviaBottomNav extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────
+// Helper — convert int to Bangla numeral string
+// ─────────────────────────────────────────────────────────────
+String _toBanglaNum(int n) {
+  const digits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+  return n.toString().split('').map((c) {
+    final d = int.tryParse(c);
+    return d != null ? digits[d] : c;
+  }).join();
+}
+
+// ─────────────────────────────────────────────────────────────
 // Small reusable widgets
 // ─────────────────────────────────────────────────────────────
 class _DrawerItem extends StatelessWidget {
@@ -661,6 +715,177 @@ class _DrawerItem extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       onTap: onTap,
       dense: true,
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Exit Confirmation Dialog
+// ─────────────────────────────────────────────────────────────
+class _ExitDialog extends StatelessWidget {
+  final bool isDark;
+
+  const _ExitDialog({required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = isDark ? AppColors.darkCard : Colors.white;
+    final textColor = isDark ? AppColors.darkText : AppColors.lightText;
+    final subColor = isDark ? AppColors.darkSubText : AppColors.lightSubText;
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 32),
+      child: Container(
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.18),
+              blurRadius: 32,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ── Gradient header ──────────────────────────
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              decoration: BoxDecoration(
+                gradient: AppColors.gradient,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+              ),
+              child: Column(
+                children: [
+                  const Text('🕌', style: TextStyle(fontSize: 40)),
+                  const SizedBox(height: 8),
+                  Text(
+                    'নূরভিয়া',
+                    style: GoogleFonts.hindSiliguri(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // ── Body ─────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+              child: Column(
+                children: [
+                  Text(
+                    'অ্যাপ বন্ধ করবেন?',
+                    style: GoogleFonts.hindSiliguri(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: textColor,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'আপনি কি সত্যিই নূরভিয়া বন্ধ করতে চান?\nআল্লাহ আপনার সাথে থাকুন। 🤲',
+                    style: GoogleFonts.hindSiliguri(
+                      fontSize: 13,
+                      color: subColor,
+                      height: 1.6,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+
+            // ── Divider ───────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Divider(
+                color: AppColors.primary.withValues(alpha: 0.15),
+                height: 24,
+              ),
+            ),
+
+            // ── Buttons ───────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+              child: Row(
+                children: [
+                  // থাকুন (Cancel)
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        side: BorderSide(
+                          color: AppColors.primary.withValues(alpha: 0.5),
+                          width: 1.5,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: Text(
+                        'থাকুন',
+                        style: GoogleFonts.hindSiliguri(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // বন্ধ করুন (Exit)
+                  Expanded(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: AppColors.gradient,
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.30),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: Text(
+                          'বন্ধ করুন',
+                          style: GoogleFonts.hindSiliguri(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/providers/theme_provider.dart';
 import 'dua_list_page.dart';
@@ -96,6 +97,7 @@ class _DowaScreenState extends State<DowaScreen> {
   List<DuaCategory> _categories = [];
   bool _loading = true;
   String? _error;
+  bool _offline = false;
 
   @override
   void initState() {
@@ -107,33 +109,62 @@ class _DowaScreenState extends State<DowaScreen> {
     setState(() {
       _loading = true;
       _error = null;
+      _offline = false;
     });
+
+    final prefs = await SharedPreferences.getInstance();
+
+    // ── ১. Cache থেকে তাৎক্ষণিক দেখাও ───────────────────────
+    final cached = prefs.getString('dua_cache');
+    if (cached != null) {
+      _parseAndSet(cached, fromCache: true);
+    }
+
+    // ── ২. Network থেকে fresh data আনো ───────────────────────
     try {
       final response = await http
           .get(Uri.parse(_apiUrl))
           .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(utf8.decode(response.bodyBytes))
-            as Map<String, dynamic>;
-        final cats = (data['categories'] as List<dynamic>)
-            .map((c) => DuaCategory.fromJson(c as Map<String, dynamic>))
-            .toList();
+        final raw = utf8.decode(response.bodyBytes);
+        await prefs.setString('dua_cache', raw);
+        _parseAndSet(raw, fromCache: false);
+      } else {
+        if (_categories.isEmpty) {
+          setState(() {
+            _error = 'সার্ভার থেকে ডেটা আনা যায়নি (${response.statusCode})';
+            _loading = false;
+          });
+        } else {
+          setState(() { _loading = false; _offline = true; });
+        }
+      }
+    } catch (e) {
+      if (_categories.isEmpty) {
         setState(() {
-          _categories = cats;
+          _error = 'ইন্টারনেট সংযোগ পরীক্ষা করুন';
           _loading = false;
         });
       } else {
-        setState(() {
-          _error = 'সার্ভার থেকে ডেটা আনা যায়নি (${response.statusCode})';
-          _loading = false;
-        });
+        setState(() { _loading = false; _offline = true; });
       }
-    } catch (e) {
+    }
+  }
+
+  void _parseAndSet(String raw, {required bool fromCache}) {
+    try {
+      final data = jsonDecode(raw) as Map<String, dynamic>;
+      final cats = (data['categories'] as List<dynamic>)
+          .map((c) => DuaCategory.fromJson(c as Map<String, dynamic>))
+          .toList();
       setState(() {
-        _error = 'ইন্টারনেট সংযোগ পরীক্ষা করুন';
+        _categories = cats;
         _loading = false;
+        _offline = fromCache;
       });
+    } catch (_) {
+      if (!fromCache) setState(() { _loading = false; });
     }
   }
 
@@ -249,25 +280,52 @@ class _DowaScreenState extends State<DowaScreen> {
                         message: _error!,
                         onRetry: _fetchDuas,
                       )
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: _categories.length,
-                        itemBuilder: (context, index) {
-                          final cat = _categories[index];
-                          return _CategoryCard(
-                            category: cat,
-                            cardColor: cardColor,
-                            textColor: textColor,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => DuaListPage(category: cat),
-                                ),
-                              );
-                            },
-                          );
-                        },
+                    : Column(
+                        children: [
+                          if (_offline)
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 6),
+                              color: Colors.orange.withValues(alpha: 0.15),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.wifi_off_rounded,
+                                      size: 14, color: Colors.orange),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'অফলাইন মোড — সংরক্ষিত ডেটা দেখাচ্ছে',
+                                    style: GoogleFonts.hindSiliguri(
+                                        fontSize: 11, color: Colors.orange),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          Expanded(
+                            child: ListView.builder(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              itemCount: _categories.length,
+                              itemBuilder: (context, index) {
+                                final cat = _categories[index];
+                                return _CategoryCard(
+                                  category: cat,
+                                  cardColor: cardColor,
+                                  textColor: textColor,
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            DuaListPage(category: cat),
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                          ),
+                        ],
                       ),
           ),
         ],
@@ -300,7 +358,7 @@ class _CategoryCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 6,
           ),
         ],
@@ -311,7 +369,7 @@ class _CategoryCard extends StatelessWidget {
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.1),
+            color: AppColors.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Center(

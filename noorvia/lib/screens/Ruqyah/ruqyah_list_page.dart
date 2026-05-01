@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/providers/theme_provider.dart';
 import 'ruqyah_detail_page.dart';
@@ -55,6 +56,7 @@ class _RuqyahListPageState extends State<RuqyahListPage>
 
   bool _loading = true;
   String? _error;
+  bool _offline = false;
 
   late TabController _tabController;
   final TextEditingController _searchCtrl = TextEditingController();
@@ -79,37 +81,64 @@ class _RuqyahListPageState extends State<RuqyahListPage>
     setState(() {
       _loading = true;
       _error = null;
+      _offline = false;
     });
+
+    final prefs = await SharedPreferences.getInstance();
+
+    // ── ১. Cache থেকে তাৎক্ষণিক দেখাও ───────────────────────
+    final cached = prefs.getString('ruqyah_cache');
+    if (cached != null) {
+      _parseAndSet(cached, fromCache: true);
+    }
+
+    // ── ২. Network থেকে fresh data আনো ───────────────────────
     try {
       final response = await http
           .get(Uri.parse(_apiUrl))
           .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> jsonMap =
-            json.decode(utf8.decode(response.bodyBytes));
-
-        final notes = _parseList(jsonMap['notes']);
-        final ayat = _parseList(jsonMap['ayat']);
-
+        final raw = utf8.decode(response.bodyBytes);
+        await prefs.setString('ruqyah_cache', raw);
+        _parseAndSet(raw, fromCache: false);
+      } else {
+        if (_notes.isEmpty && _ayat.isEmpty) {
+          setState(() {
+            _error = 'সার্ভার থেকে ডেটা আনা যায়নি (${response.statusCode})';
+            _loading = false;
+          });
+        } else {
+          setState(() { _loading = false; _offline = true; });
+        }
+      }
+    } catch (e) {
+      if (_notes.isEmpty && _ayat.isEmpty) {
         setState(() {
-          _notes = notes;
-          _ayat = ayat;
-          _filteredNotes = notes;
-          _filteredAyat = ayat;
+          _error = 'ইন্টারনেট সংযোগ পরীক্ষা করুন।';
           _loading = false;
         });
       } else {
-        setState(() {
-          _error = 'সার্ভার থেকে ডেটা আনা যায়নি (${response.statusCode})';
-          _loading = false;
-        });
+        setState(() { _loading = false; _offline = true; });
       }
-    } catch (e) {
+    }
+  }
+
+  void _parseAndSet(String raw, {required bool fromCache}) {
+    try {
+      final Map<String, dynamic> jsonMap = json.decode(raw);
+      final notes = _parseList(jsonMap['notes']);
+      final ayat = _parseList(jsonMap['ayat']);
       setState(() {
-        _error = 'ইন্টারনেট সংযোগ পরীক্ষা করুন।';
+        _notes = notes;
+        _ayat = ayat;
+        _filteredNotes = notes;
+        _filteredAyat = ayat;
         _loading = false;
+        _offline = fromCache;
       });
+    } catch (_) {
+      if (!fromCache) setState(() { _loading = false; });
     }
   }
 
@@ -240,6 +269,26 @@ class _RuqyahListPageState extends State<RuqyahListPage>
               ? _buildError()
               : Column(
                   children: [
+                    // Offline banner
+                    if (_offline)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 6),
+                        color: Colors.orange.withValues(alpha: 0.15),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.wifi_off_rounded,
+                                size: 14, color: Colors.orange),
+                            const SizedBox(width: 6),
+                            Text(
+                              'অফলাইন মোড — সংরক্ষিত ডেটা দেখাচ্ছে',
+                              style: GoogleFonts.hindSiliguri(
+                                  fontSize: 11, color: Colors.orange),
+                            ),
+                          ],
+                        ),
+                      ),
                     // Search bar
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
