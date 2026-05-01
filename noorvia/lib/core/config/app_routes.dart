@@ -12,7 +12,7 @@ import '../../screens/home/home_screen.dart';
 import '../../screens/tools/tools_screen.dart';
 import '../../screens/IslamicFeatures/BangalQUran/BanglaQuran.dart';
 import '../../screens/dowa/dowa_screen.dart';
-import '../../screens/login/login_screen.dart';
+import '../../screens/settings/settings_screen.dart';
 
 // ─────────────────────────────────────────────────────────────
 // Step 1 ▸ Route identifiers
@@ -23,7 +23,7 @@ enum AppRoute {
   tools,
   quran,
   dowa,
-  login,
+  settings,
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -115,11 +115,11 @@ final List<AppRouteConfig> appRoutes = [
     showInDrawer: true,
   ),
   AppRouteConfig(
-    route: AppRoute.login,
-    label: 'লগইন',
+    route: AppRoute.settings,
+    label: 'প্রোফাইল',
     icon: Icons.person_outline_rounded,
     activeIcon: Icons.person_rounded,
-    pageBuilder: () => const LoginScreen(),
+    pageBuilder: () => const SettingsScreen(),
     showInNavbar: true,
     showInDrawer: true,
   ),

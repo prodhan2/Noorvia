@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:audioplayers/audioplayers.dart';
+import '../../core/theme/app_theme.dart';
 
 class SurahDetailPage extends StatefulWidget {
   final Map<String, dynamic> surahInfo;
@@ -150,7 +151,7 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.blueAccent, Colors.purpleAccent],
+              colors: [AppColors.gradientStart, AppColors.gradientEnd],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -184,18 +185,17 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
                   children: [
                     // Reciter info
                     Container(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      color: Colors.teal.withOpacity(0.1),
+                      color: AppColors.primary.withValues(alpha: 0.08),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const Icon(Icons.headphones,
-                              size: 16, color: Colors.teal),
+                              size: 16, color: AppColors.primary),
                           const SizedBox(width: 8),
                           Text(
                             reciters.firstWhere(
                                 (r) => r['id'] == selectedReciter)['name']!,
-                            style: const TextStyle(color: Colors.teal),
+                            style: const TextStyle(color: AppColors.primary),
                           ),
                         ],
                       ),
@@ -237,7 +237,7 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
                                         children: [
                                           CircleAvatar(
                                             radius: 14,
-                                            backgroundColor: Colors.teal,
+                                            backgroundColor: AppColors.primary,
                                             child: Text(
                                               verseId.toString(),
                                               style: const TextStyle(
@@ -251,7 +251,7 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
                                               isCurrentVersePlaying && isPlaying
                                                   ? Icons.pause
                                                   : Icons.play_arrow,
-                                              color: Colors.teal,
+                                              color: AppColors.primary,
                                             ),
                                             onPressed: () =>
                                                 _playVerseAudio(verseId),

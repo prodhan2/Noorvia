@@ -8,6 +8,7 @@ import 'calendar.dart';
 import 'tashbi.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../core/theme/app_theme.dart';
 
 void main() => runApp(IslamicApp());
 
@@ -17,7 +18,7 @@ class IslamicApp extends StatelessWidget {
     return MaterialApp(
       title: 'Islamic App',
       theme: ThemeData(
-        primarySwatch: Colors.green,
+        primarySwatch: Colors.purple,
         fontFamily: 'Poppins',
       ),
       debugShowCheckedModeBanner: false,
@@ -77,7 +78,7 @@ class IslamicHomePage extends StatelessWidget {
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF07FFEA), Color(0xFF2A33E0)],
+              colors: [AppColors.gradientStart, AppColors.gradientEnd],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),

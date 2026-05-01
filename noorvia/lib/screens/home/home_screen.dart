@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -16,9 +15,10 @@ import '../IslamicFeatures/ramadancalender.dart';
 import '../IslamicFeatures/calendar.dart';
 import '../IslamicFeatures/AsmaulHusna/asmaul_husna_page.dart';
 import '../IslamicFeatures/qibla_direction_page.dart';
+import '../Ruqyah/ruqyah_list_page.dart';
+import '../IslamicNames/islamic_names_page.dart';
 
 import '../common/coming_soon_page.dart';
-import '../../widgets/shimmer.dart';
 import 'widgets/section_header.dart';
 import 'widgets/feature_grid_item.dart';
 import 'widgets/prayer_card.dart';
@@ -167,6 +167,7 @@ class _HomeScreenState extends State<HomeScreen>
 
     return Scaffold(
       backgroundColor: bg,
+
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         child: Column(
@@ -177,10 +178,7 @@ class _HomeScreenState extends State<HomeScreen>
               opacity: _prayerFade,
               child: SlideTransition(
                 position: _prayerSlide,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: PrayerCard(isDark: isDark),
-                ),
+                child: PrayerCard(isDark: isDark),
               ),
             ),
             const SizedBox(height: 8),
@@ -189,12 +187,9 @@ class _HomeScreenState extends State<HomeScreen>
               opacity: _bannerFade,
               child: SlideTransition(
                 position: _bannerSlide,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: RamadanMiniCard(
-                    isDark: isDark,
-                    onExpand: () => _go(context, RamadanCalendarPage()),
-                  ),
+                child: RamadanMiniCard(
+                  isDark: isDark,
+                  onExpand: () => _go(context, RamadanCalendarPage()),
                 ),
               ),
             ),
@@ -204,10 +199,7 @@ class _HomeScreenState extends State<HomeScreen>
               opacity: _bannerFade,
               child: SlideTransition(
                 position: _bannerSlide,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: BannerCard(isDark: isDark),
-                ),
+                child: BannerCard(isDark: isDark),
               ),
             ),
             const SizedBox(height: 16),
@@ -267,10 +259,7 @@ class _HomeScreenState extends State<HomeScreen>
             ),
             const SizedBox(height: 16),
 
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: const DonationCard(),
-            ),
+            const DonationCard(),
             const SizedBox(height: 24),
           ],
         ),
@@ -334,6 +323,11 @@ class _HomeScreenState extends State<HomeScreen>
       emoji: '🕌',
       label: 'নামায শিক্ষা',
       onTap: () => _go(context, const ChapterListPage()),
+    ),
+    FeatureItem(
+      emoji: '🌿',
+      label: 'রুকইয়াহ',
+      onTap: () => _go(context, const RuqyahListPage()),
     ),
   ];
 
@@ -487,12 +481,7 @@ class _HomeScreenState extends State<HomeScreen>
     FeatureItem(
       emoji: '👶',
       label: 'ইসলামিক\nনাম',
-      onTap: () => _soon(
-        context,
-        'ইসলামিক নাম',
-        '👶',
-        'সুন্দর ইসলামিক নাম ও অর্থ খুঁজুন',
-      ),
+      onTap: () => _go(context, const IslamicNamesPage()),
     ),
     FeatureItem(
       emoji: '📅',

@@ -8,6 +8,7 @@ import 'core/providers/theme_provider.dart';
 import 'core/providers/nav_provider.dart';
 import 'core/providers/prayer_provider.dart';
 import 'core/providers/audio_provider.dart';
+import 'core/providers/settings_provider.dart';
 import 'screens/splash/splash_screen.dart';
 import 'widgets/floating_audio_player.dart';
 
@@ -44,17 +45,18 @@ class NoorviaApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => NavProvider()),
         ChangeNotifierProvider(create: (_) => PrayerProvider()),
         ChangeNotifierProvider(create: (_) => AudioProvider()),
+        ChangeNotifierProvider(create: (_) => SettingsProvider()),
       ],
-      child: Consumer2<ThemeProvider, AudioProvider>(
-        builder: (context, themeProvider, audioProvider, _) {
+      child: Consumer3<ThemeProvider, AudioProvider, SettingsProvider>(
+        builder: (context, themeProvider, audioProvider, settings, _) {
           return _AudioOverlayInjector(
             audioProvider: audioProvider,
             child: MaterialApp(
               navigatorKey: _navKey,
               title: 'নূরভিয়া',
               debugShowCheckedModeBanner: false,
-              theme: AppTheme.lightTheme,
-              darkTheme: AppTheme.darkTheme,
+              theme: AppTheme.buildLight(settings.banglaFont, settings.accent),
+              darkTheme: AppTheme.buildDark(settings.banglaFont, settings.accent),
               themeMode: themeProvider.themeMode,
               home: const SplashScreen(),
             ),

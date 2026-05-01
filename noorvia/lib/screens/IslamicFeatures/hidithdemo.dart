@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../core/theme/app_theme.dart';
 
 class HadithDemoPage extends StatefulWidget {
   @override
@@ -124,9 +125,9 @@ class _HadithDemoPageState extends State<HadithDemoPage> {
         centerTitle: true,
         elevation: 0,
         flexibleSpace: Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF0F3443), Color(0xFF34E89E)],
+              colors: [AppColors.gradientStart, AppColors.gradientEnd],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -234,13 +235,13 @@ class HadithCard extends StatelessWidget {
                     hadith.number,
                     style: TextStyle(color: Colors.white),
                   ),
-                  backgroundColor: Color(0xFF0F3443),
+                  backgroundColor: AppColors.primaryDark,
                 ),
                 Spacer(),
                 IconButton(
                   icon: Icon(
                     isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                    color: isBookmarked ? Color(0xFF34E89E) : Colors.grey,
+                    color: isBookmarked ? AppColors.accent : Colors.grey,
                   ),
                   onPressed: () => onBookmark(hadith.id),
                 ),
@@ -256,7 +257,7 @@ class HadithCard extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'Bangla',
                 fontWeight: FontWeight.bold,
-                color: Colors.teal[700],
+                color: AppColors.primaryLight,
               ),
             ),
             SizedBox(height: 8),

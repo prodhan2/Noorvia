@@ -11,6 +11,8 @@ class SurahInfo {
   final int number;
   final String name;
   final String arabic;
+  final String transliteration;
+  final String meaning;
   final int ayatCount;
   final String type;
 
@@ -18,33 +20,35 @@ class SurahInfo {
     required this.number,
     required this.name,
     required this.arabic,
+    this.transliteration = '',
+    this.meaning = '',
     required this.ayatCount,
     required this.type,
   });
 }
 
 const List<SurahInfo> _surahs = [
-  SurahInfo(number: 1,  name: 'আল-ফাতিহা',   arabic: 'الفاتحة',    ayatCount: 7,   type: 'মাক্কী'),
-  SurahInfo(number: 2,  name: 'আল-বাকারা',   arabic: 'البقرة',     ayatCount: 286, type: 'মাদানী'),
-  SurahInfo(number: 3,  name: 'আলে-ইমরান',   arabic: 'آل عمران',   ayatCount: 200, type: 'মাদানী'),
-  SurahInfo(number: 4,  name: 'আন-নিসা',     arabic: 'النساء',     ayatCount: 176, type: 'মাদানী'),
-  SurahInfo(number: 5,  name: 'আল-মায়িদা',  arabic: 'المائدة',    ayatCount: 120, type: 'মাদানী'),
-  SurahInfo(number: 6,  name: 'আল-আনআম',     arabic: 'الأنعام',    ayatCount: 165, type: 'মাক্কী'),
-  SurahInfo(number: 7,  name: 'আল-আরাফ',     arabic: 'الأعراف',    ayatCount: 206, type: 'মাক্কী'),
-  SurahInfo(number: 8,  name: 'আল-আনফাল',    arabic: 'الأنفال',    ayatCount: 75,  type: 'মাদানী'),
-  SurahInfo(number: 9,  name: 'আত-তাওবা',    arabic: 'التوبة',     ayatCount: 129, type: 'মাদানী'),
-  SurahInfo(number: 10, name: 'ইউনুস',        arabic: 'يونس',       ayatCount: 109, type: 'মাক্কী'),
-  SurahInfo(number: 11, name: 'হুদ',          arabic: 'هود',        ayatCount: 123, type: 'মাক্কী'),
-  SurahInfo(number: 12, name: 'ইউসুফ',        arabic: 'يوسف',       ayatCount: 111, type: 'মাক্কী'),
-  SurahInfo(number: 13, name: 'আর-রাদ',       arabic: 'الرعد',      ayatCount: 43,  type: 'মাদানী'),
-  SurahInfo(number: 14, name: 'ইবরাহীম',      arabic: 'إبراهيم',    ayatCount: 52,  type: 'মাক্কী'),
-  SurahInfo(number: 15, name: 'আল-হিজর',      arabic: 'الحجر',      ayatCount: 99,  type: 'মাক্কী'),
-  SurahInfo(number: 36, name: 'ইয়া-সীন',     arabic: 'يس',         ayatCount: 83,  type: 'মাক্কী'),
-  SurahInfo(number: 55, name: 'আর-রাহমান',    arabic: 'الرحمن',     ayatCount: 78,  type: 'মাদানী'),
-  SurahInfo(number: 67, name: 'আল-মুলক',      arabic: 'الملك',      ayatCount: 30,  type: 'মাক্কী'),
-  SurahInfo(number: 112, name: 'আল-ইখলাস',   arabic: 'الإخلاص',    ayatCount: 4,   type: 'মাক্কী'),
-  SurahInfo(number: 113, name: 'আল-ফালাক',   arabic: 'الفلق',      ayatCount: 5,   type: 'মাক্কী'),
-  SurahInfo(number: 114, name: 'আন-নাস',      arabic: 'الناس',      ayatCount: 6,   type: 'মাক্কী'),
+  SurahInfo(number: 1,   name: 'আল-ফাতিহা',   arabic: 'الفاتحة',    transliteration: 'Al-Fatihah',  meaning: 'সূচনা',                  ayatCount: 7,   type: 'মাক্কী'),
+  SurahInfo(number: 2,   name: 'আল-বাকারা',   arabic: 'البقرة',     transliteration: 'Al-Baqarah',  meaning: 'বকনা-বাছুর',             ayatCount: 286, type: 'মাদানী'),
+  SurahInfo(number: 3,   name: 'আলে-ইমরান',   arabic: 'آل عمران',   transliteration: "Ali 'Imran",  meaning: 'ইমরানের পরিবার',         ayatCount: 200, type: 'মাদানী'),
+  SurahInfo(number: 4,   name: 'আন-নিসা',     arabic: 'النساء',     transliteration: 'An-Nisa',     meaning: 'নারী',                   ayatCount: 176, type: 'মাদানী'),
+  SurahInfo(number: 5,   name: 'আল-মায়িদা',  arabic: 'المائدة',    transliteration: "Al-Ma'idah",  meaning: 'খাদ্য পরিবেশিত টেবিল',  ayatCount: 120, type: 'মাদানী'),
+  SurahInfo(number: 6,   name: 'আল-আনআম',     arabic: 'الأنعام',    transliteration: "Al-An'am",    meaning: 'গৃহপালিত পশু',           ayatCount: 165, type: 'মাক্কী'),
+  SurahInfo(number: 7,   name: 'আল-আরাফ',     arabic: 'الأعراف',    transliteration: 'Al-Araf',     meaning: 'উচ্চস্থান',              ayatCount: 206, type: 'মাক্কী'),
+  SurahInfo(number: 8,   name: 'আল-আনফাল',    arabic: 'الأنفال',    transliteration: 'Al-Anfal',    meaning: 'যুদ্ধলব্ধ সম্পদ',       ayatCount: 75,  type: 'মাদানী'),
+  SurahInfo(number: 9,   name: 'আত-তাওবা',    arabic: 'التوبة',     transliteration: 'At-Tawbah',   meaning: 'অনুশোচনা',               ayatCount: 129, type: 'মাদানী'),
+  SurahInfo(number: 10,  name: 'ইউনুস',        arabic: 'يونس',       transliteration: 'Yunus',       meaning: 'ইউনুস',                  ayatCount: 109, type: 'মাক্কী'),
+  SurahInfo(number: 11,  name: 'হুদ',          arabic: 'هود',        transliteration: 'Hud',         meaning: 'হুদ',                    ayatCount: 123, type: 'মাক্কী'),
+  SurahInfo(number: 12,  name: 'ইউসুফ',        arabic: 'يوسف',       transliteration: 'Yusuf',       meaning: 'ইউসুফ',                  ayatCount: 111, type: 'মাক্কী'),
+  SurahInfo(number: 13,  name: 'আর-রাদ',       arabic: 'الرعد',      transliteration: 'Ar-Rad',      meaning: 'বজ্রপাত',                ayatCount: 43,  type: 'মাদানী'),
+  SurahInfo(number: 14,  name: 'ইবরাহীম',      arabic: 'إبراهيم',    transliteration: 'Ibrahim',     meaning: 'ইবরাহীম',                ayatCount: 52,  type: 'মাক্কী'),
+  SurahInfo(number: 15,  name: 'আল-হিজর',      arabic: 'الحجر',      transliteration: 'Al-Hijr',     meaning: 'পাথুরে ভূমি',            ayatCount: 99,  type: 'মাক্কী'),
+  SurahInfo(number: 36,  name: 'ইয়া-সীন',     arabic: 'يس',         transliteration: 'Ya-Sin',      meaning: 'ইয়া-সীন',               ayatCount: 83,  type: 'মাক্কী'),
+  SurahInfo(number: 55,  name: 'আর-রাহমান',    arabic: 'الرحمن',     transliteration: 'Ar-Rahman',   meaning: 'পরম দয়ালু',             ayatCount: 78,  type: 'মাদানী'),
+  SurahInfo(number: 67,  name: 'আল-মুলক',      arabic: 'الملك',      transliteration: 'Al-Mulk',     meaning: 'রাজত্ব',                 ayatCount: 30,  type: 'মাক্কী'),
+  SurahInfo(number: 112, name: 'আল-ইখলাস',    arabic: 'الإخلاص',    transliteration: 'Al-Ikhlas',   meaning: 'একনিষ্ঠতা',             ayatCount: 4,   type: 'মাক্কী'),
+  SurahInfo(number: 113, name: 'আল-ফালাক',    arabic: 'الفلق',      transliteration: 'Al-Falaq',    meaning: 'ভোরের আলো',             ayatCount: 5,   type: 'মাক্কী'),
+  SurahInfo(number: 114, name: 'আন-নাস',       arabic: 'الناس',      transliteration: 'An-Nas',      meaning: 'মানবজাতি',               ayatCount: 6,   type: 'মাক্কী'),
 ];
 
 // ─── QuranScreen ──────────────────────────────────────────────────────────────
@@ -400,15 +404,32 @@ class _SurahListTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // ── Row 1: Transliteration (meaning) — above Arabic ──
+                    if (surah.transliteration.isNotEmpty)
+                      Text(
+                        '${surah.transliteration} (${surah.meaning})',
+                        style: GoogleFonts.hindSiliguri(
+                          fontWeight: FontWeight.w700,
+                          color: textColor,
+                          fontSize: 15,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    const SizedBox(height: 2),
+                    // ── Row 2: Arabic name ──
                     Text(
-                      surah.name,
-                      style: GoogleFonts.hindSiliguri(
-                        fontWeight: FontWeight.w700,
-                        color: textColor,
-                        fontSize: 15,
+                      surah.arabic,
+                      textDirection: TextDirection.rtl,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        color: Color(0xFFB8860B), // gold
+                        fontFamily: 'serif',
+                        fontWeight: FontWeight.bold,
+                        height: 1.3,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
+                    // ── Row 3: Type badge + ayat count ──
                     Row(
                       children: [
                         Container(
@@ -435,7 +456,7 @@ class _SurahListTile extends StatelessWidget {
                         Text(
                           '${_toBangla(surah.ayatCount.toString())} আয়াত',
                           style: GoogleFonts.hindSiliguri(
-                            color: Colors.grey,
+                            color: Colors.black87,
                             fontSize: 12,
                           ),
                         ),
@@ -445,24 +466,10 @@ class _SurahListTile extends StatelessWidget {
                 ),
               ),
 
-              // Arabic name + arrow
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    surah.arabic,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      color: AppColors.primary,
-                      fontFamily: 'serif',
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  const Icon(Icons.arrow_forward_ios,
-                      size: 12, color: AppColors.primary),
-                ],
-              ),
+              // Arrow
+              const SizedBox(width: 6),
+              const Icon(Icons.arrow_forward_ios,
+                  size: 12, color: AppColors.primary),
             ],
           ),
         ),

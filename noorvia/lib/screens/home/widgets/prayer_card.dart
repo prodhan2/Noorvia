@@ -9,6 +9,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/gradient_helper.dart';
 import '../../../core/providers/prayer_provider.dart';
 import '../../../widgets/shimmer.dart';
+import '../../IslamicFeatures/ramadancalender.dart';
 
 // ═══════════════════════════════════════════════════════════════
 // PrayerCard — full redesign matching the reference image
@@ -79,11 +80,16 @@ class _PrayerCardState extends State<PrayerCard>
     return s;
   }
 
-  // ── 24h → display (Bangla digits, keep 24h format like image) ─
+  // ── 24h → 12h display with AM/PM (Bangla digits) ─────────
   String _fmt(String t) {
     final parts = t.split(':');
     if (parts.length < 2) return _bn(t);
-    return '${_bn(parts[0].padLeft(2,'0'))}:${_bn(parts[1])}';
+    int h = int.tryParse(parts[0]) ?? 0;
+    final m = parts[1].padLeft(2, '0');
+    final suffix = h >= 12 ? 'PM' : 'AM';
+    h = h % 12;
+    if (h == 0) h = 12;
+    return '${_bn(h.toString().padLeft(2, '0'))}:${_bn(m)} $suffix';
   }
 
   // ── Next prayer end time (the prayer after next) ──────────
@@ -290,25 +296,31 @@ class _PrayerCardState extends State<PrayerCard>
             )
           : pt == null
               ? const SizedBox(height: 80)
-              : IntrinsicHeight(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // ── Left: circular timer ───────────────
-                      _buildTimerSection(prayer, pt),
+              : Stack(
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // ── Left: circular timer ───────────────
+                        _buildTimerSection(prayer, pt),
 
-                      // ── Vertical divider ───────────────────
-                      Container(
+                        // ── Right: prayer list ─────────────────
+                        Expanded(
+                          child: _buildPrayerList(prayer, pt),
+                        ),
+                      ],
+                    ),
+                    // ── Vertical divider (full height via Stack) ──
+                    Positioned(
+                      top: 0,
+                      bottom: 0,
+                      left: 150,
+                      child: Container(
                         width: 1,
                         color: dividerColor,
                       ),
-
-                      // ── Right: prayer list ─────────────────
-                      Expanded(
-                        child: _buildPrayerList(prayer, pt),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
     );
   }
@@ -323,7 +335,7 @@ class _PrayerCardState extends State<PrayerCard>
     return SizedBox(
       width: 150,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -471,7 +483,7 @@ class _PrayerCardState extends State<PrayerCard>
 
     return Container(
       decoration: bgDecoration,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -722,10 +734,16 @@ class _RamadanMiniCardState extends State<RamadanMiniCard>
     return s;
   }
 
+  // ── 24h → 12h format with AM/PM in Bangla digits ─────────
   String _fmt(String t) {
     final parts = t.split(':');
     if (parts.length < 2) return _bn(t);
-    return '${_bn(parts[0].padLeft(2, '0'))}:${_bn(parts[1])}';
+    int h = int.tryParse(parts[0]) ?? 0;
+    final m = parts[1].padLeft(2, '0');
+    final suffix = h >= 12 ? 'PM' : 'AM';
+    h = h % 12;
+    if (h == 0) h = 12;
+    return '${_bn(h.toString().padLeft(2, '0'))}:${_bn(m)} $suffix';
   }
 
   @override
@@ -804,79 +822,116 @@ class _RamadanMiniCardState extends State<RamadanMiniCard>
       opacity: _enterFade,
       child: SlideTransition(
         position: _enterSlide,
-        child: Container(
-          decoration: BoxDecoration(
-            color: cardBg,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.06),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
+        child: Stack(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: cardBg,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.06),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 16),
-            child: Row(
-              children: [
-                // ── Col 1: সাহরি ────────────────────────────
-                Expanded(
-                  child: _buildIconColumn(
-                    iconWidget: _circleIcon(
-                      icon: Icons.nightlight_round,
-                      bgColor: const Color(0xFF6C3CE1),
-                      iconColor: Colors.white,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(4, 16, 4, 16),
+                child: Row(
+                  children: [
+                    // ── Col 1: সাহরি ────────────────────────────
+                    Expanded(
+                      child: _buildIconColumn(
+                        iconWidget: _circleIcon(
+                          icon: Icons.nightlight_round,
+                          bgColor: const Color(0xFF6C3CE1),
+                          iconColor: Colors.white,
+                        ),
+                        time: _fmt(_sehriTime),
+                        label: 'পরবর্তী সাহরি',
+                        pillText: sehriPill,
+                        pillBg: const Color(0xFFEDE7FF),
+                        pillTextColor: const Color(0xFF6C3CE1),
+                        isPast: sehriPast,
+                      ),
                     ),
-                    time: _fmt(_sehriTime),
-                    label: 'পরবর্তী সাহরি',
-                    pillText: sehriPill,
-                    pillBg: const Color(0xFFEDE7FF),
-                    pillTextColor: const Color(0xFF6C3CE1),
-                    isPast: sehriPast,
-                  ),
-                ),
 
-                _vDivider(),
+                    _vDivider(),
 
-                // ── Col 2: ইফতার ────────────────────────────
-                Expanded(
-                  child: _buildIconColumn(
-                    iconWidget: _circleIcon(
-                      icon: Icons.wb_twilight_rounded,
-                      bgColor: const Color(0xFFFF8C00),
-                      iconColor: Colors.white,
+                    // ── Col 2: ইফতার ────────────────────────────
+                    Expanded(
+                      child: _buildIconColumn(
+                        iconWidget: _circleIcon(
+                          icon: Icons.wb_twilight_rounded,
+                          bgColor: const Color(0xFFFF8C00),
+                          iconColor: Colors.white,
+                        ),
+                        time: _fmt(_iftarTime),
+                        label: 'পরবর্তী ইফতার',
+                        pillText: iftarPill,
+                        pillBg: const Color(0xFFFFF0E0),
+                        pillTextColor: const Color(0xFFFF6B00),
+                        isPast: iftarPast,
+                      ),
                     ),
-                    time: _fmt(_iftarTime),
-                    label: 'পরবর্তী ইফতার',
-                    pillText: iftarPill,
-                    pillBg: const Color(0xFFFFF0E0),
-                    pillTextColor: const Color(0xFFFF6B00),
-                    isPast: iftarPast,
-                  ),
-                ),
 
-                _vDivider(),
+                    _vDivider(),
 
-                // ── Col 3: Countdown ─────────────────────────
-                Expanded(
-                  child: _buildIconColumn(
-                    iconWidget: _circleIcon(
-                      icon: Icons.access_time_rounded,
-                      bgColor: const Color(0xFF2979FF),
-                      iconColor: Colors.white,
+                    // ── Col 3: Countdown ─────────────────────────
+                    Expanded(
+                      child: _buildIconColumn(
+                        iconWidget: _circleIcon(
+                          icon: Icons.access_time_rounded,
+                          bgColor: const Color(0xFF2979FF),
+                          iconColor: Colors.white,
+                        ),
+                        time: activeCountdown,
+                        label: _activeLabel,
+                        pillText: 'মধ্যরাত শেষ',
+                        pillBg: const Color(0xFFE3EEFF),
+                        pillTextColor: const Color(0xFF2979FF),
+                        isPast: false,
+                      ),
                     ),
-                    time: activeCountdown,
-                    label: _activeLabel,
-                    pillText: 'মধ্যরাত শেষ',
-                    pillBg: const Color(0xFFE3EEFF),
-                    pillTextColor: const Color(0xFF2979FF),
-                    isPast: false,
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
+
+            // ── Expand icon — top right corner ───────────────
+            Positioned(
+              top: 6,
+              right: 8,
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const RamadanCalendarPage(),
+                    ),
+                  );
+                },
+                child: Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.10)
+                        : const Color(0xFF6C3CE1).withValues(alpha: 0.08),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.open_in_new_rounded,
+                    size: 15,
+                    color: isDark
+                        ? Colors.white70
+                        : const Color(0xFF6C3CE1),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

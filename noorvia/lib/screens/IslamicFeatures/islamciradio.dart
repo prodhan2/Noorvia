@@ -5,6 +5,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:provider/provider.dart';
 import '../../core/providers/audio_provider.dart';
+import '../../core/theme/app_theme.dart';
 
 class RadioScreen extends StatefulWidget {
   const RadioScreen({super.key});
@@ -169,6 +170,7 @@ class _RadioScreenState extends State<RadioScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text(
           'Islamic Radio Stations',
@@ -183,14 +185,11 @@ class _RadioScreenState extends State<RadioScreen> {
         ],
         flexibleSpace: Container(
           decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Color.fromARGB(255, 7, 255, 234),
-            Color.fromARGB(255, 42, 51, 224)
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+            gradient: LinearGradient(
+              colors: [AppColors.gradientStart, AppColors.gradientEnd],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
           ),
         ),
         backgroundColor: Colors.transparent,
@@ -237,7 +236,7 @@ class _RadioScreenState extends State<RadioScreen> {
     );
 
     return Container(
-      color: Colors.green[50],
+      color: AppColors.lightBg,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
         children: [
@@ -245,7 +244,7 @@ class _RadioScreenState extends State<RadioScreen> {
             'NOW PLAYING',
             style: TextStyle(
               fontSize: 12,
-              color: Colors.green[700],
+              color: AppColors.primary,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -287,7 +286,7 @@ class _RadioScreenState extends State<RadioScreen> {
                   playerState == PlayerState.playing
                       ? Icons.pause
                       : Icons.play_arrow,
-                  color: Colors.green,
+                  color: AppColors.primary,
                   size: 32,
                 ),
                 onPressed: () => toggleRadioPlayback(currentStation),
@@ -308,7 +307,7 @@ class _RadioScreenState extends State<RadioScreen> {
               ? position!.inMilliseconds / duration!.inMilliseconds
               : 0,
           backgroundColor: Colors.grey[300],
-          color: Colors.green,
+          color: AppColors.primary,
         ),
       ],
     );
@@ -383,9 +382,9 @@ class RadioStationCard extends StatelessWidget {
   Widget _buildPlayPauseIcon() {
     if (isPlaying) {
       return playerState == PlayerState.playing
-          ? const Icon(Icons.pause, color: Colors.red)
-          : const Icon(Icons.play_arrow, color: Colors.green);
+          ? const Icon(Icons.pause, color: Colors.redAccent)
+          : Icon(Icons.play_arrow, color: AppColors.primary);
     }
-    return const Icon(Icons.play_arrow, color: Colors.green);
+    return Icon(Icons.play_arrow, color: AppColors.primary);
   }
 }

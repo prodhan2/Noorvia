@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/app_theme.dart';
 
 class QuranDemoPage extends StatelessWidget {
   @override
@@ -77,7 +78,7 @@ class SurahCard extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: Colors.green,
+                color: AppColors.primary,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Center(
@@ -114,7 +115,7 @@ class SurahCard extends StatelessWidget {
             Text('$verses verses'),
             SizedBox(width: 16),
             IconButton(
-              icon: Icon(Icons.play_circle_fill, color: Colors.green),
+              icon: Icon(Icons.play_circle_fill, color: AppColors.primary),
               onPressed: () {},
             ),
           ],
@@ -147,7 +148,7 @@ class PrayerMethodCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Colors.green,
+                color: AppColors.primary,
               ),
             ),
             SizedBox(height: 10),

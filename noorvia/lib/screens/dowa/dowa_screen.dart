@@ -1,24 +1,141 @@
+// ============================================================
+//  dowa_screen.dart
+//  GitHub API থেকে dua.json fetch করে categories দেখায়
+// ============================================================
+
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/providers/theme_provider.dart';
+import 'dua_list_page.dart';
 
-class DowaScreen extends StatelessWidget {
+// ─── Data Models ─────────────────────────────────────────────
+
+class DuaCategory {
+  final String id;
+  final String emoji;
+  final String title;
+  final String description;
+  final int count;
+  final List<DuaItem> duas;
+
+  const DuaCategory({
+    required this.id,
+    required this.emoji,
+    required this.title,
+    required this.description,
+    required this.count,
+    required this.duas,
+  });
+
+  factory DuaCategory.fromJson(Map<String, dynamic> json) {
+    return DuaCategory(
+      id: json['id'] ?? '',
+      emoji: json['emoji'] ?? '🤲',
+      title: json['title'] ?? '',
+      description: json['description'] ?? '',
+      count: json['count'] ?? 0,
+      duas: (json['duas'] as List<dynamic>? ?? [])
+          .map((d) => DuaItem.fromJson(d as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+}
+
+class DuaItem {
+  final int id;
+  final String title;
+  final String arabic;
+  final String transliteration;
+  final String translation;
+  final String reference;
+  final String virtue;
+  final String? note;
+
+  const DuaItem({
+    required this.id,
+    required this.title,
+    required this.arabic,
+    required this.transliteration,
+    required this.translation,
+    required this.reference,
+    required this.virtue,
+    this.note,
+  });
+
+  factory DuaItem.fromJson(Map<String, dynamic> json) {
+    return DuaItem(
+      id: json['id'] ?? 0,
+      title: json['title'] ?? '',
+      arabic: json['arabic'] ?? '',
+      transliteration: json['transliteration'] ?? '',
+      translation: json['translation'] ?? '',
+      reference: json['reference'] ?? '',
+      virtue: json['virtue'] ?? '',
+      note: json['note'] as String?,
+    );
+  }
+}
+
+// ─── Screen ──────────────────────────────────────────────────
+
+class DowaScreen extends StatefulWidget {
   const DowaScreen({super.key});
 
-  final List<Map<String, String>> categories = const [
-    {'emoji': '🌅', 'title': 'সকালের দু\'আ', 'count': '১৫টি দু\'আ'},
-    {'emoji': '🌙', 'title': 'রাতের দু\'আ', 'count': '১২টি দু\'আ'},
-    {'emoji': '🍽️', 'title': 'খাওয়ার দু\'আ', 'count': '৮টি দু\'আ'},
-    {'emoji': '🚗', 'title': 'সফরের দু\'আ', 'count': '১০টি দু\'আ'},
-    {'emoji': '🤲', 'title': 'নামাজের দু\'আ', 'count': '২০টি দু\'আ'},
-    {'emoji': '😴', 'title': 'ঘুমের দু\'আ', 'count': '৬টি দু\'আ'},
-    {'emoji': '🏠', 'title': 'ঘরে প্রবেশের দু\'আ', 'count': '৪টি দু\'আ'},
-    {'emoji': '💊', 'title': 'অসুস্থতার দু\'আ', 'count': '৯টি দু\'আ'},
-    {'emoji': '📿', 'title': 'তাসবীহ ও যিকির', 'count': '২৫টি'},
-    {'emoji': '🌿', 'title': 'ইস্তিগফার', 'count': '১৪টি দু\'আ'},
-  ];
+  @override
+  State<DowaScreen> createState() => _DowaScreenState();
+}
+
+class _DowaScreenState extends State<DowaScreen> {
+  static const _apiUrl =
+      'https://raw.githubusercontent.com/prodhan2/App_Backend_Data/main/MyApi/dua.json';
+
+  List<DuaCategory> _categories = [];
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchDuas();
+  }
+
+  Future<void> _fetchDuas() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final response = await http
+          .get(Uri.parse(_apiUrl))
+          .timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(utf8.decode(response.bodyBytes))
+            as Map<String, dynamic>;
+        final cats = (data['categories'] as List<dynamic>)
+            .map((c) => DuaCategory.fromJson(c as Map<String, dynamic>))
+            .toList();
+        setState(() {
+          _categories = cats;
+          _loading = false;
+        });
+      } else {
+        setState(() {
+          _error = 'সার্ভার থেকে ডেটা আনা যায়নি (${response.statusCode})';
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _error = 'ইন্টারনেট সংযোগ পরীক্ষা করুন';
+        _loading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +148,7 @@ class DowaScreen extends StatelessWidget {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ── Header ──
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             child: Text(
@@ -42,7 +160,8 @@ class DowaScreen extends StatelessWidget {
               ),
             ),
           ),
-          // Featured dua
+
+          // ── Featured Banner ──
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Container(
@@ -56,9 +175,9 @@ class DowaScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  Text(
+                  const Text(
                     'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 22,
                       color: Colors.white,
                       fontFamily: 'serif',
@@ -87,71 +206,190 @@ class DowaScreen extends StatelessWidget {
               ),
             ),
           ),
+
           const SizedBox(height: 16),
+
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              'বিভাগসমূহ',
-              style: GoogleFonts.hindSiliguri(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: textColor,
-              ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'বিভাগসমূহ',
+                  style: GoogleFonts.hindSiliguri(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: textColor,
+                  ),
+                ),
+                if (!_loading && _error == null)
+                  Text(
+                    '${_categories.length}টি বিভাগ',
+                    style: GoogleFonts.hindSiliguri(
+                      fontSize: 13,
+                      color: Colors.grey,
+                    ),
+                  ),
+              ],
             ),
           ),
+
           const SizedBox(height: 8),
+
+          // ── Body ──
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: categories.length,
-              itemBuilder: (context, index) {
-                final cat = categories[index];
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  decoration: BoxDecoration(
-                    color: cardColor,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                          color: Colors.black.withOpacity(0.04), blurRadius: 6),
-                    ],
-                  ),
-                  child: ListTile(
-                    leading: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Center(
-                        child: Text(cat['emoji']!,
-                            style: const TextStyle(fontSize: 22)),
-                      ),
+            child: _loading
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.primary,
                     ),
-                    title: Text(
-                      cat['title']!,
-                      style: GoogleFonts.hindSiliguri(
-                        fontWeight: FontWeight.w600,
-                        color: textColor,
-                        fontSize: 15,
+                  )
+                : _error != null
+                    ? _ErrorWidget(
+                        message: _error!,
+                        onRetry: _fetchDuas,
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: _categories.length,
+                        itemBuilder: (context, index) {
+                          final cat = _categories[index];
+                          return _CategoryCard(
+                            category: cat,
+                            cardColor: cardColor,
+                            textColor: textColor,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => DuaListPage(category: cat),
+                                ),
+                              );
+                            },
+                          );
+                        },
                       ),
-                    ),
-                    subtitle: Text(
-                      cat['count']!,
-                      style: GoogleFonts.hindSiliguri(
-                        color: Colors.grey,
-                        fontSize: 12,
-                      ),
-                    ),
-                    trailing: const Icon(Icons.arrow_forward_ios,
-                        size: 14, color: AppColors.primary),
-                  ),
-                );
-              },
-            ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ─── Category Card ────────────────────────────────────────────
+
+class _CategoryCard extends StatelessWidget {
+  final DuaCategory category;
+  final Color cardColor;
+  final Color textColor;
+  final VoidCallback onTap;
+
+  const _CategoryCard({
+    required this.category,
+    required this.cardColor,
+    required this.textColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 6,
+          ),
+        ],
+      ),
+      child: ListTile(
+        onTap: onTap,
+        leading: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: AppColors.primary.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Center(
+            child: Text(
+              category.emoji,
+              style: const TextStyle(fontSize: 22),
+            ),
+          ),
+        ),
+        title: Text(
+          category.title,
+          style: GoogleFonts.hindSiliguri(
+            fontWeight: FontWeight.w600,
+            color: textColor,
+            fontSize: 15,
+          ),
+        ),
+        subtitle: Text(
+          '${category.count}টি দু\'আ',
+          style: GoogleFonts.hindSiliguri(
+            color: Colors.grey,
+            fontSize: 12,
+          ),
+        ),
+        trailing: const Icon(
+          Icons.arrow_forward_ios,
+          size: 14,
+          color: AppColors.primary,
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Error Widget ─────────────────────────────────────────────
+
+class _ErrorWidget extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+
+  const _ErrorWidget({required this.message, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.wifi_off_rounded, size: 64, color: Colors.grey),
+            const SizedBox(height: 16),
+            Text(
+              message,
+              style: GoogleFonts.hindSiliguri(
+                fontSize: 15,
+                color: Colors.grey,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh_rounded),
+              label: Text(
+                'আবার চেষ্টা করুন',
+                style: GoogleFonts.hindSiliguri(),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

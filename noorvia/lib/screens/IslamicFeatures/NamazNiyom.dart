@@ -4,13 +4,14 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/theme/app_theme.dart';
 
 // ── Theme colors ──────────────────────────────────────────────
-const _kPrimary      = Color(0xFF1B6B3A);
-const _kPrimaryDark  = Color(0xFF0F4D2A);
-const _kPrimaryLight = Color(0xFF2E8B57);
+const _kPrimary      = AppColors.primary;
+const _kPrimaryDark  = AppColors.primaryDark;
+const _kPrimaryLight = AppColors.primaryLight;
 const _kGold         = Color(0xFFFFB300);
-const _kBg           = Color(0xFFF4F6F4);
+const _kBg           = Color(0xFFF5F4FF); // light purple tint bg
 
 const _kApiUrl =
     'https://raw.githubusercontent.com/prodhan2/App_Backend_Data/main/MyApi/namaz_shikkha.json';
@@ -497,7 +498,7 @@ class _NamazDetailPageState extends State<NamazDetailPage> {
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor:
-                            _copied ? Colors.green : _kPrimary,
+                            _copied ? AppColors.accent : _kPrimary,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(

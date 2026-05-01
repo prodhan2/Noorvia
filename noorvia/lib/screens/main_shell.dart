@@ -30,10 +30,16 @@ class _MainShellState extends State<MainShell> {
     final nav = context.watch<NavProvider>();
     final theme = context.watch<ThemeProvider>();
     final isDark = theme.isDark;
+    // Dynamic height: toolbar content (56) + status bar + 2px red divider
+    final statusBarH = MediaQuery.of(context).padding.top;
+    final appBarH = kToolbarHeight + statusBarH + 2;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: _NoorviaAppBar(isDark: isDark, theme: theme),
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(appBarH),
+        child: _NoorviaAppBar(isDark: isDark, theme: theme, appBarHeight: appBarH),
+      ),
       drawer: _NoorviaDrawer(isDark: isDark, theme: theme),
       body: IndexedStack(
         index: nav.currentIndex,
@@ -50,197 +56,232 @@ class _MainShellState extends State<MainShell> {
 class _NoorviaAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool isDark;
   final ThemeProvider theme;
+  final double appBarHeight;
 
-  const _NoorviaAppBar({required this.isDark, required this.theme});
+  const _NoorviaAppBar({
+    required this.isDark,
+    required this.theme,
+    required this.appBarHeight,
+  });
 
   @override
-  Size get preferredSize => const Size.fromHeight(64);
+  Size get preferredSize => Size.fromHeight(appBarHeight);
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = Colors.white;
-    final textColor = AppColors.lightText;
-    final subColor = AppColors.lightSubText;
     final prayer = context.watch<PrayerProvider>();
     final screenW = MediaQuery.of(context).size.width;
     final isSmall = screenW < 360;
+    final topPad = MediaQuery.of(context).padding.top;
+    // হালকা red accent — সব border-এ ব্যবহার হবে
+    const redBorder = Color(0xFFFF6B6B);
 
-    return Container(
-      height: preferredSize.height + MediaQuery.of(context).padding.top,
-      decoration: BoxDecoration(
-        color: bgColor,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          height: appBarHeight,
+          decoration: BoxDecoration(
+            gradient: AppColors.gradient,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.gradientStart.withValues(alpha: 0.30),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-        ],
-      ),
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top,
-        left: 12,
-        right: 12,
-        bottom: 8,
-      ),
-      child: Row(
-        children: [
-          // ── Hamburger + Brand ──────────────────────────────
-          Builder(
-            builder: (ctx) => GestureDetector(
-              onTap: () => Scaffold.of(ctx).openDrawer(),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
+          padding: EdgeInsets.only(
+            top: topPad,
+            left: 12,
+            right: 12,
+            bottom: 8,
+          ),
+          child: Row(
+            children: [
+              // ── Hamburger + Brand ────────────────────────────
+              Builder(
+                builder: (ctx) => GestureDetector(
+                  onTap: () => Scaffold.of(ctx).openDrawer(),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: redBorder.withValues(alpha: 0.55),
+                            width: 1.2,
+                          ),
+                        ),
+                        child: const Icon(Icons.menu,
+                            color: Colors.white, size: 20),
+                      ),
+                      if (!isSmall) ...[
+                        const SizedBox(width: 8),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'নূরভিয়া',
+                              style: GoogleFonts.hindSiliguri(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                                height: 1.1,
+                              ),
+                            ),
+                            Text(
+                              'Noorvia',
+                              style: GoogleFonts.poppins(
+                                fontSize: 9,
+                                color: Colors.white70,
+                                letterSpacing: 1.5,
+                                height: 1.1,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+
+              const Spacer(),
+
+              // ── Location pill ──────────────────────────────
+              GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LocationScreen()),
+                ),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: redBorder.withValues(alpha: 0.55),
+                      width: 1.2,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      prayer.isLoading
+                          ? const SizedBox(
+                              width: 10,
+                              height: 10,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 1.5, color: Colors.white))
+                          : const Icon(Icons.location_on_outlined,
+                              color: Colors.white, size: 12),
+                      const SizedBox(width: 3),
+                      ConstrainedBox(
+                        constraints:
+                            BoxConstraints(maxWidth: isSmall ? 60 : 80),
+                        child: Text(
+                          prayer.cityDisplayName,
+                          style: GoogleFonts.hindSiliguri(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const Icon(Icons.keyboard_arrow_down,
+                          color: Colors.white, size: 14),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 6),
+
+              // ── Notification bell ──────────────────────────
+              Stack(
+                clipBehavior: Clip.none,
                 children: [
                   Container(
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(Icons.menu,
-                        color: AppColors.primary, size: 20),
-                  ),
-                  if (!isSmall) ...[
-                    const SizedBox(width: 8),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'নূরভিয়া',
-                          style: GoogleFonts.hindSiliguri(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.primary,
-                            height: 1.1,
-                          ),
-                        ),
-                        Text(
-                          'Noorvia',
-                          style: GoogleFonts.poppins(
-                            fontSize: 9,
-                            color: subColor,
-                            letterSpacing: 1.5,
-                            height: 1.1,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-
-          const Spacer(),
-
-          // ── Location pill (tap → LocationScreen) ──────────
-          GestureDetector(
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const LocationScreen()),
-            ),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                gradient: AppColors.gradient,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  prayer.isLoading
-                      ? const SizedBox(
-                          width: 10,
-                          height: 10,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 1.5,
-                              color: Colors.white))
-                      : const Icon(Icons.location_on_outlined,
-                          color: Colors.white, size: 12),
-                  const SizedBox(width: 3),
-                  ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: isSmall ? 60 : 80),
-                    child: Text(
-                      prayer.cityDisplayName,
-                      style: GoogleFonts.hindSiliguri(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
+                      color: Colors.white.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: redBorder.withValues(alpha: 0.70),
+                        width: 1.4,
                       ),
-                      overflow: TextOverflow.ellipsis,
+                    ),
+                    child: const Icon(Icons.notifications_outlined,
+                        size: 18, color: Colors.white),
+                  ),
+                  Positioned(
+                    top: -3,
+                    right: -3,
+                    child: Container(
+                      width: 17,
+                      height: 17,
+                      decoration: BoxDecoration(
+                        color: AppColors.notifRed,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 1.5),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          '৬',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 8,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      ),
                     ),
                   ),
-                  const Icon(Icons.keyboard_arrow_down,
-                      color: Colors.white, size: 14),
                 ],
               ),
-            ),
-          ),
 
-          const SizedBox(width: 6),
+              const SizedBox(width: 6),
 
-          // ── Notification bell ──────────────────────────────
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
+              // ── Profile avatar ─────────────────────────────
               Container(
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
+                  color: Colors.white.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 6,
-                    ),
-                  ],
-                ),
-                child: Icon(Icons.notifications_outlined,
-                    size: 18, color: textColor),
-              ),
-              Positioned(
-                top: -2,
-                right: -2,
-                child: Container(
-                  width: 16,
-                  height: 16,
-                  decoration: const BoxDecoration(
-                    color: AppColors.notifRed,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Center(
-                    child: Text(
-                      '৬',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 8,
-                          fontWeight: FontWeight.bold),
-                    ),
+                  border: Border.all(
+                    color: redBorder.withValues(alpha: 0.55),
+                    width: 1.4,
                   ),
                 ),
+                child: const Icon(Icons.person, color: Colors.white, size: 18),
               ),
             ],
           ),
+        ),
 
-          const SizedBox(width: 6),
-
-          // ── Profile avatar ─────────────────────────────────
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.primaryLight, width: 2),
+        // ── Red divider line ─────────────────────────────────
+        Container(
+          height: 2,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color(0xFFFF4444),
+                Color(0xFFFF8C8C),
+                Color(0xFFFF4444),
+              ],
             ),
-            child: const Icon(Icons.person, color: Colors.white, size: 18),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -374,7 +415,10 @@ class _NoorviaDrawer extends StatelessWidget {
                     icon: Icons.settings_outlined,
                     label: 'সেটিংস',
                     textColor: textColor,
-                    onTap: () => Navigator.pop(context),
+                    onTap: () {
+                      Navigator.pop(context);
+                      nav.goTo(AppRoute.settings);
+                    },
                   ),
                   _DrawerItem(
                     icon: Icons.info_outline,
@@ -580,25 +624,6 @@ class _NoorviaBottomNav extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────
 // Small reusable widgets
 // ─────────────────────────────────────────────────────────────
-class _Pill extends StatelessWidget {
-  final Color color;
-  final Widget child;
-
-  const _Pill({required this.color, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: child,
-    );
-  }
-}
-
 class _DrawerItem extends StatelessWidget {
   final IconData icon;
   final String label;

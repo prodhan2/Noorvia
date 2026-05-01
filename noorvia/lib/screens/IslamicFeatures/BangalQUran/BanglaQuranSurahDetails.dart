@@ -10,9 +10,9 @@ import '../../../core/providers/theme_provider.dart';
 import '../../../core/providers/audio_provider.dart';
 import '../../../widgets/shimmer.dart';
 
-const _kPrimary = Color(0xFF1B6B3A);
-const _kPrimaryDark = Color(0xFF0F4D2A);
-const _kPrimaryLight = Color(0xFF2E8B57);
+const _kPrimary      = AppColors.primary;
+const _kPrimaryDark  = AppColors.primaryDark;
+const _kPrimaryLight = AppColors.primaryLight;
 const _kGold = Color(0xFFFFB300);
 
 // ═══════════════════════════════════════════════════════════════

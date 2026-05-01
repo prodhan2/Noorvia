@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../providers/settings_provider.dart';
 
 class AppColors {
   // ── Airkom Gradient tokens ────────────────────────────────
@@ -69,69 +69,91 @@ class AppColors {
 }
 
 class AppTheme {
-  static ThemeData lightTheme = ThemeData(
-    useMaterial3: true,
-    brightness: Brightness.light,
-    primaryColor: AppColors.primary,
-    scaffoldBackgroundColor: AppColors.lightBg,
-    colorScheme: const ColorScheme.light(
-      primary: AppColors.primary,
-      secondary: AppColors.accent,
-      surface: AppColors.lightCard,
-    ),
-    textTheme: GoogleFonts.hindSiliguriTextTheme().apply(
-      bodyColor: AppColors.lightText,
-      displayColor: AppColors.lightText,
-    ),
-    appBarTheme: const AppBarTheme(
-      backgroundColor: AppColors.lightBg,
-      elevation: 0,
-      iconTheme: IconThemeData(color: AppColors.lightText),
-    ),
-    cardTheme: CardThemeData(
-      color: AppColors.lightCard,
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-    ),
-    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-      backgroundColor: AppColors.lightCard,
-      selectedItemColor: AppColors.primary,
-      unselectedItemColor: AppColors.lightSubText,
-      type: BottomNavigationBarType.fixed,
-      elevation: 8,
-    ),
+  // ── Static defaults (used before settings load) ───────────
+  static ThemeData lightTheme = _buildLight(
+    BanglaFont.hindSiliguri,
+    kAccentOptions.first,
   );
 
-  static ThemeData darkTheme = ThemeData(
-    useMaterial3: true,
-    brightness: Brightness.dark,
-    primaryColor: AppColors.primary,
-    scaffoldBackgroundColor: AppColors.darkBg,
-    colorScheme: const ColorScheme.dark(
-      primary: AppColors.primary,
-      secondary: AppColors.accent,
-      surface: AppColors.darkCard,
-    ),
-    textTheme: GoogleFonts.hindSiliguriTextTheme().apply(
-      bodyColor: AppColors.darkText,
-      displayColor: AppColors.darkText,
-    ),
-    appBarTheme: const AppBarTheme(
-      backgroundColor: AppColors.darkBg,
-      elevation: 0,
-      iconTheme: IconThemeData(color: AppColors.darkText),
-    ),
-    cardTheme: CardThemeData(
-      color: AppColors.darkCard,
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-    ),
-    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-      backgroundColor: AppColors.darkCard,
-      selectedItemColor: AppColors.primary,
-      unselectedItemColor: AppColors.darkSubText,
-      type: BottomNavigationBarType.fixed,
-      elevation: 8,
-    ),
+  static ThemeData darkTheme = _buildDark(
+    BanglaFont.hindSiliguri,
+    kAccentOptions.first,
   );
+
+  // ── Dynamic builders — called from main.dart via Consumer ─
+  static ThemeData buildLight(BanglaFont font, AppAccentOption accent) =>
+      _buildLight(font, accent);
+
+  static ThemeData buildDark(BanglaFont font, AppAccentOption accent) =>
+      _buildDark(font, accent);
+
+  static ThemeData _buildLight(BanglaFont font, AppAccentOption accent) {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.light,
+      primaryColor: accent.primary,
+      scaffoldBackgroundColor: AppColors.lightBg,
+      colorScheme: ColorScheme.light(
+        primary: accent.primary,
+        secondary: accent.light,
+        surface: AppColors.lightCard,
+      ),
+      textTheme: font.textTheme().apply(
+        bodyColor: AppColors.lightText,
+        displayColor: AppColors.lightText,
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: AppColors.lightBg,
+        elevation: 0,
+        iconTheme: IconThemeData(color: AppColors.lightText),
+      ),
+      cardTheme: CardThemeData(
+        color: AppColors.lightCard,
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: AppColors.lightCard,
+        selectedItemColor: accent.primary,
+        unselectedItemColor: AppColors.lightSubText,
+        type: BottomNavigationBarType.fixed,
+        elevation: 8,
+      ),
+    );
+  }
+
+  static ThemeData _buildDark(BanglaFont font, AppAccentOption accent) {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      primaryColor: accent.primary,
+      scaffoldBackgroundColor: AppColors.darkBg,
+      colorScheme: ColorScheme.dark(
+        primary: accent.primary,
+        secondary: accent.light,
+        surface: AppColors.darkCard,
+      ),
+      textTheme: font.textTheme().apply(
+        bodyColor: AppColors.darkText,
+        displayColor: AppColors.darkText,
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: AppColors.darkBg,
+        elevation: 0,
+        iconTheme: IconThemeData(color: AppColors.darkText),
+      ),
+      cardTheme: CardThemeData(
+        color: AppColors.darkCard,
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: AppColors.darkCard,
+        selectedItemColor: accent.primary,
+        unselectedItemColor: AppColors.darkSubText,
+        type: BottomNavigationBarType.fixed,
+        elevation: 8,
+      ),
+    );
+  }
 }

@@ -35,7 +35,7 @@ class _TC {
   // header gradient
   List<Color> get headerGrad => isDark
       ? [const Color(0xFF0D1B2A), const Color(0xFF1A3A5C), const Color(0xFF0D2B3E)]
-      : [const Color(0xFF1B6B3A), const Color(0xFF2E8B57), const Color(0xFF0F4D2A)];
+      : [AppColors.primaryDark, AppColors.primary, AppColors.gradientMid];
 
   // card shadow
   List<BoxShadow> get cardShadow => [

@@ -15,10 +15,10 @@ import '../../../core/providers/theme_provider.dart';
 import '../../../widgets/shimmer.dart';
 
 
-// ─── App colors (matches Noorvia theme) ──────────────────────
-const _kPrimary = Color(0xFF1B6B3A);
-const _kPrimaryDark = Color(0xFF0F4D2A);
-const _kPrimaryLight = Color(0xFF2E8B57);
+// ─── App theme colors ─────────────────────────────────────────
+const _kPrimary      = AppColors.primary;       // 0xFF6C3CE1
+const _kPrimaryDark  = AppColors.primaryDark;   // 0xFF4A2BAD
+const _kPrimaryLight = AppColors.primaryLight;  // 0xFF9B6FF5
 
 // ─── Background task setup ────────────────────────────────────
 void main() {
@@ -322,7 +322,7 @@ class _SurahListPageState extends State<SurahListPage>
                         color: isDark ? AppColors.darkSubText : Colors.grey,
                         fontSize: 13),
                     prefixIcon:
-                        const Icon(Icons.search, color: _kPrimary, size: 20),
+                        const Icon(Icons.search, color: AppColors.primary, size: 20),
                     suffixIcon: searchQuery.isNotEmpty
                         ? IconButton(
                             icon: Icon(Icons.clear,
@@ -505,77 +505,58 @@ class _SurahTile extends StatelessWidget {
                   color: _kPrimary.withValues(alpha: 0.10),
                   shape: BoxShape.circle,
                 ),
-                child: Center(
-                  child: Text(bnNumber,
-                      style: GoogleFonts.hindSiliguri(
-                          color: _kPrimary,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 14)),
+                alignment: Alignment.center,
+                child: Text(
+                  bnNumber,
+                  style: GoogleFonts.hindSiliguri(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: _kPrimary,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
-              // Name + meta
+              // Surah info
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(translation.isNotEmpty ? translation : name,
-                        style: GoogleFonts.hindSiliguri(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 15,
-                            color: textColor)),
-                    const SizedBox(height: 3),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: isMakki
-                                ? Colors.orange.withValues(alpha: 0.15)
-                                : Colors.blue.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            isMakki ? 'মাক্কী' : 'মাদানী',
-                            style: GoogleFonts.hindSiliguri(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: isMakki
-                                    ? Colors.orange.shade700
-                                    : Colors.blue.shade700),
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Text('$totalVerses আয়াত',
-                            style: GoogleFonts.hindSiliguri(
-                                color: isDark ? AppColors.darkSubText : Colors.grey,
-                                fontSize: 12)),
-                      ],
+                    Text(
+                      name,
+                      style: GoogleFonts.hindSiliguri(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: textColor,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '$translit • $translation',
+                      style: GoogleFonts.hindSiliguri(
+                        fontSize: 11,
+                        color: textColor.withValues(alpha: 0.6),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${isMakki ? 'মক্কী' : 'মাদানী'} • $totalVerses আয়াত',
+                      style: GoogleFonts.hindSiliguri(
+                        fontSize: 11,
+                        color: _kPrimary.withValues(alpha: 0.8),
+                      ),
                     ),
                   ],
                 ),
               ),
-              // Arabic name + fav
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(name,
-                      style: const TextStyle(
-                          fontSize: 20,
-                          color: _kPrimary,
-                          fontFamily: 'serif',
-                          fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 2),
-                  GestureDetector(
-                    onTap: onFavTap,
-                    child: Icon(
-                      isFav ? Icons.favorite : Icons.favorite_border,
-                      color: isFav ? Colors.redAccent : Colors.grey,
-                      size: 18,
-                    ),
-                  ),
-                ],
+              // Favourite button
+              GestureDetector(
+                onTap: onFavTap,
+                child: Icon(
+                  isFav ? Icons.favorite : Icons.favorite_border,
+                  color: isFav ? Colors.redAccent : Colors.grey,
+                  size: 18,
+                ),
               ),
             ],
           ),
