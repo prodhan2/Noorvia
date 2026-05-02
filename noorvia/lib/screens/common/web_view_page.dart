@@ -1,8 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_theme.dart';
 
+/// Opens [url] in the system's in-app browser (Chrome Custom Tab on Android,
+/// SFSafariViewController on iOS).  Falls back to the external browser if
+/// in-app mode is unavailable.
+Future<void> openWebPage(
+  BuildContext context, {
+  required String url,
+  required String title,
+}) async {
+  final uri = Uri.parse(url);
+
+  // Try in-app browser first (Chrome Custom Tab / SFSafari)
+  if (await canLaunchUrl(uri)) {
+    final launched = await launchUrl(
+      uri,
+      mode: LaunchMode.inAppBrowserView,
+    );
+    if (launched) return;
+  }
+
+  // Fallback: external browser
+  await launchUrl(uri, mode: LaunchMode.externalApplication);
+}
+
+/// A simple wrapper page that shows a loading indicator while the
+/// in-app browser is being prepared.  On most devices the system browser
+/// opens on top of this page, so this widget is mostly a visual placeholder.
 class WebViewPage extends StatefulWidget {
   final String url;
   final String title;
@@ -18,29 +44,18 @@ class WebViewPage extends StatefulWidget {
 }
 
 class _WebViewPageState extends State<WebViewPage> {
-  late final WebViewController _controller;
-  bool _isLoading = true;
-  int _loadingProgress = 0;
-
   @override
   void initState() {
     super.initState();
-    _controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onPageStarted: (_) {
-            if (mounted) setState(() => _isLoading = true);
-          },
-          onPageFinished: (_) {
-            if (mounted) setState(() => _isLoading = false);
-          },
-          onProgress: (progress) {
-            if (mounted) setState(() => _loadingProgress = progress);
-          },
-        ),
-      )
-      ..loadRequest(Uri.parse(widget.url));
+    // Launch immediately and pop this page once done
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await openWebPage(
+        context,
+        url: widget.url,
+        title: widget.title,
+      );
+      if (mounted) Navigator.of(context).pop();
+    });
   }
 
   @override
@@ -57,19 +72,10 @@ class _WebViewPageState extends State<WebViewPage> {
             color: Colors.white,
           ),
         ),
-        bottom: _isLoading
-            ? PreferredSize(
-                preferredSize: const Size.fromHeight(3),
-                child: LinearProgressIndicator(
-                  value: _loadingProgress / 100,
-                  backgroundColor: Colors.white24,
-                  valueColor:
-                      const AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              )
-            : null,
       ),
-      body: WebViewWidget(controller: _controller),
+      body: const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      ),
     );
   }
 }
