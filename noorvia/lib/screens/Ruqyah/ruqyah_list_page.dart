@@ -316,42 +316,66 @@ class _RuqyahListPageState extends State<RuqyahListPage>
       drawer: _buildDrawer(isDark, cardColor, textColor, subColor),
       // ── Compact AppBar ──────────────────────────────────────
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.primary,
         elevation: 0,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(gradient: AppColors.gradient),
+        flexibleSpace: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.network(
+              'https://raw.githubusercontent.com/prodhan2/App_Backend_Data/main/MyApi/IslamicAppImages/rukaiyabg.webp',
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                decoration: BoxDecoration(gradient: AppColors.gradient),
+              ),
+            ),
+            // Decorative circles
+            Positioned(
+              top: -30, right: -30,
+              child: Container(
+                width: 160, height: 160,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.06),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -20, left: -20,
+              child: Container(
+                width: 120, height: 120,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.05),
+                ),
+              ),
+            ),
+          ],
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new,
               color: Colors.white, size: 18),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Row(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('🌿', style: TextStyle(fontSize: 20)),
-            const SizedBox(width: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'রুকইয়াহ',
-                  style: GoogleFonts.hindSiliguri(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    height: 1.2,
-                  ),
-                ),
-                Text(
-                  'কোরআন সুন্নাহ ভিত্তিক চিকিৎসা',
-                  style: GoogleFonts.hindSiliguri(
-                    fontSize: 10,
-                    color: Colors.white70,
-                    height: 1.2,
-                  ),
-                ),
-              ],
+            Text(
+              'রুকইয়াহ',
+              style: GoogleFonts.hindSiliguri(
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+                height: 1.2,
+              ),
+            ),
+            Text(
+              'কোরআন সুন্নাহ ভিত্তিক চিকিৎসা',
+              style: GoogleFonts.hindSiliguri(
+                fontSize: 10,
+                color: Colors.white70,
+                height: 1.2,
+              ),
             ),
           ],
         ),
@@ -391,26 +415,6 @@ class _RuqyahListPageState extends State<RuqyahListPage>
               ? _buildError()
               : Column(
                   children: [
-                    // Offline banner
-                    if (_offline)
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 6),
-                        color: Colors.orange.withValues(alpha: 0.15),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.wifi_off_rounded,
-                                size: 14, color: Colors.orange),
-                            const SizedBox(width: 6),
-                            Text(
-                              'অফলাইন মোড — সংরক্ষিত ডেটা দেখাচ্ছে',
-                              style: GoogleFonts.hindSiliguri(
-                                  fontSize: 11, color: Colors.orange),
-                            ),
-                          ],
-                        ),
-                      ),
                     // Search bar
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),

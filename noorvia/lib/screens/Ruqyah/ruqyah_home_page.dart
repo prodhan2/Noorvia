@@ -276,56 +276,66 @@ class _RuqyahHomePageState extends State<RuqyahHomePage>
       expandedHeight: 220,
       pinned: true,
       backgroundColor: AppColors.primary,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 18),
-        onPressed: () => Navigator.pop(context),
-      ),
-      actions: [
-        if (_offline)
-          const Padding(
-            padding: EdgeInsets.only(right: 4),
-            child: Icon(Icons.wifi_off_rounded, color: Colors.white70, size: 18),
-          ),
-        IconButton(
-          icon: const Icon(Icons.refresh_rounded, color: Colors.white, size: 20),
-          onPressed: _fetchData,
-        ),
-        IconButton(
-          icon: const Icon(Icons.menu_rounded, color: Colors.white, size: 22),
-          onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-        ),
-        const SizedBox(width: 4),
-      ],
+      // Hide default leading & title — we draw everything ourselves
+      automaticallyImplyLeading: false,
+      title: null,
+      // Collapsed app bar row (visible when scrolled up)
       flexibleSpace: FlexibleSpaceBar(
         collapseMode: CollapseMode.parallax,
-        title: Text('রুকইয়াহ',
-            style: GoogleFonts.hindSiliguri(
-                fontSize: 17, fontWeight: FontWeight.w800, color: Colors.white)),
-        titlePadding: const EdgeInsets.only(left: 56, bottom: 16),
+        // title shows only in collapsed state (bottom of FlexibleSpaceBar)
+        titlePadding: EdgeInsets.zero,
+        title: LayoutBuilder(
+          builder: (context, constraints) {
+            // FlexibleSpaceBar shrinks from expandedHeight → kToolbarHeight
+            // When fully collapsed constraints.maxHeight ≈ kToolbarHeight
+            final collapsed =
+                constraints.maxHeight <= kToolbarHeight + 10;
+            if (!collapsed) return const SizedBox.shrink();
+
+            // Collapsed row: back | title | offline | refresh | menu
+            return SafeArea(
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back_ios_new,
+                        color: Colors.white, size: 18),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  Expanded(
+                    child: Text(
+                      'রুকইয়াহ',
+                      style: GoogleFonts.hindSiliguri(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.refresh_rounded,
+                        color: Colors.white, size: 20),
+                    onPressed: _fetchData,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.menu_rounded,
+                        color: Colors.white, size: 22),
+                    onPressed: () =>
+                        _scaffoldKey.currentState?.openDrawer(),
+                  ),
+                  const SizedBox(width: 4),
+                ],
+              ),
+            );
+          },
+        ),
         background: Stack(
           fit: StackFit.expand,
           children: [
-            // Background image — halka (low opacity)
+            // Background image — halka
             Image.network(
-              'https://i.postimg.cc/GpTws3cT/image.png',
+              'https://raw.githubusercontent.com/prodhan2/App_Backend_Data/main/MyApi/IslamicAppImages/rukaiyabg.webp',
               fit: BoxFit.cover,
-              color: Colors.black.withValues(alpha: 0.45),
-              colorBlendMode: BlendMode.darken,
               errorBuilder: (_, __, ___) => Container(
                 decoration: BoxDecoration(gradient: AppColors.gradient),
-              ),
-            ),
-            // Gradient overlay so text stays readable
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppColors.gradientStart.withValues(alpha: 0.55),
-                    AppColors.gradientEnd.withValues(alpha: 0.55),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
               ),
             ),
             // Decorative circles
@@ -349,32 +359,54 @@ class _RuqyahHomePageState extends State<RuqyahHomePage>
                 ),
               ),
             ),
-            // Centre content
+            // Expanded top-bar row: back | spacer | offline | refresh | menu
+            Positioned(
+              top: 0, left: 0, right: 0,
+              child: SafeArea(
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back_ios_new,
+                          color: Colors.white, size: 18),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.refresh_rounded,
+                          color: Colors.white, size: 20),
+                      onPressed: _fetchData,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.menu_rounded,
+                          color: Colors.white, size: 22),
+                      onPressed: () =>
+                          _scaffoldKey.currentState?.openDrawer(),
+                    ),
+                    const SizedBox(width: 4),
+                  ],
+                ),
+              ),
+            ),
+            // Centre content — title only (একবার মাত্র)
             Positioned.fill(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const SizedBox(height: 40),
-                  Container(
-                    width: 64, height: 64,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.18),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.35), width: 2),
-                    ),
-                    child: const Center(
-                        child: Text('🌿', style: TextStyle(fontSize: 30))),
+                  Text(
+                    'রুকইয়াহ',
+                    style: GoogleFonts.hindSiliguri(
+                        fontSize: 38,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF0D1B2A),
+                        letterSpacing: 0.5),
                   ),
-                  const SizedBox(height: 10),
-                  Text('রুকইয়াহ',
-                      style: GoogleFonts.hindSiliguri(
-                          fontSize: 26, fontWeight: FontWeight.w900,
-                          color: Colors.white, letterSpacing: 0.5)),
-                  const SizedBox(height: 4),
-                  Text('কোরআন সুন্নাহ ভিত্তিক চিকিৎসা',
-                      style: GoogleFonts.hindSiliguri(
-                          fontSize: 13, color: Colors.white70)),
+                  const SizedBox(height: 6),
+                  Text(
+                    'কোরআন সুন্নাহ ভিত্তিক চিকিৎসা',
+                    style: GoogleFonts.hindSiliguri(
+                        fontSize: 18, color: const Color(0xFF1A3A5C),
+                        fontWeight: FontWeight.w600),
+                  ),
                 ],
               ),
             ),
@@ -399,8 +431,6 @@ class _RuqyahHomePageState extends State<RuqyahHomePage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (_offline) _buildOfflineBanner(),
-
           _buildSectionTitle('বিষয়সমূহ', isDark),
           const SizedBox(height: 14),
 
@@ -574,31 +604,6 @@ class _RuqyahHomePageState extends State<RuqyahHomePage>
       ),
     );
   }
-
-  // ── Offline banner ───────────────────────────────────────────
-  Widget _buildOfflineBanner() => Container(
-    margin: const EdgeInsets.only(bottom: 16),
-    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-    decoration: BoxDecoration(
-      color: Colors.orange.withValues(alpha: 0.12),
-      borderRadius: BorderRadius.circular(10),
-      border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
-    ),
-    child: Row(children: [
-      const Icon(Icons.wifi_off_rounded, size: 16, color: Colors.orange),
-      const SizedBox(width: 8),
-      Expanded(child: Text('অফলাইন মোড — সংরক্ষিত ডেটা দেখাচ্ছে',
-          style: GoogleFonts.hindSiliguri(fontSize: 12, color: Colors.orange))),
-      GestureDetector(
-        onTap: _fetchData,
-        child: Text('রিফ্রেশ',
-            style: GoogleFonts.hindSiliguri(
-                fontSize: 12, color: Colors.orange,
-                fontWeight: FontWeight.w700,
-                decoration: TextDecoration.underline)),
-      ),
-    ]),
-  );
 
   Widget _buildSectionTitle(String title, bool isDark) => Text(title,
       style: GoogleFonts.hindSiliguri(

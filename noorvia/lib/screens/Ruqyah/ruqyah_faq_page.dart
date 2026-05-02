@@ -238,108 +238,124 @@ class _RuqyahFaqPageState extends State<RuqyahFaqPage> {
   // ── Sliver AppBar ────────────────────────────────────────────
   Widget _buildSliverAppBar(bool isDark) {
     return SliverAppBar(
-      expandedHeight: 170,
+      expandedHeight: 200,
       pinned: true,
       backgroundColor: AppColors.primary,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new,
-            color: Colors.white, size: 18),
-        onPressed: () => Navigator.pop(context),
-      ),
-      actions: [
-        if (_offline)
-          const Padding(
-            padding: EdgeInsets.only(right: 4),
-            child: Icon(Icons.wifi_off_rounded,
-                color: Colors.white70, size: 18),
-          ),
-        IconButton(
-          icon: const Icon(Icons.refresh_rounded,
-              color: Colors.white, size: 20),
-          onPressed: _fetchData,
-        ),
-        const SizedBox(width: 4),
-      ],
+      automaticallyImplyLeading: false,
+      title: null,
       flexibleSpace: FlexibleSpaceBar(
-        background: Container(
-          decoration: BoxDecoration(gradient: AppColors.gradient),
-          child: Stack(
-            children: [
-              Positioned(
-                top: -40,
-                right: -40,
-                child: Container(
-                  width: 180,
-                  height: 180,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.06),
+        collapseMode: CollapseMode.parallax,
+        titlePadding: EdgeInsets.zero,
+        title: LayoutBuilder(
+          builder: (context, constraints) {
+            final collapsed = constraints.maxHeight <= kToolbarHeight + 10;
+            if (!collapsed) return const SizedBox.shrink();
+            return SafeArea(
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back_ios_new,
+                        color: Colors.white, size: 18),
+                    onPressed: () => Navigator.pop(context),
                   ),
-                ),
-              ),
-              Positioned(
-                bottom: -30,
-                left: -20,
-                child: Container(
-                  width: 130,
-                  height: 130,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.05),
-                  ),
-                ),
-              ),
-              Positioned.fill(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 36),
-                    Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                            color: Colors.white.withOpacity(0.3), width: 2),
-                      ),
-                      child: const Center(
-                        child: Text('❓', style: TextStyle(fontSize: 26)),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
+                  Expanded(
+                    child: Text(
                       'প্রশ্ন ও উত্তর',
                       style: GoogleFonts.hindSiliguri(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                      ),
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'রুকইয়াহ বিষয়ক সাধারণ জিজ্ঞাসা',
-                      style: GoogleFonts.hindSiliguri(
-                        fontSize: 12,
-                        color: Colors.white70,
-                      ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.refresh_rounded,
+                        color: Colors.white, size: 20),
+                    onPressed: _fetchData,
+                  ),
+                  const SizedBox(width: 4),
+                ],
+              ),
+            );
+          },
+        ),
+        background: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.network(
+              'https://raw.githubusercontent.com/prodhan2/App_Backend_Data/main/MyApi/IslamicAppImages/rukaiyabg.webp',
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                decoration: BoxDecoration(gradient: AppColors.gradient),
+              ),
+            ),
+            Positioned(
+              top: -30, right: -30,
+              child: Container(
+                width: 160, height: 160,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.06),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -20, left: -20,
+              child: Container(
+                width: 120, height: 120,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.05),
+                ),
+              ),
+            ),
+            // Expanded top-bar row
+            Positioned(
+              top: 0, left: 0, right: 0,
+              child: SafeArea(
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back_ios_new,
+                          color: Colors.white, size: 18),
+                      onPressed: () => Navigator.pop(context),
                     ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.refresh_rounded,
+                          color: Colors.white, size: 20),
+                      onPressed: _fetchData,
+                    ),
+                    const SizedBox(width: 4),
                   ],
                 ),
               ),
-            ],
-          ),
+            ),
+            // Centre content
+            Positioned.fill(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'প্রশ্ন ও উত্তর',
+                    style: GoogleFonts.hindSiliguri(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF0D1B2A),
+                        letterSpacing: 0.5),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'রুকইয়াহ বিষয়ক সাধারণ জিজ্ঞাসা',
+                    style: GoogleFonts.hindSiliguri(
+                        fontSize: 14,
+                        color: const Color(0xFF1A3A5C),
+                        fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-        title: Text(
-          'প্রশ্ন ও উত্তর',
-          style: GoogleFonts.hindSiliguri(
-            fontSize: 17,
-            fontWeight: FontWeight.w800,
-            color: Colors.white,
-          ),
-        ),
-        titlePadding: const EdgeInsets.only(left: 56, bottom: 16),
-        collapseMode: CollapseMode.parallax,
       ),
     );
   }
@@ -394,9 +410,6 @@ class _RuqyahFaqPageState extends State<RuqyahFaqPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Offline banner
-        if (_offline) _buildOfflineBanner(),
-
         // Search bar
         _buildSearchBar(isDark),
 
@@ -430,44 +443,6 @@ class _RuqyahFaqPageState extends State<RuqyahFaqPage> {
 
         const SizedBox(height: 32),
       ],
-    );
-  }
-
-  // ── Offline banner ───────────────────────────────────────────
-  Widget _buildOfflineBanner() {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.orange.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.orange.withOpacity(0.3)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.wifi_off_rounded, size: 16, color: Colors.orange),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              'অফলাইন মোড — সংরক্ষিত ডেটা দেখাচ্ছে',
-              style: GoogleFonts.hindSiliguri(
-                  fontSize: 12, color: Colors.orange),
-            ),
-          ),
-          GestureDetector(
-            onTap: _fetchData,
-            child: Text(
-              'রিফ্রেশ',
-              style: GoogleFonts.hindSiliguri(
-                fontSize: 12,
-                color: Colors.orange,
-                fontWeight: FontWeight.w700,
-                decoration: TextDecoration.underline,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 

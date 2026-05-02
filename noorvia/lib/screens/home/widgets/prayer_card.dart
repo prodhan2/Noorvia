@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
@@ -10,6 +11,9 @@ import '../../../core/theme/gradient_helper.dart';
 import '../../../core/providers/prayer_provider.dart';
 import '../../../widgets/shimmer.dart';
 import '../../IslamicFeatures/ramadancalender.dart';
+
+const _kDateBgUrl =
+    'https://raw.githubusercontent.com/prodhan2/App_Backend_Data/main/MyApi/IslamicAppImages/datebg0.webp';
 
 // ═══════════════════════════════════════════════════════════════
 // PrayerCard — full redesign matching the reference image
@@ -155,27 +159,7 @@ class _PrayerCardState extends State<PrayerCard>
     return Column(
       children: [
         // Top gradient bar — same as online, shows date
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF6C3CE1), Color(0xFF4A6FE3), Color(0xFF4A90D9)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(20),
-              topRight: Radius.circular(20),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF6C3CE1).withValues(alpha: 0.35),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
+        _DateBgCard(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -238,10 +222,6 @@ class _PrayerCardState extends State<PrayerCard>
           width: double.infinity,
           decoration: BoxDecoration(
             color: cardBg,
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(20),
-              bottomRight: Radius.circular(20),
-            ),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.06),
@@ -321,31 +301,11 @@ class _PrayerCardState extends State<PrayerCard>
   }
 
   // ─────────────────────────────────────────────────────────────
-  // TOP CARD — Airkom purple/blue gradient background
+  // TOP CARD — remote image bg (fallback: gradient)
   // ─────────────────────────────────────────────────────────────
   Widget _buildTopCard(
       BuildContext context, PrayerProvider prayer, PrayerTimeModel? pt) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF6C3CE1), Color(0xFF4A6FE3), Color(0xFF4A90D9)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF6C3CE1).withValues(alpha: 0.35),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
+    return _DateBgCard(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -490,9 +450,6 @@ class _PrayerCardState extends State<PrayerCard>
       ),
     );
   }
-
-  // ─────────────────────────────────────────────────────────────
-  // BOTTOM CARD — theme-aware background
   // ─────────────────────────────────────────────────────────────
   Widget _buildBottomCard(
       BuildContext context, PrayerProvider prayer, PrayerTimeModel? pt) {
@@ -505,10 +462,6 @@ class _PrayerCardState extends State<PrayerCard>
       width: double.infinity,
       decoration: BoxDecoration(
         color: cardBg,
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(20),
-          bottomRight: Radius.circular(20),
-        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.06),
@@ -1317,6 +1270,67 @@ class _RamadanMiniCardState extends State<RamadanMiniCard>
       color: isDark
           ? Colors.white.withValues(alpha: 0.08)
           : Colors.grey.withValues(alpha: 0.15),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// _DateBgCard — top card with remote image bg + gradient fallback
+// ─────────────────────────────────────────────────────────────
+class _DateBgCard extends StatelessWidget {
+  final Widget child;
+  const _DateBgCard({required this.child});
+
+  static const _fallbackGradient = LinearGradient(
+    colors: [Color(0xFF6C3CE1), Color(0xFF4A6FE3), Color(0xFF4A90D9)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.zero,
+      child: CachedNetworkImage(
+        imageUrl: _kDateBgUrl,
+        imageBuilder: (context, imageProvider) => _shell(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: imageProvider,
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+        // While loading → show gradient so layout doesn't jump
+        placeholder: (context, url) => _shell(
+          decoration: const BoxDecoration(
+            gradient: _fallbackGradient,
+          ),
+        ),
+        // On error → fallback gradient
+        errorWidget: (context, url, error) => _shell(
+          decoration: const BoxDecoration(
+            gradient: _fallbackGradient,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _shell({required BoxDecoration decoration}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: decoration.copyWith(
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF6C3CE1).withValues(alpha: 0.35),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: child,
     );
   }
 }

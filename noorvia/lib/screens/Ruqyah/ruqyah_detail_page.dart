@@ -72,81 +72,10 @@ class _RuqyahDetailPageState extends State<RuqyahDetailPage> {
 
     return Scaffold(
       backgroundColor: bg,
-      // ── Compact AppBar ──────────────────────────────────────
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(gradient: AppColors.gradient),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new,
-              color: Colors.white, size: 18),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              _current.title,
-              style: GoogleFonts.hindSiliguri(
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
-                color: Colors.white,
-                height: 1.2,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            Text(
-              '${_currentIndex + 1} / ${widget.allChapters.length}',
-              style: GoogleFonts.hindSiliguri(
-                fontSize: 11,
-                color: Colors.white70,
-                height: 1.2,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          // Font decrease
-          IconButton(
-            icon: const Icon(Icons.text_decrease,
-                color: Colors.white, size: 18),
-            onPressed: () {
-              if (_fontSize > 12) setState(() => _fontSize -= 1);
-            },
-            tooltip: 'ছোট',
-          ),
-          // Font size label
-          Center(
-            child: Text(
-              '${_fontSize.toInt()}',
-              style: GoogleFonts.poppins(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          // Font increase
-          IconButton(
-            icon: const Icon(Icons.text_increase,
-                color: Colors.white, size: 18),
-            onPressed: () {
-              if (_fontSize < 22) setState(() => _fontSize += 1);
-            },
-            tooltip: 'বড়',
-          ),
-          const SizedBox(width: 4),
-        ],
-      ),
-
-      body: Column(
-        children: [
-          // ── Content ─────────────────────────────────────────
-          Expanded(
+      body: CustomScrollView(
+        slivers: [
+          _buildSliverAppBar(isDark),
+          SliverFillRemaining(
             child: PageView.builder(
               controller: _pageController,
               itemCount: widget.allChapters.length,
@@ -277,6 +206,177 @@ class _RuqyahDetailPageState extends State<RuqyahDetailPage> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  SliverAppBar _buildSliverAppBar(bool isDark) {
+    return SliverAppBar(
+      expandedHeight: 200,
+      pinned: true,
+      backgroundColor: AppColors.primary,
+      automaticallyImplyLeading: false,
+      title: null,
+      flexibleSpace: FlexibleSpaceBar(
+        collapseMode: CollapseMode.parallax,
+        titlePadding: EdgeInsets.zero,
+        title: LayoutBuilder(
+          builder: (context, constraints) {
+            final collapsed = constraints.maxHeight <= kToolbarHeight + 10;
+            if (!collapsed) return const SizedBox.shrink();
+            return SafeArea(
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back_ios_new,
+                        color: Colors.white, size: 18),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  Expanded(
+                    child: Text(
+                      _current.title,
+                      style: GoogleFonts.hindSiliguri(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.text_decrease,
+                        color: Colors.white, size: 18),
+                    onPressed: () {
+                      if (_fontSize > 12) setState(() => _fontSize -= 1);
+                    },
+                    tooltip: 'ছোট',
+                  ),
+                  Center(
+                    child: Text(
+                      '${_fontSize.toInt()}',
+                      style: GoogleFonts.poppins(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.text_increase,
+                        color: Colors.white, size: 18),
+                    onPressed: () {
+                      if (_fontSize < 22) setState(() => _fontSize += 1);
+                    },
+                    tooltip: 'বড়',
+                  ),
+                  const SizedBox(width: 4),
+                ],
+              ),
+            );
+          },
+        ),
+        background: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.network(
+              'https://raw.githubusercontent.com/prodhan2/App_Backend_Data/main/MyApi/IslamicAppImages/rukaiyabg.webp',
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                decoration: BoxDecoration(gradient: AppColors.gradient),
+              ),
+            ),
+            Positioned(
+              top: -30, right: -30,
+              child: Container(
+                width: 160, height: 160,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.06),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -20, left: -20,
+              child: Container(
+                width: 120, height: 120,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.05),
+                ),
+              ),
+            ),
+            // Expanded top-bar row
+            Positioned(
+              top: 0, left: 0, right: 0,
+              child: SafeArea(
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back_ios_new,
+                          color: Colors.white, size: 18),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.text_decrease,
+                          color: Colors.white, size: 18),
+                      onPressed: () {
+                        if (_fontSize > 12) setState(() => _fontSize -= 1);
+                      },
+                      tooltip: 'ছোট',
+                    ),
+                    Center(
+                      child: Text(
+                        '${_fontSize.toInt()}',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.text_increase,
+                          color: Colors.white, size: 18),
+                      onPressed: () {
+                        if (_fontSize < 22) setState(() => _fontSize += 1);
+                      },
+                      tooltip: 'বড়',
+                    ),
+                    const SizedBox(width: 4),
+                  ],
+                ),
+              ),
+            ),
+            // Centre content
+            Positioned.fill(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    _current.title,
+                    style: GoogleFonts.hindSiliguri(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF0D1B2A),
+                        letterSpacing: 0.5),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '${_currentIndex + 1} / ${widget.allChapters.length}',
+                    style: GoogleFonts.hindSiliguri(
+                        fontSize: 14,
+                        color: const Color(0xFF1A3A5C),
+                        fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

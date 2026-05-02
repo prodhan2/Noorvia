@@ -135,37 +135,136 @@ class _RuqyahDiagnosisPageState extends State<RuqyahDiagnosisPage> {
 
     return Scaffold(
       backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        flexibleSpace: Container(decoration: BoxDecoration(gradient: AppColors.gradient)),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 18),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('সেলফ ডায়াগনোসিস',
-                style: GoogleFonts.hindSiliguri(
-                    fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white)),
-            Text('নিজেই যাচাই করুন',
-                style: GoogleFonts.hindSiliguri(fontSize: 10, color: Colors.white70)),
-          ],
-        ),
-        actions: [
-          if (_offline)
-            const Padding(padding: EdgeInsets.only(right: 4),
-                child: Icon(Icons.wifi_off_rounded, color: Colors.white70, size: 18)),
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: Colors.white, size: 20),
-            onPressed: _loadData,
-          ),
-          const SizedBox(width: 4),
+      body: CustomScrollView(
+        slivers: [
+          _buildSliverAppBar(isDark),
+          SliverToBoxAdapter(child: _buildBody(isDark)),
         ],
       ),
-      body: _buildBody(isDark),
+    );
+  }
+
+  Widget _buildSliverAppBar(bool isDark) {
+    return SliverAppBar(
+      expandedHeight: 200,
+      pinned: true,
+      backgroundColor: AppColors.primary,
+      automaticallyImplyLeading: false,
+      title: null,
+      flexibleSpace: FlexibleSpaceBar(
+        collapseMode: CollapseMode.parallax,
+        titlePadding: EdgeInsets.zero,
+        title: LayoutBuilder(
+          builder: (context, constraints) {
+            final collapsed = constraints.maxHeight <= kToolbarHeight + 10;
+            if (!collapsed) return const SizedBox.shrink();
+            return SafeArea(
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back_ios_new,
+                        color: Colors.white, size: 18),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  Expanded(
+                    child: Text(
+                      'সেলফ ডায়াগনোসিস',
+                      style: GoogleFonts.hindSiliguri(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.refresh_rounded,
+                        color: Colors.white, size: 20),
+                    onPressed: _loadData,
+                  ),
+                  const SizedBox(width: 4),
+                ],
+              ),
+            );
+          },
+        ),
+        background: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.network(
+              'https://raw.githubusercontent.com/prodhan2/App_Backend_Data/main/MyApi/IslamicAppImages/rukaiyabg.webp',
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                decoration: BoxDecoration(gradient: AppColors.gradient),
+              ),
+            ),
+            Positioned(
+              top: -30, right: -30,
+              child: Container(
+                width: 160, height: 160,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.06),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -20, left: -20,
+              child: Container(
+                width: 120, height: 120,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.05),
+                ),
+              ),
+            ),
+            // Expanded top-bar row
+            Positioned(
+              top: 0, left: 0, right: 0,
+              child: SafeArea(
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back_ios_new,
+                          color: Colors.white, size: 18),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.refresh_rounded,
+                          color: Colors.white, size: 20),
+                      onPressed: _loadData,
+                    ),
+                    const SizedBox(width: 4),
+                  ],
+                ),
+              ),
+            ),
+            // Centre content
+            Positioned.fill(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'সেলফ ডায়াগনোসিস',
+                    style: GoogleFonts.hindSiliguri(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF0D1B2A),
+                        letterSpacing: 0.5),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'নিজেই যাচাই করুন',
+                    style: GoogleFonts.hindSiliguri(
+                        fontSize: 14,
+                        color: const Color(0xFF1A3A5C),
+                        fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -204,7 +303,6 @@ class _RuqyahDiagnosisPageState extends State<RuqyahDiagnosisPage> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       children: [
-        if (_offline) _offlineBanner(),
         _introCard(isDark),
         const SizedBox(height: 20),
         Text('সমস্যার ধরন বেছে নিন',
@@ -227,30 +325,6 @@ class _RuqyahDiagnosisPageState extends State<RuqyahDiagnosisPage> {
       ],
     );
   }
-
-  Widget _offlineBanner() => Container(
-    margin: const EdgeInsets.only(bottom: 12),
-    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-    decoration: BoxDecoration(
-      color: Colors.orange.withValues(alpha: 0.12),
-      borderRadius: BorderRadius.circular(10),
-      border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
-    ),
-    child: Row(children: [
-      const Icon(Icons.wifi_off_rounded, size: 14, color: Colors.orange),
-      const SizedBox(width: 8),
-      Expanded(child: Text('অফলাইন মোড — সংরক্ষিত ডেটা',
-          style: GoogleFonts.hindSiliguri(fontSize: 11, color: Colors.orange))),
-      GestureDetector(
-        onTap: _loadData,
-        child: Text('রিফ্রেশ',
-            style: GoogleFonts.hindSiliguri(
-                fontSize: 11, color: Colors.orange,
-                fontWeight: FontWeight.w700,
-                decoration: TextDecoration.underline)),
-      ),
-    ]),
-  );
 
   Widget _introCard(bool isDark) => Container(
     padding: const EdgeInsets.all(16),
@@ -292,72 +366,72 @@ class _CategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cardColor = isDark ? AppColors.darkCard : Colors.white;
+    final textColor = isDark ? AppColors.darkText : AppColors.lightText;
+    final subColor  = isDark ? AppColors.darkSubText : AppColors.lightSubText;
+    final accentColor = gradientColors.first;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-              colors: gradientColors,
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight),
+          color: cardColor,
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: gradientColors.first.withValues(alpha: 0.3),
-              blurRadius: 12,
-              offset: const Offset(0, 5),
+              color: accentColor.withValues(alpha: isDark ? 0.12 : 0.10),
+              blurRadius: 14,
+              offset: const Offset(0, 4),
             ),
           ],
-        ),
-        child: Stack(children: [
-          Positioned(
-            right: -15, top: -15,
-            child: Container(
-              width: 90, height: 90,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.08),
-              ),
-            ),
+          border: Border.all(
+            color: accentColor.withValues(alpha: isDark ? 0.18 : 0.12),
           ),
-          Padding(
-            padding: const EdgeInsets.all(18),
-            child: Row(children: [
-              Container(
-                width: 56, height: 56,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
-                ),
-                child: Center(child: Text(icon, style: const TextStyle(fontSize: 26))),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(children: [
+            // Accent icon box
+            Container(
+              width: 52, height: 52,
+              decoration: BoxDecoration(
+                color: accentColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(14),
               ),
-              const SizedBox(width: 14),
-              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              child: Center(child: Text(icon, style: const TextStyle(fontSize: 26))),
+            ),
+            const SizedBox(width: 14),
+            // Text
+            Expanded(child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Text(
                   category.shortTitle,
                   style: GoogleFonts.hindSiliguri(
-                      fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white),
+                      fontSize: 15, fontWeight: FontWeight.w700, color: textColor),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 3),
                 Text(
                   '${category.questions.length} টি প্রশ্ন',
-                  style: GoogleFonts.hindSiliguri(fontSize: 12, color: Colors.white70),
+                  style: GoogleFonts.hindSiliguri(
+                      fontSize: 12, color: subColor, height: 1.4),
                 ),
-              ])),
-              Container(
-                width: 34, height: 34,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.arrow_forward_ios_rounded,
-                    color: Colors.white, size: 15),
+              ],
+            )),
+            const SizedBox(width: 8),
+            // Arrow
+            Container(
+              width: 32, height: 32,
+              decoration: BoxDecoration(
+                color: accentColor.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
               ),
-            ]),
-          ),
-        ]),
+              child: Icon(Icons.arrow_forward_ios_rounded,
+                  color: accentColor, size: 14),
+            ),
+          ]),
+        ),
       ),
     );
   }
@@ -421,7 +495,7 @@ class _DiagnosisQuizPageState extends State<_DiagnosisQuizPage> {
     return Scaffold(
       backgroundColor: bg,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.primary,
         elevation: 0,
         flexibleSpace: Container(decoration: BoxDecoration(gradient: AppColors.gradient)),
         leading: IconButton(
