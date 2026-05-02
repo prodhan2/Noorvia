@@ -294,19 +294,25 @@ class _NoorviaAppBar extends StatelessWidget implements PreferredSizeWidget {
 
               const SizedBox(width: 6),
 
-              // ── Profile avatar ─────────────────────────────
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: redBorder.withValues(alpha: 0.55),
-                    width: 1.4,
+              // ── Settings button ────────────────────────────
+              GestureDetector(
+                onTap: () {
+                  context.read<NavProvider>().goTo(AppRoute.settings);
+                },
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: redBorder.withValues(alpha: 0.55),
+                      width: 1.4,
+                    ),
                   ),
+                  child: const Icon(Icons.settings_outlined,
+                      color: Colors.white, size: 18),
                 ),
-                child: const Icon(Icons.person, color: Colors.white, size: 18),
               ),
             ],
           ),

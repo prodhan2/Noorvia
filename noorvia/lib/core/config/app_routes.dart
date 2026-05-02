@@ -116,9 +116,10 @@ final List<AppRouteConfig> appRoutes = [
   ),
   AppRouteConfig(
     route: AppRoute.settings,
-    label: 'প্রোফাইল',
-    icon: Icons.person_outline_rounded,
-    activeIcon: Icons.person_rounded,
+    label: 'সেটিংস',
+    icon: Icons.settings_outlined,
+    activeIcon: Icons.settings_rounded,
+    drawerIcon: Icons.settings_outlined,
     pageBuilder: () => const SettingsScreen(),
     showInNavbar: true,
     showInDrawer: true,

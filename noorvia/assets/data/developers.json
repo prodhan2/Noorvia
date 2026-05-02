@@ -1,0 +1,50 @@
+{
+  "developers": [
+    {
+      "id": 1,
+      "name": "Md. Rakibul Islam",
+      "role": "Lead Flutter Developer",
+      "location": "Dhaka, Bangladesh",
+      "email": "rakibul@noorvia.app",
+      "phone": "+880 1700 000001",
+      "github": "github.com/rakibul-dev",
+      "website": "noorvia.app",
+      "avatar": null,
+      "isOnline": true,
+      "stats": {
+        "projects": 28,
+        "rating": 4.9,
+        "ratingCount": 128,
+        "experience": "৫+",
+        "downloads": "৮.৬K"
+      },
+      "skills": ["Flutter", "Dart", "Firebase", "REST API", "Provider", "Git", "UI/UX"],
+      "bio": "Passionate Flutter Developer with 5+ years of experience building scalable and user-friendly Islamic mobile applications.",
+      "profileUrl": "https://noorvia.app/rakibul",
+      "facebook": "fb.com/rakibul.dev"
+    },
+    {
+      "id": 2,
+      "name": "Md. Sabbir Ahmed",
+      "role": "UI/UX & Backend Developer",
+      "location": "Chittagong, Bangladesh",
+      "email": "sabbir@noorvia.app",
+      "phone": "+880 1700 000002",
+      "github": "github.com/sabbir-dev",
+      "website": "noorvia.app",
+      "avatar": null,
+      "isOnline": true,
+      "stats": {
+        "projects": 19,
+        "rating": 4.8,
+        "ratingCount": 96,
+        "experience": "৩+",
+        "downloads": "৪.২K"
+      },
+      "skills": ["Figma", "Firebase", "Node.js", "Git", "Android", "iOS", "UI/UX"],
+      "bio": "UI/UX Designer & Backend Developer focused on creating responsive, accessible and beautiful Islamic app interfaces.",
+      "profileUrl": "https://noorvia.app/sabbir",
+      "facebook": "fb.com/sabbir.dev"
+    }
+  ]
+}
