@@ -323,9 +323,15 @@ class _TasbihCounterState extends State<TasbihCounter>
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = isDark ? AppColors.darkBg : AppColors.lightBg;
+    final cardBg = isDark ? AppColors.darkCard : Colors.white;
     final textColor = isDark ? AppColors.darkText : AppColors.lightText;
     final subColor = isDark ? AppColors.darkSubText : AppColors.lightSubText;
     final zikrColor = _currentZikr.color;
+    final screenH = MediaQuery.of(context).size.height;
+
+    // Responsive button size
+    final double btnSize = (screenH * 0.22).clamp(130.0, 190.0);
+    final double countFontSize = (btnSize * 0.32).clamp(36.0, 58.0);
 
     return Scaffold(
       backgroundColor: bg,
@@ -333,31 +339,47 @@ class _TasbihCounterState extends State<TasbihCounter>
         backgroundColor: Colors.transparent,
         elevation: 0,
         flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: AppColors.gradient,
-          ),
+          decoration: BoxDecoration(gradient: AppColors.gradient),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
           onPressed: () => Navigator.maybePop(context),
         ),
-        title: Text(
-          'তাসবিহ কাউন্টার',
-          style: GoogleFonts.hindSiliguri(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-          ),
+        // Arabic + name in the title area
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              _currentZikr.arabic,
+              style: const TextStyle(
+                fontSize: 17,
+                color: Colors.white,
+                fontFamily: 'Amiri',
+                height: 1.3,
+              ),
+              textDirection: TextDirection.rtl,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            Text(
+              _currentZikr.name,
+              style: GoogleFonts.hindSiliguri(
+                fontSize: 11,
+                color: Colors.white.withValues(alpha: 0.8),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ),
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.bar_chart_rounded, color: Colors.white),
+            icon: const Icon(Icons.bar_chart_rounded, color: Colors.white, size: 22),
             onPressed: _showHistory,
             tooltip: 'পরিসংখ্যান',
           ),
           IconButton(
-            icon: const Icon(Icons.tune_rounded, color: Colors.white),
+            icon: const Icon(Icons.tune_rounded, color: Colors.white, size: 22),
             onPressed: _showSettings,
             tooltip: 'সেটিংস',
           ),
@@ -368,10 +390,10 @@ class _TasbihCounterState extends State<TasbihCounter>
           children: [
             // ── Zikr selector chips ──────────────────────────
             SizedBox(
-              height: 48,
+              height: 40,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 itemCount: _zikrList.length,
                 itemBuilder: (_, i) {
                   final selected = i == _selectedIndex;
@@ -382,7 +404,6 @@ class _TasbihCounterState extends State<TasbihCounter>
                         _targetCount = _zikrData['tasbih_target_${_zikrList[i].name}'] != null
                             ? _zikrData['tasbih_target_${_zikrList[i].name}'] as int
                             : _zikrList[i].defaultTarget;
-                        // Sync beads to the new zikr's counter
                         _animatedBeadCount = (_zikrData[_zikrList[i].name]?['counter'] ?? 0) as int;
                         _slideQueue.clear();
                         _isAnimating = false;
@@ -392,14 +413,14 @@ class _TasbihCounterState extends State<TasbihCounter>
                       _saveData();
                     },
                     child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 250),
-                      margin: const EdgeInsets.only(right: 8, top: 6, bottom: 6),
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      duration: const Duration(milliseconds: 200),
+                      margin: const EdgeInsets.only(right: 6, top: 5, bottom: 5),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
                       decoration: BoxDecoration(
                         color: selected ? _zikrList[i].color : (isDark ? AppColors.darkCard : Colors.white),
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(16),
                         boxShadow: selected ? [
-                          BoxShadow(color: _zikrList[i].color.withValues(alpha: 0.35), blurRadius: 8, offset: const Offset(0, 3)),
+                          BoxShadow(color: _zikrList[i].color.withValues(alpha: 0.3), blurRadius: 6, offset: const Offset(0, 2)),
                         ] : [],
                         border: Border.all(
                           color: selected ? Colors.transparent : (isDark ? Colors.grey[700]! : Colors.grey[300]!),
@@ -409,7 +430,7 @@ class _TasbihCounterState extends State<TasbihCounter>
                         child: Text(
                           _zikrList[i].name,
                           style: GoogleFonts.hindSiliguri(
-                            fontSize: 12,
+                            fontSize: 11,
                             fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                             color: selected ? Colors.white : subColor,
                           ),
@@ -421,277 +442,212 @@ class _TasbihCounterState extends State<TasbihCounter>
               ),
             ),
 
+            const SizedBox(height: 6),
+
+            // ── Bead string ──────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: _TasbihBeadRow(
+                total: _targetCount.clamp(1, 100),
+                counted: _animatedBeadCount,
+                animatingIndex: _animatingBeadIndex,
+                animatingOffset: _animatingBeadOffset,
+                color: zikrColor,
+                isDark: isDark,
+              ),
+            ),
+
             const SizedBox(height: 8),
 
-            // ── Arabic text card ─────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [zikrColor, zikrColor.withValues(alpha: 0.75)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+            // ── Counter button (center, takes remaining space) ─
+            Expanded(
+              child: Center(
+                child: GestureDetector(
+                  onTap: _increment,
+                  child: AnimatedBuilder(
+                    animation: _pulseAnim,
+                    builder: (_, child) => Transform.scale(
+                      scale: _pulseAnim.value,
+                      child: child,
+                    ),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // Ripple
+                        AnimatedBuilder(
+                          animation: _rippleAnim,
+                          builder: (_, __) => Opacity(
+                            opacity: (1 - _rippleAnim.value).clamp(0.0, 1.0),
+                            child: Container(
+                              width: btnSize + 50 * _rippleAnim.value,
+                              height: btnSize + 50 * _rippleAnim.value,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: zikrColor.withValues(alpha: 0.3),
+                                  width: 2,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        // Glow
+                        Container(
+                          width: btnSize + 20,
+                          height: btnSize + 20,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: RadialGradient(
+                              colors: [zikrColor.withValues(alpha: 0.12), Colors.transparent],
+                            ),
+                          ),
+                        ),
+                        // Main button
+                        Container(
+                          width: btnSize,
+                          height: btnSize,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              colors: [zikrColor, zikrColor.withValues(alpha: 0.75)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: zikrColor.withValues(alpha: 0.4),
+                                blurRadius: 28,
+                                spreadRadius: 3,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              AnimatedBuilder(
+                                animation: _countAnim,
+                                builder: (_, child) => Transform.scale(
+                                  scale: _countAnim.value,
+                                  child: child,
+                                ),
+                                child: Text(
+                                  _bn(_counter),
+                                  style: GoogleFonts.hindSiliguri(
+                                    fontSize: countFontSize,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                    height: 1,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'ট্যাপ করুন',
+                                style: GoogleFonts.hindSiliguri(
+                                  fontSize: 12,
+                                  color: Colors.white.withValues(alpha: 0.7),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
+
+            // ── Stats row (compact inline) ───────────────────
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                decoration: BoxDecoration(
+                  color: cardBg,
+                  borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(
-                      color: zikrColor.withValues(alpha: 0.3),
-                      blurRadius: 16,
-                      offset: const Offset(0, 6),
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),
-                child: Column(
+                child: Row(
                   children: [
-                    Text(
-                      _currentZikr.arabic,
-                      style: const TextStyle(
-                        fontSize: 26,
-                        color: Colors.white,
-                        fontFamily: 'Amiri',
-                        height: 1.6,
-                      ),
-                      textAlign: TextAlign.center,
-                      textDirection: TextDirection.rtl,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _currentZikr.name,
-                      style: GoogleFonts.hindSiliguri(
-                        fontSize: 13,
-                        color: Colors.white.withValues(alpha: 0.85),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                    _InlineStat(label: 'সম্পন্ন', value: _bn(_completedTimes), color: zikrColor, subColor: subColor),
+                    _Divider(color: subColor),
+                    _InlineStat(label: 'বর্তমান', value: _bn(_counter), color: zikrColor, subColor: subColor),
+                    _Divider(color: subColor),
+                    _InlineStat(label: 'লক্ষ্য', value: _bn(_targetCount), color: zikrColor, subColor: subColor),
+                    _Divider(color: subColor),
+                    _InlineStat(label: 'বাকি', value: _bn((_targetCount - _counter).clamp(0, _targetCount)), color: zikrColor, subColor: subColor),
                   ],
                 ),
               ),
             ),
 
-            const SizedBox(height: 20),
-
-            // ── Stats row ────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                children: [
-                  _StatCard(
-                    label: 'সম্পন্ন',
-                    value: _bn(_completedTimes),
-                    unit: 'বার',
-                    color: zikrColor,
-                    isDark: isDark,
-                  ),
-                  const SizedBox(width: 12),
-                  _StatCard(
-                    label: 'লক্ষ্য',
-                    value: _bn(_targetCount),
-                    unit: 'বার',
-                    color: zikrColor,
-                    isDark: isDark,
-                  ),
-                  const SizedBox(width: 12),
-                  _StatCard(
-                    label: 'বাকি',
-                    value: _bn((_targetCount - _counter).clamp(0, _targetCount)),
-                    unit: 'বার',
-                    color: zikrColor,
-                    isDark: isDark,
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // ── Tasbih bead animation + counter button ───────
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Bead string visual
-                  _TasbihBeadRow(
-                    total: _targetCount.clamp(1, 100),
-                    counted: _animatedBeadCount,
-                    animatingIndex: _animatingBeadIndex,
-                    animatingOffset: _animatingBeadOffset,
-                    color: zikrColor,
-                    isDark: isDark,
-                  ),
-
-                  const SizedBox(height: 28),
-
-                  // Counter tap button
-                  GestureDetector(
-                    onTap: _increment,
-                    child: AnimatedBuilder(
-                      animation: _pulseAnim,
-                      builder: (_, child) => Transform.scale(
-                        scale: _pulseAnim.value,
-                        child: child,
-                      ),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          // Ripple ring
-                          AnimatedBuilder(
-                            animation: _rippleAnim,
-                            builder: (_, __) => Opacity(
-                              opacity: (1 - _rippleAnim.value).clamp(0.0, 1.0),
-                              child: Container(
-                                width: 140 + 60 * _rippleAnim.value,
-                                height: 140 + 60 * _rippleAnim.value,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: zikrColor.withValues(alpha: 0.35),
-                                    width: 2,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          // Main circle
-                          Container(
-                            width: 130,
-                            height: 130,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: LinearGradient(
-                                colors: [zikrColor, zikrColor.withValues(alpha: 0.75)],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: zikrColor.withValues(alpha: 0.45),
-                                  blurRadius: 24,
-                                  spreadRadius: 2,
-                                  offset: const Offset(0, 6),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                AnimatedBuilder(
-                                  animation: _countAnim,
-                                  builder: (_, child) => Transform.scale(
-                                    scale: _countAnim.value,
-                                    child: child,
-                                  ),
-                                  child: Text(
-                                    _bn(_counter),
-                                    style: GoogleFonts.hindSiliguri(
-                                      fontSize: 46,
-                                      fontWeight: FontWeight.w900,
-                                      color: Colors.white,
-                                      height: 1,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'ট্যাপ করুন',
-                                  style: GoogleFonts.hindSiliguri(
-                                    fontSize: 11,
-                                    color: Colors.white.withValues(alpha: 0.75),
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            const SizedBox(height: 8),
 
             // ── Progress bar ─────────────────────────────────
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '${(_progress * 100).toStringAsFixed(0)}% সম্পন্ন',
-                        style: GoogleFonts.hindSiliguri(
-                          fontSize: 12,
-                          color: subColor,
-                          fontWeight: FontWeight.w500,
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0, end: _progress),
+                        duration: const Duration(milliseconds: 400),
+                        curve: Curves.easeOut,
+                        builder: (_, val, __) => LinearProgressIndicator(
+                          value: val,
+                          minHeight: 8,
+                          backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
+                          valueColor: AlwaysStoppedAnimation<Color>(zikrColor),
                         ),
                       ),
-                      Text(
-                        '${_bn(_counter)} / ${_bn(_targetCount)}',
-                        style: GoogleFonts.hindSiliguri(
-                          fontSize: 12,
-                          color: subColor,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                  const SizedBox(height: 6),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: TweenAnimationBuilder<double>(
-                      tween: Tween(begin: 0, end: _progress),
-                      duration: const Duration(milliseconds: 400),
-                      curve: Curves.easeOut,
-                      builder: (_, val, __) => LinearProgressIndicator(
-                        value: val,
-                        minHeight: 10,
-                        backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
-                        valueColor: AlwaysStoppedAnimation<Color>(zikrColor),
+                  const SizedBox(width: 10),
+                  Text(
+                    '${(_progress * 100).toStringAsFixed(0)}%',
+                    style: GoogleFonts.hindSiliguri(
+                      fontSize: 12,
+                      color: zikrColor,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Reset icon button inline
+                  GestureDetector(
+                    onTap: _reset,
+                    child: Container(
+                      padding: const EdgeInsets.all(7),
+                      decoration: BoxDecoration(
+                        color: zikrColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: zikrColor.withValues(alpha: 0.3)),
                       ),
+                      child: Icon(Icons.refresh_rounded, color: zikrColor, size: 18),
                     ),
                   ),
                 ],
               ),
             ),
 
-            const SizedBox(height: 20),
-
-            // ── Reset button ─────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: _reset,
-                  icon: Icon(Icons.refresh_rounded, color: zikrColor, size: 18),
-                  label: Text(
-                    'রিসেট করুন',
-                    style: GoogleFonts.hindSiliguri(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: zikrColor,
-                    ),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    side: BorderSide(color: zikrColor.withValues(alpha: 0.5), width: 1.5),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 24),
+            const SizedBox(height: 12),
           ],
         ),
       ),
     );
   }
 }
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // _BeadSlide — data class for queued animations
@@ -705,10 +661,10 @@ class _BeadSlide {
 // _TasbihBeadRow — real tasbih bead string visual
 // ─────────────────────────────────────────────────────────────────────────────
 class _TasbihBeadRow extends StatelessWidget {
-  final int total;        // total beads (capped for display)
-  final int counted;      // how many have slid to the right
-  final int? animatingIndex; // which bead is mid-slide
-  final double animatingOffset; // 0.0 → 1.0 slide progress
+  final int total;
+  final int counted;
+  final int? animatingIndex;
+  final double animatingOffset;
   final Color color;
   final bool isDark;
 
@@ -1005,6 +961,70 @@ class _StatCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _InlineStat — compact stat cell used in the stats row
+// ─────────────────────────────────────────────────────────────────────────────
+class _InlineStat extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+  final Color subColor;
+
+  const _InlineStat({
+    required this.label,
+    required this.value,
+    required this.color,
+    required this.subColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            value,
+            style: GoogleFonts.hindSiliguri(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: color,
+              height: 1,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            label,
+            style: GoogleFonts.hindSiliguri(
+              fontSize: 10,
+              color: subColor,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _Divider — thin vertical separator between inline stats
+// ─────────────────────────────────────────────────────────────────────────────
+class _Divider extends StatelessWidget {
+  final Color color;
+  const _Divider({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 1,
+      height: 28,
+      color: color.withValues(alpha: 0.25),
+      margin: const EdgeInsets.symmetric(horizontal: 4),
     );
   }
 }
