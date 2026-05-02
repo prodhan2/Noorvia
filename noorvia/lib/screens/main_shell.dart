@@ -16,6 +16,7 @@ import '../core/providers/notification_provider.dart';
 import '../core/config/app_routes.dart';
 import 'location/location_screen.dart';
 import 'notifications/notification_screen.dart';
+import 'developer/developer_page.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -468,6 +469,20 @@ class _NoorviaDrawer extends StatelessWidget {
                     label: 'আমাদের সম্পর্কে',
                     textColor: textColor,
                     onTap: () => Navigator.pop(context),
+                  ),
+                  _DrawerItem(
+                    icon: Icons.code_rounded,
+                    label: 'ডেভেলপার',
+                    textColor: textColor,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const DeveloperPage(),
+                        ),
+                      );
+                    },
                   ),
 
                   // Day / Night toggle
