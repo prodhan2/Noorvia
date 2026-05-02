@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/services.dart';
+import '../services/custom_font_loader.dart';
 
 // ═══════════════════════════════════════════════════════════════
 // BanglaFont — supported Bangla fonts
@@ -207,6 +209,12 @@ const List<AppAccentOption> kAccentOptions = [
 class SettingsProvider extends ChangeNotifier {
   // ── Bangla Font ───────────────────────────────────────────
   BanglaFont _banglaFont = BanglaFont.hindSiliguri;
+  
+  // ── Custom Bangla Fonts ───────────────────────────────────
+  List<CustomBanglaFont> _customFonts = [];
+  CustomBanglaFont? _selectedCustomFont;
+  bool _isLoadingCustomFonts = false;
+  final Map<String, String> _loadedCustomFonts = {}; // fontFamily -> fileName
 
   // ── Arabic Font ───────────────────────────────────────────
   ArabicFont _arabicFont = ArabicFont.amiri;
@@ -228,6 +236,10 @@ class SettingsProvider extends ChangeNotifier {
 
   // ── Getters ───────────────────────────────────────────────
   BanglaFont get banglaFont    => _banglaFont;
+  List<CustomBanglaFont> get customFonts => _customFonts;
+  CustomBanglaFont? get selectedCustomFont => _selectedCustomFont;
+  bool get isLoadingCustomFonts => _isLoadingCustomFonts;
+  bool get isUsingCustomFont => _selectedCustomFont != null;
   ArabicFont get arabicFont    => _arabicFont;
   double     get fontSize      => _fontSize;
   double     get arabicFontSize => _arabicFontSize;
@@ -246,6 +258,7 @@ class SettingsProvider extends ChangeNotifier {
 
   SettingsProvider() {
     _load();
+    _loadCustomFonts();
   }
 
   // ── Load from SharedPreferences ───────────────────────────
@@ -279,15 +292,103 @@ class SettingsProvider extends ChangeNotifier {
     _compactMode    = prefs.getBool('compactMode') ?? false;
     _textScale      = prefs.getDouble('textScale') ?? 1.0;
 
+    // Load custom font selection
+    final customFontFileName = prefs.getString('customFontFileName');
+    final customFontDisplayName = prefs.getString('customFontDisplayName');
+    final customFontUrl = prefs.getString('customFontUrl');
+    if (customFontFileName != null && customFontDisplayName != null && customFontUrl != null) {
+      _selectedCustomFont = CustomBanglaFont(
+        fileName: customFontFileName,
+        displayName: customFontDisplayName,
+        downloadUrl: customFontUrl,
+      );
+    }
+
     notifyListeners();
+  }
+
+  /// Load custom fonts from GitHub (cached)
+  Future<void> _loadCustomFonts() async {
+    _isLoadingCustomFonts = true;
+    notifyListeners();
+
+    try {
+      _customFonts = await CustomFontLoader.getCustomFonts();
+    } catch (e) {
+      print('Error loading custom fonts: $e');
+      _customFonts = [];
+    }
+
+    _isLoadingCustomFonts = false;
+    notifyListeners();
+  }
+
+  /// Refresh custom fonts from GitHub (force reload)
+  Future<void> refreshCustomFonts() async {
+    await CustomFontLoader.clearCache();
+    await _loadCustomFonts();
   }
 
   // ── Bangla font setter ────────────────────────────────────
   Future<void> setFont(BanglaFont font) async {
     _banglaFont = font;
+    _selectedCustomFont = null; // Clear custom font when selecting built-in font
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('banglaFont', font.key);
+    await prefs.remove('customFontFileName');
+    await prefs.remove('customFontDisplayName');
+    await prefs.remove('customFontUrl');
     notifyListeners();
+  }
+
+  /// Set custom Bangla font
+  Future<void> setCustomFont(CustomBanglaFont font) async {
+    _selectedCustomFont = font;
+    
+    // Load the font if not already loaded
+    if (!_loadedCustomFonts.containsKey(font.fileName)) {
+      try {
+        final fontData = await CustomFontLoader.loadFontFromUrl(font.downloadUrl);
+        if (fontData != null) {
+          final fontLoader = FontLoader(font.fileName);
+          fontLoader.addFont(Future.value(fontData));
+          await fontLoader.load();
+          _loadedCustomFonts[font.fileName] = font.fileName;
+        }
+      } catch (e) {
+        print('Error loading custom font: $e');
+        return;
+      }
+    }
+
+    // Save to preferences
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('customFontFileName', font.fileName);
+    await prefs.setString('customFontDisplayName', font.displayName);
+    await prefs.setString('customFontUrl', font.downloadUrl);
+    
+    notifyListeners();
+  }
+
+  /// Get TextStyle for current font (built-in or custom)
+  TextStyle getCurrentFontStyle({
+    double? fontSize,
+    FontWeight? fontWeight,
+    Color? color,
+  }) {
+    if (_selectedCustomFont != null && _loadedCustomFonts.containsKey(_selectedCustomFont!.fileName)) {
+      return TextStyle(
+        fontFamily: _selectedCustomFont!.fileName,
+        fontSize: fontSize ?? this.fontSize,
+        fontWeight: fontWeight ?? this.fontWeight,
+        color: color,
+      );
+    }
+    return _banglaFont.style(
+      fontSize: fontSize ?? this.fontSize,
+      fontWeight: fontWeight ?? this.fontWeight,
+      color: color,
+    );
   }
 
   // ── Arabic font setter ────────────────────────────────────
@@ -367,6 +468,7 @@ class SettingsProvider extends ChangeNotifier {
   // ── Reset all to defaults ─────────────────────────────────
   Future<void> resetAll() async {
     _banglaFont     = BanglaFont.hindSiliguri;
+    _selectedCustomFont = null;
     _arabicFont     = ArabicFont.amiri;
     _fontSize       = 16.0;
     _arabicFontSize = 22.0;
@@ -383,6 +485,7 @@ class SettingsProvider extends ChangeNotifier {
       'banglaFont', 'arabicFont', 'fontSize', 'arabicFontSize',
       'fontWeightIndex', 'lineHeight', 'accentColor',
       'coloredCards', 'useAnimations', 'compactMode', 'textScale',
+      'customFontFileName', 'customFontDisplayName', 'customFontUrl',
     ]) {
       await prefs.remove(key);
     }

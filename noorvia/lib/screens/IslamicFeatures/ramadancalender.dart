@@ -8,8 +8,10 @@ import 'package:http/http.dart' as http;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/gradient_helper.dart';
+import '../../core/providers/theme_provider.dart';
 
 // ═══════════════════════════════════════════════════════════════
 // Ramadan Calendar — Multi-year, scroll up/down for prev/next year
@@ -430,8 +432,11 @@ class _RamadanCalendarPageState extends State<RamadanCalendarPage> {
   // ─────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
+    final isDark = context.watch<ThemeProvider>().isDark;
+    final bg = isDark ? AppColors.darkBg : const Color(0xFFFFF8E7);
+    
     return Scaffold(
-      backgroundColor: _kCream,
+      backgroundColor: bg,
       appBar: AppBar(
         flexibleSpace: Container(
           decoration: GradientHelper.boxDecoration(),

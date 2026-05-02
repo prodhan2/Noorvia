@@ -8,7 +8,9 @@ import 'calendar.dart';
 import 'tashbi.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/providers/theme_provider.dart';
 
 void main() => runApp(IslamicApp());
 
@@ -70,8 +72,11 @@ final List<GridItemData> gridItems = [
 class IslamicHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final isDark = context.watch<ThemeProvider>().isDark;
+    final bg = isDark ? AppColors.darkBg : AppColors.lightBg;
+    
     return Scaffold(
-      backgroundColor: Colors.white, // white page background
+      backgroundColor: bg,
       appBar: AppBar(
         title: const Text('বিউটিফুল দিনাজপুর ইসলামিক App'),
         centerTitle: true,

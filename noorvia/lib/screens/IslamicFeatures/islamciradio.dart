@@ -6,6 +6,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/providers/audio_provider.dart';
+import '../../core/providers/theme_provider.dart';
 import '../../core/theme/app_theme.dart';
 
 class RadioScreen extends StatefulWidget {
@@ -200,8 +201,11 @@ class _RadioScreenState extends State<RadioScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.watch<ThemeProvider>().isDark;
+    final bg = isDark ? AppColors.darkBg : AppColors.lightBg;
+    
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: bg,
       appBar: AppBar(
         title: const Text(
           'Islamic Radio Stations',

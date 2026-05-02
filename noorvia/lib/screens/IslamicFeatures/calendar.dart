@@ -6,8 +6,10 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/gradient_helper.dart';
+import '../../core/providers/theme_provider.dart';
 
 // ═══════════════════════════════════════════════════════════════
 //  Prayer Times Calendar  —  Noorvia Islamic App
@@ -247,8 +249,11 @@ class _PrayerTimesCalendarPageState extends State<PrayerTimesCalendarPage>
   // ── Build ────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
+    final isDark = context.watch<ThemeProvider>().isDark;
+    final bg = isDark ? AppColors.darkBg : _kGreenLight;
+    
     return Scaffold(
-      backgroundColor: _kGreenLight,
+      backgroundColor: bg,
       appBar: _buildAppBar(),
       body: Column(
         children: [

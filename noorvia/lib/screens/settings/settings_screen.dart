@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/providers/theme_provider.dart';
 import '../../core/providers/settings_provider.dart';
+import '../../core/services/custom_font_loader.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -253,6 +254,123 @@ class SettingsScreen extends StatelessWidget {
                   onChanged: (v) =>
                       context.read<SettingsProvider>().setLineHeight(v),
                 ),
+              ],
+            ),
+
+            const SizedBox(height: 20),
+
+            // ════════════════════════════════════════════════
+            // SECTION 3.5 — কাস্টম বাংলা ফন্ট (GitHub)
+            // ════════════════════════════════════════════════
+            _SectionHeader(label: 'কাস্টম বাংলা ফন্ট', textColor: subColor),
+            _Card(
+              isDark: isDark,
+              children: [
+                if (settings.isLoadingCustomFonts)
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Center(
+                      child: Column(
+                        children: [
+                          CircularProgressIndicator(color: accent),
+                          const SizedBox(height: 12),
+                          Text('ফন্ট লোড হচ্ছে...',
+                              style: settings.banglaFont.style(
+                                  fontSize: 13, color: subColor)),
+                        ],
+                      ),
+                    ),
+                  )
+                else if (settings.customFonts.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        Icon(Icons.cloud_off_rounded,
+                            size: 40, color: subColor),
+                        const SizedBox(height: 8),
+                        Text('কাস্টম ফন্ট লোড করা যায়নি',
+                            style: settings.banglaFont.style(
+                                fontSize: 13, color: subColor)),
+                        const SizedBox(height: 12),
+                        TextButton.icon(
+                          onPressed: () =>
+                              context.read<SettingsProvider>().refreshCustomFonts(),
+                          icon: const Icon(Icons.refresh_rounded),
+                          label: Text('আবার চেষ্টা করুন',
+                              style: settings.banglaFont.style(fontSize: 13)),
+                          style: TextButton.styleFrom(foregroundColor: accent),
+                        ),
+                      ],
+                    ),
+                  )
+                else ...[
+                  // Custom font dropdown
+                  _CustomFontDropdownTile(
+                    icon: Icons.font_download_rounded,
+                    label: 'কাস্টম ফন্ট নির্বাচন',
+                    textColor: textColor,
+                    accent: accent,
+                    isDark: isDark,
+                    settings: settings,
+                  ),
+                  if (settings.selectedCustomFont != null) ...[
+                    _Divider(isDark: isDark),
+                    // Preview
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text('প্রিভিউ',
+                                  style: GoogleFonts.hindSiliguri(
+                                      fontSize: 11,
+                                      color: subColor,
+                                      fontWeight: FontWeight.w600)),
+                              const Spacer(),
+                              Text(settings.selectedCustomFont!.displayName,
+                                  style: GoogleFonts.hindSiliguri(
+                                      fontSize: 11,
+                                      color: accent,
+                                      fontWeight: FontWeight.w600)),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'আল্লাহু আকবার — সুবহানাল্লাহ — আলহামদুলিল্লাহ',
+                            style: settings.getCurrentFontStyle(
+                              fontSize: settings.fontSize,
+                              fontWeight: settings.fontWeight,
+                              color: textColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    _Divider(isDark: isDark),
+                    // Clear custom font button
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: () =>
+                              context.read<SettingsProvider>().setFont(settings.banglaFont),
+                          icon: const Icon(Icons.clear_rounded, size: 18),
+                          label: Text('বিল্ট-ইন ফন্টে ফিরে যান',
+                              style: settings.banglaFont.style(fontSize: 13)),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: accent,
+                            side: BorderSide(color: accent.withValues(alpha: 0.5)),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ],
             ),
 
@@ -866,6 +984,107 @@ class _Divider extends StatelessWidget {
       color: isDark
           ? Colors.white.withValues(alpha: 0.06)
           : Colors.black.withValues(alpha: 0.06),
+    );
+  }
+}
+
+// ── Custom Font Dropdown Tile ─────────────────────────────────
+class _CustomFontDropdownTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color textColor;
+  final Color accent;
+  final bool isDark;
+  final SettingsProvider settings;
+
+  const _CustomFontDropdownTile({
+    required this.icon,
+    required this.label,
+    required this.textColor,
+    required this.accent,
+    required this.isDark,
+    required this.settings,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 20, color: accent),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              label,
+              style: GoogleFonts.hindSiliguri(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: textColor,
+              ),
+            ),
+          ),
+          DropdownButton<CustomBanglaFont?>(
+            value: settings.selectedCustomFont,
+            underline: const SizedBox(),
+            dropdownColor: isDark ? AppColors.darkCard : Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            icon: Icon(Icons.keyboard_arrow_down_rounded,
+                color: accent, size: 20),
+            hint: Text(
+              'নির্বাচন করুন',
+              style: GoogleFonts.hindSiliguri(
+                fontSize: 13,
+                color: textColor.withValues(alpha: 0.6),
+              ),
+            ),
+            style: GoogleFonts.hindSiliguri(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: accent,
+            ),
+            items: [
+              // None option
+              DropdownMenuItem<CustomBanglaFont?>(
+                value: null,
+                child: Text(
+                  'কোনটি নয়',
+                  style: GoogleFonts.hindSiliguri(
+                    fontSize: 13,
+                    color: textColor,
+                  ),
+                ),
+              ),
+              // Custom fonts
+              ...settings.customFonts.map((font) => DropdownMenuItem<CustomBanglaFont?>(
+                    value: font,
+                    child: Text(
+                      font.displayName,
+                      style: GoogleFonts.hindSiliguri(
+                        fontSize: 13,
+                        color: textColor,
+                      ),
+                    ),
+                  )),
+            ],
+            onChanged: (font) {
+              if (font == null) {
+                context.read<SettingsProvider>().setFont(settings.banglaFont);
+              } else {
+                context.read<SettingsProvider>().setCustomFont(font);
+              }
+            },
+          ),
+        ],
+      ),
     );
   }
 }

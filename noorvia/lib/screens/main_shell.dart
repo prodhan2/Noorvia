@@ -6,10 +6,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../core/theme/app_theme.dart';
 import '../core/providers/theme_provider.dart';
+import '../core/providers/settings_provider.dart';
 import '../core/providers/nav_provider.dart';
 import '../core/providers/prayer_provider.dart';
 import '../core/providers/notification_provider.dart';
@@ -95,6 +95,7 @@ class _NoorviaAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
     final prayer = context.watch<PrayerProvider>();
     final screenW = MediaQuery.of(context).size.width;
     final isSmall = screenW < 360;
@@ -154,16 +155,15 @@ class _NoorviaAppBar extends StatelessWidget implements PreferredSizeWidget {
                           children: [
                             Text(
                               'নূরভিয়া',
-                              style: GoogleFonts.hindSiliguri(
+                              style: settings.banglaFont.style(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w800,
                                 color: Colors.white,
-                                height: 1.1,
                               ),
                             ),
-                            Text(
+                            const Text(
                               'Noorvia',
-                              style: GoogleFonts.poppins(
+                              style: TextStyle(
                                 fontSize: 9,
                                 color: Colors.white70,
                                 letterSpacing: 1.5,
@@ -214,7 +214,7 @@ class _NoorviaAppBar extends StatelessWidget implements PreferredSizeWidget {
                             BoxConstraints(maxWidth: isSmall ? 60 : 80),
                         child: Text(
                           prayer.cityDisplayName,
-                          style: GoogleFonts.hindSiliguri(
+                          style: settings.banglaFont.style(
                             color: Colors.white,
                             fontWeight: FontWeight.w600,
                             fontSize: 12,
@@ -347,6 +347,7 @@ class _NoorviaDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
     final nav = context.read<NavProvider>();
     final bg = isDark ? AppColors.darkCard : Colors.white;
     final textColor = isDark ? AppColors.darkText : AppColors.lightText;
@@ -379,15 +380,15 @@ class _NoorviaDrawer extends StatelessWidget {
                         children: [
                           Text(
                             'নূরভিয়া',
-                            style: GoogleFonts.hindSiliguri(
+                            style: settings.banglaFont.style(
                               fontSize: 24,
                               fontWeight: FontWeight.w700,
                               color: Colors.white,
                             ),
                           ),
-                          Text(
+                          const Text(
                             'Noorvia',
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(
                               fontSize: 12,
                               color: Colors.white70,
                               letterSpacing: 2,
@@ -400,7 +401,7 @@ class _NoorviaDrawer extends StatelessWidget {
                   const SizedBox(height: 12),
                   Text(
                     'ইসলামিক জীবনযাপনের সঙ্গী',
-                    style: GoogleFonts.hindSiliguri(
+                    style: settings.banglaFont.style(
                         fontSize: 13, color: Colors.white70),
                   ),
                 ],
@@ -503,13 +504,13 @@ class _NoorviaDrawer extends StatelessWidget {
                       theme.autoMode
                           ? 'অটো মোড (চালু)'
                           : (theme.isDark ? 'দিনের মোড' : 'রাতের মোড'),
-                      style: GoogleFonts.hindSiliguri(
+                      style: settings.banglaFont.style(
                           color: textColor, fontSize: 15),
                     ),
                     subtitle: theme.autoMode
                         ? Text(
                             'সময় অনুযায়ী স্বয়ংক্রিয়',
-                            style: GoogleFonts.hindSiliguri(
+                            style: settings.banglaFont.style(
                                 color: AppColors.primary, fontSize: 11),
                           )
                         : null,
@@ -529,7 +530,7 @@ class _NoorviaDrawer extends StatelessWidget {
                               ),
                               child: Text(
                                 'অটো',
-                                style: GoogleFonts.hindSiliguri(
+                                style: settings.banglaFont.style(
                                   color: AppColors.primary,
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
@@ -555,8 +556,8 @@ class _NoorviaDrawer extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               child: Text(
                 'সংস্করণ ১.০.০',
-                style:
-                    GoogleFonts.hindSiliguri(color: Colors.grey, fontSize: 12),
+                style: settings.banglaFont.style(
+                    color: Colors.grey, fontSize: 12),
               ),
             ),
           ],
@@ -576,6 +577,7 @@ class _NoorviaBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
     final nav = context.watch<NavProvider>();
     final items = AppRoutes.navbar; // ← single source of truth
 
@@ -661,7 +663,7 @@ class _NoorviaBottomNav extends StatelessWidget {
                       const SizedBox(height: 3),
                       Text(
                         cfg.label,
-                        style: GoogleFonts.hindSiliguri(
+                        style: settings.banglaFont.style(
                           fontSize: 10,
                           fontWeight: isSelected
                               ? FontWeight.w700
@@ -716,6 +718,7 @@ class _DrawerItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
     return ListTile(
       leading: Icon(
         icon,
@@ -724,7 +727,7 @@ class _DrawerItem extends StatelessWidget {
       ),
       title: Text(
         label,
-        style: GoogleFonts.hindSiliguri(
+        style: settings.banglaFont.style(
           color: isActive ? AppColors.primary : textColor,
           fontSize: 15,
           fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
@@ -750,6 +753,7 @@ class _ExitDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
     final bg = isDark ? AppColors.darkCard : Colors.white;
     final textColor = isDark ? AppColors.darkText : AppColors.lightText;
     final subColor = isDark ? AppColors.darkSubText : AppColors.lightSubText;
@@ -789,7 +793,7 @@ class _ExitDialog extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     'নূরভিয়া',
-                    style: GoogleFonts.hindSiliguri(
+                    style: settings.banglaFont.style(
                       fontSize: 20,
                       fontWeight: FontWeight.w800,
                       color: Colors.white,
@@ -806,7 +810,7 @@ class _ExitDialog extends StatelessWidget {
                 children: [
                   Text(
                     'অ্যাপ বন্ধ করবেন?',
-                    style: GoogleFonts.hindSiliguri(
+                    style: settings.banglaFont.style(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
                       color: textColor,
@@ -816,10 +820,9 @@ class _ExitDialog extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     'আপনি কি সত্যিই নূরভিয়া বন্ধ করতে চান?\nআল্লাহ আপনার সাথে থাকুন। 🤲',
-                    style: GoogleFonts.hindSiliguri(
+                    style: settings.banglaFont.style(
                       fontSize: 13,
                       color: subColor,
-                      height: 1.6,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -857,7 +860,7 @@ class _ExitDialog extends StatelessWidget {
                       ),
                       child: Text(
                         'থাকুন',
-                        style: GoogleFonts.hindSiliguri(
+                        style: settings.banglaFont.style(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: AppColors.primary,
@@ -892,7 +895,7 @@ class _ExitDialog extends StatelessWidget {
                         ),
                         child: Text(
                           'বন্ধ করুন',
-                          style: GoogleFonts.hindSiliguri(
+                          style: settings.banglaFont.style(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,

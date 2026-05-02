@@ -74,6 +74,15 @@ class NoorviaApp extends StatelessWidget {
                 darkTheme: AppTheme.buildDark(settings.banglaFont, settings.accent),
                 themeMode: themeProvider.themeMode,
                 home: const SplashScreen(),
+                builder: (context, child) {
+                  // Apply global text scale to all text
+                  return MediaQuery(
+                    data: MediaQuery.of(context).copyWith(
+                      textScaler: TextScaler.linear(settings.textScale),
+                    ),
+                    child: child!,
+                  );
+                },
               ),
             ),
           );

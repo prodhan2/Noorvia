@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/providers/theme_provider.dart';
+import '../../core/providers/settings_provider.dart';
 
 class ToolsScreen extends StatelessWidget {
   const ToolsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
     final isDark = context.watch<ThemeProvider>().isDark;
     final textColor = isDark ? AppColors.darkText : AppColors.lightText;
 
@@ -32,8 +33,8 @@ class ToolsScreen extends StatelessWidget {
           children: [
             Text(
               'ইসলামিক টুলস',
-              style: GoogleFonts.hindSiliguri(
-                fontSize: 24,
+              style: settings.banglaFont.style(
+                fontSize: settings.fontSize + 8,
                 fontWeight: FontWeight.w700,
                 color: textColor,
               ),
@@ -70,8 +71,8 @@ class ToolsScreen extends StatelessWidget {
                           const SizedBox(height: 8),
                           Text(
                             tool['label']!,
-                            style: GoogleFonts.hindSiliguri(
-                              fontSize: 13,
+                            style: settings.banglaFont.style(
+                              fontSize: settings.fontSize - 3,
                               fontWeight: FontWeight.w600,
                               color: textColor,
                             ),
