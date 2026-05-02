@@ -21,6 +21,8 @@ import '../IslamicNames/islamic_names_page.dart';
 import '../ArabicAlphabet/arabic_alphabet_home.dart';
 import '../IslamicBooks/islamic_books_page.dart';
 
+import '../common/web_view_page.dart';
+
 import '../IslamicFeatures/namaz_tracker_page.dart';
 import '../common/coming_soon_page.dart';
 import 'widgets/section_header.dart';
@@ -414,8 +416,17 @@ class _HomeScreenState extends State<HomeScreen>
     FeatureItem(
       emoji: '🧩',
       label: 'কুইজ',
-      onTap: () =>
-          _soon(context, 'ইসলামিক কুইজ', '🧩', 'ইসলামিক জ্ঞান যাচাই করুন'),
+      imageUrl:
+          'https://raw.githubusercontent.com/prodhan2/App_Backend_Data/main/MyApi/islamic_Quiz/quiz.webp',
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const WebViewPage(
+            url: 'https://www.iqcbd.org/',
+            title: 'ইসলামিক কুইজ',
+          ),
+        ),
+      ),
     ),
     FeatureItem(
       emoji: '💑',

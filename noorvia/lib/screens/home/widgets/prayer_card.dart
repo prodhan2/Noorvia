@@ -307,7 +307,7 @@ class _PrayerCardState extends State<PrayerCard>
       BuildContext context, PrayerProvider prayer, PrayerTimeModel? pt) {
     return _DateBgCard(
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── Left: Hijri + Bangla date ──────────────────────
           Expanded(
@@ -1275,11 +1275,69 @@ class _RamadanMiniCardState extends State<RamadanMiniCard>
 }
 
 // ─────────────────────────────────────────────────────────────
-// _DateBgCard — top card with remote image bg + gradient fallback
+// _DateBgCard — fetches image list from API, tap to cycle
 // ─────────────────────────────────────────────────────────────
-class _DateBgCard extends StatelessWidget {
+
+// Shared state so both offline & online top cards stay in sync
+class _BgImageStore {
+  static final _BgImageStore _i = _BgImageStore._();
+  factory _BgImageStore() => _i;
+  _BgImageStore._();
+
+  static const _apiUrl =
+      'https://opensheet.elk.sh/16SrsQMW8ETVOzz8J7Ty6HOfWqDU6lAx_ya5bGDxlA5o/1';
+
+  List<String> _urls = [];
+  int _index = 0;
+  bool _fetched = false;
+
+  String get current =>
+      _urls.isNotEmpty ? _urls[_index] : _kDateBgUrl;
+
+  void next() {
+    if (_urls.length > 1) {
+      _index = (_index + 1) % _urls.length;
+    }
+  }
+
+  Future<void> fetchIfNeeded() async {
+    if (_fetched) return;
+    try {
+      final res = await http
+          .get(Uri.parse(_apiUrl))
+          .timeout(const Duration(seconds: 10));
+      if (res.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(res.body);
+        // Sort by "no" so no:1 is always first
+        data.sort((a, b) =>
+            (int.tryParse(a['no'] ?? '0') ?? 0)
+                .compareTo(int.tryParse(b['no'] ?? '0') ?? 0));
+        final links = data
+            .map((e) => e['imglink']?.toString() ?? '')
+            .where((s) => s.isNotEmpty)
+            .toList();
+        if (links.isNotEmpty) {
+          _urls = links;
+          _index = 0; // always start at no:1
+          _fetched = true;
+        }
+      }
+    } catch (_) {
+      // silently fall back to default
+    }
+  }
+}
+
+class _DateBgCard extends StatefulWidget {
   final Widget child;
   const _DateBgCard({required this.child});
+
+  @override
+  State<_DateBgCard> createState() => _DateBgCardState();
+}
+
+class _DateBgCardState extends State<_DateBgCard> {
+  final _store = _BgImageStore();
 
   static const _fallbackGradient = LinearGradient(
     colors: [Color(0xFF6C3CE1), Color(0xFF4A6FE3), Color(0xFF4A90D9)],
@@ -1288,11 +1346,24 @@ class _DateBgCard extends StatelessWidget {
   );
 
   @override
+  void initState() {
+    super.initState();
+    _store.fetchIfNeeded().then((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  void _onTap() {
+    _store.next();
+    if (mounted) setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.zero,
+    return GestureDetector(
+      onTap: _onTap,
       child: CachedNetworkImage(
-        imageUrl: _kDateBgUrl,
+        imageUrl: _store.current,
         imageBuilder: (context, imageProvider) => _shell(
           decoration: BoxDecoration(
             image: DecorationImage(
@@ -1301,17 +1372,11 @@ class _DateBgCard extends StatelessWidget {
             ),
           ),
         ),
-        // While loading → show gradient so layout doesn't jump
         placeholder: (context, url) => _shell(
-          decoration: const BoxDecoration(
-            gradient: _fallbackGradient,
-          ),
+          decoration: const BoxDecoration(gradient: _fallbackGradient),
         ),
-        // On error → fallback gradient
         errorWidget: (context, url, error) => _shell(
-          decoration: const BoxDecoration(
-            gradient: _fallbackGradient,
-          ),
+          decoration: const BoxDecoration(gradient: _fallbackGradient),
         ),
       ),
     );
@@ -1330,7 +1395,7 @@ class _DateBgCard extends StatelessWidget {
           ),
         ],
       ),
-      child: child,
+      child: widget.child,
     );
   }
 }

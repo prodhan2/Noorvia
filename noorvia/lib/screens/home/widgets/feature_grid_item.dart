@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_theme.dart';
@@ -6,11 +7,14 @@ class FeatureItem {
   final String emoji;
   final String label;
   final VoidCallback? onTap;
+  /// Optional network image URL — replaces the emoji icon when provided
+  final String? imageUrl;
 
   const FeatureItem({
     required this.emoji,
     required this.label,
     this.onTap,
+    this.imageUrl,
   });
 }
 
@@ -47,24 +51,49 @@ class FeatureGridItem extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Emoji in a soft gradient circle
+            // Icon container — network image or emoji
             Container(
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppColors.primary.withValues(alpha: isDark ? 0.25 : 0.10),
-                    AppColors.accent.withValues(alpha: isDark ? 0.20 : 0.08),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                gradient: item.imageUrl != null
+                    ? null
+                    : LinearGradient(
+                        colors: [
+                          AppColors.primary
+                              .withValues(alpha: isDark ? 0.25 : 0.10),
+                          AppColors.accent
+                              .withValues(alpha: isDark ? 0.20 : 0.08),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Center(
-                child: Text(item.emoji, style: const TextStyle(fontSize: 22)),
-              ),
+              clipBehavior: Clip.antiAlias,
+              child: item.imageUrl != null
+                  ? CachedNetworkImage(
+                      imageUrl: item.imageUrl!,
+                      fit: BoxFit.cover,
+                      placeholder: (_, __) => Center(
+                        child: Text(
+                          item.emoji,
+                          style: const TextStyle(fontSize: 22),
+                        ),
+                      ),
+                      errorWidget: (_, __, ___) => Center(
+                        child: Text(
+                          item.emoji,
+                          style: const TextStyle(fontSize: 22),
+                        ),
+                      ),
+                    )
+                  : Center(
+                      child: Text(
+                        item.emoji,
+                        style: const TextStyle(fontSize: 22),
+                      ),
+                    ),
             ),
             const SizedBox(height: 7),
             Text(

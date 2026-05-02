@@ -270,37 +270,44 @@ class _RuqyahDiagnosisPageState extends State<RuqyahDiagnosisPage> {
 
   Widget _buildBody(bool isDark) {
     if (_loading) {
-      return Center(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          const CircularProgressIndicator(color: AppColors.primary),
-          const SizedBox(height: 14),
-          Text('লোড হচ্ছে...', style: GoogleFonts.hindSiliguri(color: AppColors.primary)),
-        ]),
+      return const SizedBox(
+        height: 300,
+        child: Center(
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            CircularProgressIndicator(color: AppColors.primary),
+            SizedBox(height: 14),
+          ]),
+        ),
       );
     }
     if (_error != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Icon(Icons.error_outline_rounded, size: 56, color: AppColors.primary),
-            const SizedBox(height: 16),
-            Text(_error!, textAlign: TextAlign.center,
-                style: GoogleFonts.hindSiliguri(fontSize: 15)),
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              onPressed: _loadData,
-              icon: const Icon(Icons.refresh_rounded),
-              label: Text('আবার চেষ্টা', style: GoogleFonts.hindSiliguri()),
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary, foregroundColor: Colors.white),
-            ),
-          ]),
+      return SizedBox(
+        height: 300,
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              const Icon(Icons.error_outline_rounded, size: 56, color: AppColors.primary),
+              const SizedBox(height: 16),
+              Text(_error!, textAlign: TextAlign.center,
+                  style: GoogleFonts.hindSiliguri(fontSize: 15)),
+              const SizedBox(height: 20),
+              ElevatedButton.icon(
+                onPressed: _loadData,
+                icon: const Icon(Icons.refresh_rounded),
+                label: Text('আবার চেষ্টা', style: GoogleFonts.hindSiliguri()),
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary, foregroundColor: Colors.white),
+              ),
+            ]),
+          ),
         ),
       );
     }
 
     return ListView(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       children: [
         _introCard(isDark),
