@@ -91,6 +91,16 @@ class ScheduledNotificationService {
     const initSettings = InitializationSettings(android: androidSettings);
     await _plugin.initialize(initSettings);
 
+    final androidImpl = _plugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+
+    // POST_NOTIFICATIONS permission (Android 13+)
+    await androidImpl?.requestNotificationsPermission();
+
+    // SCHEDULE_EXACT_ALARM permission (Android 12+) — exact alarm এর জন্য দরকার
+    await androidImpl?.requestExactAlarmsPermission();
+
     // Channel তৈরি করো
     final channel = AndroidNotificationChannel(
       _channelId,
@@ -101,10 +111,7 @@ class ScheduledNotificationService {
       enableVibration: true,
       vibrationPattern: Int64List.fromList(_vibration),
     );
-    await _plugin
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(channel);
+    await androidImpl?.createNotificationChannel(channel);
   }
 
   /// আজকে schedule করা হয়েছে কিনা check করো, না হলে করো

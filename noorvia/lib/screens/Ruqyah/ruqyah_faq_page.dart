@@ -226,137 +226,49 @@ class _RuqyahFaqPageState extends State<RuqyahFaqPage> {
 
     return Scaffold(
       backgroundColor: bg,
-      body: CustomScrollView(
-        slivers: [
-          _buildSliverAppBar(isDark),
-          SliverToBoxAdapter(child: _buildBody(isDark)),
-        ],
-      ),
+      appBar: _buildAppBar(),
+      body: SingleChildScrollView(child: _buildBody(isDark)),
     );
   }
 
-  // ── Sliver AppBar ────────────────────────────────────────────
-  Widget _buildSliverAppBar(bool isDark) {
-    return SliverAppBar(
-      expandedHeight: 200,
-      pinned: true,
+  // ── AppBar ────────────────────────────────────────────────────
+  AppBar _buildAppBar() {
+    return AppBar(
       backgroundColor: AppColors.primary,
-      automaticallyImplyLeading: false,
-      title: null,
-      flexibleSpace: FlexibleSpaceBar(
-        collapseMode: CollapseMode.parallax,
-        titlePadding: EdgeInsets.zero,
-        title: LayoutBuilder(
-          builder: (context, constraints) {
-            final collapsed = constraints.maxHeight <= kToolbarHeight + 10;
-            if (!collapsed) return const SizedBox.shrink();
-            return SafeArea(
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new,
-                        color: Colors.white, size: 18),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  Expanded(
-                    child: Text(
-                      'প্রশ্ন ও উত্তর',
-                      style: GoogleFonts.hindSiliguri(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.refresh_rounded,
-                        color: Colors.white, size: 20),
-                    onPressed: _fetchData,
-                  ),
-                  const SizedBox(width: 4),
-                ],
-              ),
-            );
-          },
-        ),
-        background: Stack(
-          fit: StackFit.expand,
-          children: [
-            Image.network(
-              'https://raw.githubusercontent.com/prodhan2/App_Backend_Data/main/MyApi/IslamicAppImages/rukaiyabg.webp',
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
-                decoration: BoxDecoration(gradient: AppColors.gradient),
-              ),
+      elevation: 0,
+      flexibleSpace: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.network(
+            'https://raw.githubusercontent.com/prodhan2/App_Backend_Data/main/MyApi/IslamicAppImages/rukaiyabg.webp',
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => Container(
+              decoration: BoxDecoration(gradient: AppColors.gradient),
             ),
-            Positioned(
-              top: -30, right: -30,
-              child: Container(
-                width: 160, height: 160,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.06),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: -20, left: -20,
-              child: Container(
-                width: 120, height: 120,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.05),
-                ),
-              ),
-            ),
-            // Expanded top-bar row
-            Positioned(
-              top: 0, left: 0, right: 0,
-              child: SafeArea(
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back_ios_new,
-                          color: Colors.white, size: 18),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                    const Spacer(),
-                    IconButton(
-                      icon: const Icon(Icons.refresh_rounded,
-                          color: Colors.white, size: 20),
-                      onPressed: _fetchData,
-                    ),
-                    const SizedBox(width: 4),
-                  ],
-                ),
-              ),
-            ),
-            // Centre content
-            Positioned.fill(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'প্রশ্ন ও উত্তর',
-                    style: GoogleFonts.hindSiliguri(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF0D1B2A),
-                        letterSpacing: 0.5),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'রুকইয়াহ বিষয়ক সাধারণ জিজ্ঞাসা',
-                    style: GoogleFonts.hindSiliguri(
-                        fontSize: 14,
-                        color: const Color(0xFF1A3A5C),
-                        fontWeight: FontWeight.w600),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+          Positioned(top: -30, right: -30, child: Container(width: 160, height: 160, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withValues(alpha: 0.06)))),
+          Positioned(bottom: -20, left: -20, child: Container(width: 120, height: 120, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withValues(alpha: 0.05)))),
+        ],
       ),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 18),
+        onPressed: () => Navigator.pop(context),
+      ),
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('প্রশ্ন ও উত্তর', style: GoogleFonts.hindSiliguri(fontSize: 17, fontWeight: FontWeight.w800, color: Colors.black, height: 1.2)),
+          Text('রুকইয়াহ বিষয়ক সাধারণ জিজ্ঞাসা', style: GoogleFonts.hindSiliguri(fontSize: 10, color: Colors.black, height: 1.2)),
+        ],
+      ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.refresh_rounded, color: Colors.black, size: 20),
+          onPressed: _fetchData,
+        ),
+        const SizedBox(width: 4),
+      ],
     );
   }
 

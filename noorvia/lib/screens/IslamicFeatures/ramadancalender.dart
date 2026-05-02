@@ -5,6 +5,9 @@ import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/gradient_helper.dart';
 
@@ -44,6 +47,9 @@ class _RamadanCalendarPageState extends State<RamadanCalendarPage> {
 
   // Scroll
   final ScrollController _scroll = ScrollController();
+
+  // PDF generation state
+  bool _pdfLoading = false;
 
   // Each year block height (approx) for year detection
   // We'll use a GlobalKey per year header to detect visibility
@@ -97,6 +103,11 @@ class _RamadanCalendarPageState extends State<RamadanCalendarPage> {
     _scroll.addListener(_onScroll);
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) setState(() => _now = DateTime.now());
+    });
+
+    // Auto-scroll to current year section after first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToCurrentYear();
     });
 
     _initLocation();
@@ -264,8 +275,10 @@ class _RamadanCalendarPageState extends State<RamadanCalendarPage> {
           _loadingYear[hijriYear] = false;
         });
         if (hijriYear == _currentHijriYear()) {
-          WidgetsBinding.instance
-              .addPostFrameCallback((_) => _scrollToToday());
+          // Small delay so the newly built rows are laid out before scrolling
+          Future.delayed(const Duration(milliseconds: 300), () {
+            if (mounted) _scrollToToday();
+          });
         }
       }
     } catch (e) {
@@ -284,6 +297,21 @@ class _RamadanCalendarPageState extends State<RamadanCalendarPage> {
     _fetchAllYears();
   }
 
+  // ── Scroll to current year section (called on page open) ─
+  void _scrollToCurrentYear() {
+    final curYear = _currentHijriYear();
+    final key = _yearKeys[curYear];
+    if (key == null) return;
+    final ctx = key.currentContext;
+    if (ctx == null) return;
+    Scrollable.ensureVisible(
+      ctx,
+      duration: const Duration(milliseconds: 700),
+      curve: Curves.easeInOutCubic,
+      alignment: 0.0, // align to top of viewport
+    );
+  }
+
   // ── Scroll to today ───────────────────────────────────────
   void _scrollToToday() {
     final curYear = _currentHijriYear();
@@ -295,21 +323,32 @@ class _RamadanCalendarPageState extends State<RamadanCalendarPage> {
     if (data == null) return;
 
     final idx = data.indexWhere((d) => _isToday(d));
-    if (idx < 0) return;
 
-    // Scroll to year header first, then offset by row index
+    // First scroll to the year header
     Scrollable.ensureVisible(
       ctx,
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.easeOut,
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeInOutCubic,
+      alignment: 0.0,
     ).then((_) {
       if (!_scroll.hasClients) return;
-      final extra = 56.0 + (idx ~/ 10) * 40.0 + idx * 52.0;
+      if (idx < 0) return;
+
+      // Each section header ~40px, each row ~52px, year banner ~44px
+      // section headers appear at index 0, 10, 20
+      final sectionHeadersBefore = (idx ~/ 10) + 1; // headers before this row
+      final extra = 44.0                             // year banner
+          + sectionHeadersBefore * 40.0              // section headers
+          + idx * 52.0;                              // rows above today
+
       final target = (_scroll.offset + extra)
           .clamp(0.0, _scroll.position.maxScrollExtent);
-      _scroll.animateTo(target,
-          duration: const Duration(milliseconds: 400),
-          curve: Curves.easeOut);
+
+      _scroll.animateTo(
+        target,
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeInOutCubic,
+      );
     });
   }
 
@@ -460,6 +499,28 @@ class _RamadanCalendarPageState extends State<RamadanCalendarPage> {
           ],
         ),
         actions: [
+          // ── PDF Download button ──────────────────────────
+          Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: _pdfLoading
+                ? const Padding(
+                    padding: EdgeInsets.all(10),
+                    child: SizedBox(
+                      width: 20, height: 20,
+                      child: CircularProgressIndicator(
+                          color: Colors.white, strokeWidth: 2),
+                    ),
+                  )
+                : IconButton(
+                    onPressed: _generateAndDownloadPdf,
+                    tooltip: 'PDF ডাউনলোড',
+                    icon: const Icon(
+                      Icons.picture_as_pdf_rounded,
+                      color: Colors.white,
+                      size: 22,
+                    ),
+                  ),
+          ),
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: DropdownButtonHideUnderline(
@@ -513,6 +574,220 @@ class _RamadanCalendarPageState extends State<RamadanCalendarPage> {
         elevation: 4,
         child: const Icon(Icons.today_rounded, color: Colors.white),
         tooltip: 'আজকে যান',
+      ),
+    );
+  }
+
+  // ── Generate & download PDF for visible Hijri year ───────
+  Future<void> _generateAndDownloadPdf() async {
+    final hijriYear = _visibleHijriYear;
+    final data = _cache[hijriYear];
+
+    if (data == null || data.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(
+          'ডেটা লোড হয়নি। একটু অপেক্ষা করুন।',
+          style: GoogleFonts.hindSiliguri(fontSize: 13),
+        ),
+        backgroundColor: Colors.orange.shade700,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        duration: const Duration(seconds: 2),
+      ));
+      return;
+    }
+
+    setState(() => _pdfLoading = true);
+
+    try {
+      // Load a font that supports Bengali
+      final ttf = await PdfGoogleFonts.hindSiliguriRegular();
+      final ttfBold = await PdfGoogleFonts.hindSiliguriMedium();
+
+      final pdf = pw.Document();
+
+      // Colors
+      final headerBg   = PdfColor.fromHex('6C3CE1');
+      final headerText = PdfColors.white;
+      final todayBg    = PdfColor.fromHex('6C3CE1');
+      final sec1Bg     = PdfColor.fromHex('E8F5EE');
+      final sec2Bg     = PdfColor.fromHex('FFF8E8');
+      final sec3Bg     = PdfColor.fromHex('EAF2FF');
+      final sec1Accent = PdfColor.fromHex('0D5C3A');
+      final sec2Accent = PdfColor.fromHex('D4A017');
+      final sec3Accent = PdfColor.fromHex('2563EB');
+      final rowEven    = PdfColors.white;
+      final rowOdd     = PdfColor.fromHex('FAF6EE');
+      final textDark   = PdfColor.fromHex('1A1A1A');
+      final textSub    = PdfColor.fromHex('555555');
+
+      final gRange = _gregorianYearRange(hijriYear);
+      final cityName = _cityBnDisplay;
+
+      // Split data into sections of 10
+      final sections = [
+        {'label': 'রহমতের ১০ দিন',     'bg': sec1Bg, 'accent': sec1Accent},
+        {'label': 'মাগফিরাতের ১০ দিন', 'bg': sec2Bg, 'accent': sec2Accent},
+        {'label': 'নাজাতের ১০ দিন',    'bg': sec3Bg, 'accent': sec3Accent},
+      ];
+
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(24),
+          header: (ctx) => pw.Container(
+            decoration: pw.BoxDecoration(color: headerBg),
+            padding: const pw.EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Text(
+                  'রমজান ক্যালেন্ডার  •  $hijriYear হিজরি  •  $gRange',
+                  style: pw.TextStyle(font: ttfBold, fontSize: 13, color: headerText),
+                ),
+                pw.Text(
+                  cityName,
+                  style: pw.TextStyle(font: ttf, fontSize: 11, color: headerText),
+                ),
+              ],
+            ),
+          ),
+          footer: (ctx) => pw.Container(
+            decoration: pw.BoxDecoration(
+              border: pw.Border(top: pw.BorderSide(color: sec2Accent, width: 0.5)),
+            ),
+            padding: const pw.EdgeInsets.only(top: 6),
+            child: pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Text(
+                  'সাহরীর শেষ = ফজরের ৫ মিনিট পূর্বে  |  ইফতার = মাগরিবের ৩ মিনিট পর',
+                  style: pw.TextStyle(font: ttf, fontSize: 8, color: textSub),
+                ),
+                pw.Text(
+                  'পৃষ্ঠা ${ctx.pageNumber}/${ctx.pagesCount}',
+                  style: pw.TextStyle(font: ttf, fontSize: 8, color: textSub),
+                ),
+              ],
+            ),
+          ),
+          build: (ctx) {
+            final widgets = <pw.Widget>[];
+
+            // Column header row
+            widgets.add(
+              pw.Container(
+                decoration: pw.BoxDecoration(color: headerBg),
+                padding: const pw.EdgeInsets.symmetric(vertical: 7, horizontal: 4),
+                child: pw.Row(children: [
+                  _pdfCell('রমাযান', ttfBold, headerText, flex: 2),
+                  _pdfCell('তারিখ',  ttfBold, headerText, flex: 4),
+                  _pdfCell('বার',    ttfBold, headerText, flex: 3),
+                  _pdfCell('সাহরী শেষ', ttfBold, headerText, flex: 3),
+                  _pdfCell('ইফতার', ttfBold, headerText, flex: 3),
+                ]),
+              ),
+            );
+
+            for (int i = 0; i < data.length; i++) {
+              // Section header every 10 rows
+              if (i == 0 || i == 10 || i == 20) {
+                final sIdx = i ~/ 10;
+                final s = sections[sIdx];
+                widgets.add(
+                  pw.Container(
+                    decoration: pw.BoxDecoration(
+                      color: s['bg'] as PdfColor,
+                      border: pw.Border(
+                        left: pw.BorderSide(color: s['accent'] as PdfColor, width: 3),
+                      ),
+                    ),
+                    padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+                    child: pw.Text(
+                      s['label'] as String,
+                      style: pw.TextStyle(font: ttfBold, fontSize: 11, color: s['accent'] as PdfColor),
+                    ),
+                  ),
+                );
+              }
+
+              final day = data[i];
+              final isToday = _isToday(day);
+              final g = day['date']['gregorian'];
+              final timings = day['timings'] as Map<String, dynamic>;
+              final ramadanDay = _bn((i + 1).toString().padLeft(2, '0'));
+              final readable = day['date']['readable']?.toString() ?? '';
+              final weekday = _weekdayBn(g['weekday']['en'] as String);
+              final fajrRaw = (timings['Fajr'] as String).split(' ').first;
+              final maghribRaw = (timings['Maghrib'] as String).split(' ').first;
+              final sehriTime = _fmt12(_adjustTime(fajrRaw, -5));
+              final iftarTime = _fmt12(_adjustTime(maghribRaw, 3));
+
+              final rowBg = isToday ? todayBg : (i.isEven ? rowEven : rowOdd);
+              final textColor = isToday ? PdfColors.white : textDark;
+              final sehriColor = isToday ? PdfColor.fromHex('B2EBD4') : PdfColor.fromHex('5C6BC0');
+              final iftarColor = isToday ? PdfColor.fromHex('FFD580') : PdfColor.fromHex('E53935');
+
+              widgets.add(
+                pw.Container(
+                  decoration: pw.BoxDecoration(
+                    color: rowBg,
+                    border: pw.Border(
+                      bottom: pw.BorderSide(color: PdfColor.fromHex('E0E0E0'), width: 0.5),
+                      left: isToday
+                          ? pw.BorderSide(color: PdfColor.fromHex('F5C842'), width: 3)
+                          : pw.BorderSide(color: PdfColor.fromInt(0x00000000), width: 0),
+                    ),
+                  ),
+                  padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                  child: pw.Row(children: [
+                    _pdfCell(ramadanDay, isToday ? ttfBold : ttfBold,
+                        isToday ? PdfColor.fromHex('F5C842') : PdfColor.fromHex('6C3CE1'), flex: 2),
+                    _pdfCell(readable,   ttf, textColor, flex: 4),
+                    _pdfCell(weekday,    ttf, textColor, flex: 3),
+                    _pdfCell(sehriTime,  isToday ? ttfBold : ttf, sehriColor, flex: 3),
+                    _pdfCell(iftarTime,  isToday ? ttfBold : ttf, iftarColor, flex: 3),
+                  ]),
+                ),
+              );
+            }
+
+            return widgets;
+          },
+        ),
+      );
+
+      // Share/save via printing package (works on Android, iOS, desktop)
+      await Printing.sharePdf(
+        bytes: await pdf.save(),
+        filename: 'ramadan_${hijriYear}_$_city.pdf',
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(
+          'PDF তৈরি করতে সমস্যা হয়েছে।',
+          style: GoogleFonts.hindSiliguri(fontSize: 13),
+        ),
+        backgroundColor: Colors.red.shade700,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        duration: const Duration(seconds: 2),
+      ));
+    } finally {
+      if (mounted) setState(() => _pdfLoading = false);
+    }
+  }
+
+  // ── PDF cell helper ───────────────────────────────────────
+  pw.Widget _pdfCell(String text, pw.Font font, PdfColor color, {int flex = 1}) {
+    return pw.Expanded(
+      flex: flex,
+      child: pw.Text(
+        text,
+        textAlign: pw.TextAlign.center,
+        style: pw.TextStyle(font: font, fontSize: 10, color: color),
       ),
     );
   }

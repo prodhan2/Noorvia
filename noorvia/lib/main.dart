@@ -117,13 +117,15 @@ class _GlobalShakeDetectorState extends State<_GlobalShakeDetector>
     _shakeDetector!.start();
   }
 
-  // Pause shake when app goes to background, resume when foreground
+  // Resume shake when app comes to foreground.
+  // Do NOT stop on paused/inactive — those states still have sensor access
+  // on most Android devices (screen may still be on, app just lost focus).
+  // Only stop when the process is truly detached / about to be killed.
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _startShake();
-    } else if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.inactive) {
+    } else if (state == AppLifecycleState.detached) {
       _shakeDetector?.stop();
     }
   }

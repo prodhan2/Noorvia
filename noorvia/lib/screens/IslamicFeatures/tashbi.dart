@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -66,6 +68,18 @@ class _TasbihCounterState extends State<TasbihCounter>
 
   bool _tapped = false; // ignore: unused_field
 
+  // ── Bead animation state ───────────────────────────────────
+  // How many beads are "counted" (slid to right side)
+  int _animatedBeadCount = 0;
+  // Queue of pending slide animations
+  final Queue<_BeadSlide> _slideQueue = Queue();
+  bool _isAnimating = false;
+  // Timestamp of last tap for speed detection
+  DateTime? _lastTapTime;
+  // The bead currently mid-animation
+  int? _animatingBeadIndex; // index in the visual row being animated
+  double _animatingBeadOffset = 0.0; // 0.0 = left pos, 1.0 = right pos
+
   ZikrItem get _currentZikr => _zikrList[_selectedIndex];
   int get _counter => _zikrData[_currentZikr.name]?['counter'] ?? 0;
   int get _completedTimes => _zikrData[_currentZikr.name]?['completedTimes'] ?? 0;
@@ -75,9 +89,9 @@ class _TasbihCounterState extends State<TasbihCounter>
   void initState() {
     super.initState();
 
-    _pulseCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 180));
-    _rippleCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
-    _countCtrl  = AnimationController(vsync: this, duration: const Duration(milliseconds: 250));
+    _pulseCtrl   = AnimationController(vsync: this, duration: const Duration(milliseconds: 180));
+    _rippleCtrl  = AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
+    _countCtrl   = AnimationController(vsync: this, duration: const Duration(milliseconds: 250));
     _successCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
 
     _pulseAnim = Tween<double>(begin: 1.0, end: 0.92).animate(
@@ -102,6 +116,57 @@ class _TasbihCounterState extends State<TasbihCounter>
     super.dispose();
   }
 
+  // ── Bead animation queue processor ────────────────────────
+  void _enqueueBeadSlide(int tapIntervalMs) {
+    _slideQueue.add(_BeadSlide(intervalMs: tapIntervalMs));
+    if (!_isAnimating) _processNextSlide();
+  }
+
+  void _processNextSlide() {
+    if (_slideQueue.isEmpty || !mounted) {
+      _isAnimating = false;
+      return;
+    }
+    _isAnimating = true;
+    final slide = _slideQueue.removeFirst();
+
+    // Speed: faster taps = shorter animation (min 80ms, max 320ms)
+    final dur = (slide.intervalMs * 0.55).clamp(80.0, 320.0).toInt();
+    final beadIdx = _animatedBeadCount;
+
+    setState(() {
+      _animatingBeadIndex = beadIdx;
+      _animatingBeadOffset = 0.0;
+    });
+
+    _animateOffset(dur, beadIdx);
+  }
+
+  void _animateOffset(int durationMs, int beadIdx) {
+    const steps = 20;
+    final stepDur = (durationMs ~/ steps).clamp(4, 20);
+    int step = 0;
+
+    Timer.periodic(Duration(milliseconds: stepDur), (t) {
+      if (!mounted) { t.cancel(); return; }
+      step++;
+      final progress = Curves.easeInOut.transform(step / steps);
+      setState(() => _animatingBeadOffset = progress);
+
+      if (step >= steps) {
+        t.cancel();
+        setState(() {
+          _animatedBeadCount++;
+          _animatingBeadIndex = null;
+          _animatingBeadOffset = 0.0;
+        });
+        Future.delayed(Duration(milliseconds: (stepDur * 0.5).toInt()), () {
+          _processNextSlide();
+        });
+      }
+    });
+  }
+
   // ── Persistence ────────────────────────────────────────────
   Future<void> _loadData() async {
     final prefs = await SharedPreferences.getInstance();
@@ -111,6 +176,9 @@ class _TasbihCounterState extends State<TasbihCounter>
       _zikrData = raw != null ? Map<String, dynamic>.from(jsonDecode(raw)) : {};
       _selectedIndex = idx.clamp(0, _zikrList.length - 1);
       _targetCount = prefs.getInt('tasbih_target_${_currentZikr.name}') ?? _currentZikr.defaultTarget;
+      // Sync bead visual to saved counter
+      _animatedBeadCount = _counter.clamp(0, _targetCount);
+      _animatingBeadIndex = null;
     });
   }
 
@@ -124,6 +192,13 @@ class _TasbihCounterState extends State<TasbihCounter>
   // ── Increment ──────────────────────────────────────────────
   void _increment() {
     HapticFeedback.lightImpact();
+
+    // Measure tap interval for speed-based animation
+    final now = DateTime.now();
+    final intervalMs = _lastTapTime != null
+        ? now.difference(_lastTapTime!).inMilliseconds
+        : 400;
+    _lastTapTime = now;
 
     // Animate button press
     _pulseCtrl.forward().then((_) => _pulseCtrl.reverse());
@@ -141,6 +216,11 @@ class _TasbihCounterState extends State<TasbihCounter>
         cur['completedTimes'] = (cur['completedTimes'] ?? 0) + 1;
         cur['counter'] = 0;
         _zikrData[_currentZikr.name] = cur;
+        // Reset bead visual state for new round
+        _animatedBeadCount = 0;
+        _slideQueue.clear();
+        _isAnimating = false;
+        _animatingBeadIndex = null;
         _saveData();
         Future.microtask(() => _showSuccessSheet(cur['completedTimes']));
         return;
@@ -151,6 +231,9 @@ class _TasbihCounterState extends State<TasbihCounter>
     });
 
     _saveData();
+
+    // Enqueue a bead slide with current tap speed
+    _enqueueBeadSlide(intervalMs.clamp(80, 1000));
 
     Future.delayed(const Duration(milliseconds: 200), () {
       if (mounted) setState(() => _tapped = false);
@@ -163,6 +246,12 @@ class _TasbihCounterState extends State<TasbihCounter>
       final cur = Map<String, dynamic>.from(_zikrData[_currentZikr.name] ?? {});
       cur['counter'] = 0;
       _zikrData[_currentZikr.name] = cur;
+      // Reset bead visual
+      _animatedBeadCount = 0;
+      _slideQueue.clear();
+      _isAnimating = false;
+      _animatingBeadIndex = null;
+      _animatingBeadOffset = 0.0;
     });
     _saveData();
   }
@@ -241,10 +330,15 @@ class _TasbihCounterState extends State<TasbihCounter>
     return Scaffold(
       backgroundColor: bg,
       appBar: AppBar(
-        backgroundColor: bg,
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: AppColors.gradient,
+          ),
+        ),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, color: textColor, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
           onPressed: () => Navigator.maybePop(context),
         ),
         title: Text(
@@ -252,18 +346,18 @@ class _TasbihCounterState extends State<TasbihCounter>
           style: GoogleFonts.hindSiliguri(
             fontSize: 18,
             fontWeight: FontWeight.w700,
-            color: textColor,
+            color: Colors.white,
           ),
         ),
         centerTitle: true,
         actions: [
           IconButton(
-            icon: Icon(Icons.bar_chart_rounded, color: textColor),
+            icon: const Icon(Icons.bar_chart_rounded, color: Colors.white),
             onPressed: _showHistory,
             tooltip: 'পরিসংখ্যান',
           ),
           IconButton(
-            icon: Icon(Icons.tune_rounded, color: textColor),
+            icon: const Icon(Icons.tune_rounded, color: Colors.white),
             onPressed: _showSettings,
             tooltip: 'সেটিংস',
           ),
@@ -288,6 +382,12 @@ class _TasbihCounterState extends State<TasbihCounter>
                         _targetCount = _zikrData['tasbih_target_${_zikrList[i].name}'] != null
                             ? _zikrData['tasbih_target_${_zikrList[i].name}'] as int
                             : _zikrList[i].defaultTarget;
+                        // Sync beads to the new zikr's counter
+                        _animatedBeadCount = (_zikrData[_zikrList[i].name]?['counter'] ?? 0) as int;
+                        _slideQueue.clear();
+                        _isAnimating = false;
+                        _animatingBeadIndex = null;
+                        _animatingBeadOffset = 0.0;
                       });
                       _saveData();
                     },
@@ -407,115 +507,109 @@ class _TasbihCounterState extends State<TasbihCounter>
 
             const SizedBox(height: 24),
 
-            // ── Main counter button ──────────────────────────
+            // ── Tasbih bead animation + counter button ───────
             Expanded(
-              child: Center(
-                child: GestureDetector(
-                  onTap: _increment,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      // Ripple ring
-                      AnimatedBuilder(
-                        animation: _rippleAnim,
-                        builder: (_, __) {
-                          return Opacity(
-                            opacity: (1 - _rippleAnim.value).clamp(0.0, 1.0),
-                            child: Container(
-                              width: 220 + 80 * _rippleAnim.value,
-                              height: 220 + 80 * _rippleAnim.value,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: zikrColor.withValues(alpha: 0.4),
-                                  width: 2,
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Bead string visual
+                  _TasbihBeadRow(
+                    total: _targetCount.clamp(1, 100),
+                    counted: _animatedBeadCount,
+                    animatingIndex: _animatingBeadIndex,
+                    animatingOffset: _animatingBeadOffset,
+                    color: zikrColor,
+                    isDark: isDark,
+                  ),
 
-                      // Outer glow ring
-                      Container(
-                        width: 230,
-                        height: 230,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: RadialGradient(
-                            colors: [
-                              zikrColor.withValues(alpha: 0.15),
-                              Colors.transparent,
-                            ],
-                          ),
-                        ),
-                      ),
+                  const SizedBox(height: 28),
 
-                      // Main button
-                      AnimatedBuilder(
-                        animation: _pulseAnim,
-                        builder: (_, child) => Transform.scale(
-                          scale: _pulseAnim.value,
-                          child: child,
-                        ),
-                        child: Container(
-                          width: 200,
-                          height: 200,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              colors: [
-                                zikrColor,
-                                zikrColor.withValues(alpha: 0.8),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: zikrColor.withValues(alpha: 0.45),
-                                blurRadius: 30,
-                                spreadRadius: 4,
-                                offset: const Offset(0, 8),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              // Counter number with bounce
-                              AnimatedBuilder(
-                                animation: _countAnim,
-                                builder: (_, child) => Transform.scale(
-                                  scale: _countAnim.value,
-                                  child: child,
-                                ),
-                                child: Text(
-                                  _bn(_counter),
-                                  style: GoogleFonts.hindSiliguri(
-                                    fontSize: 64,
-                                    fontWeight: FontWeight.w900,
-                                    color: Colors.white,
-                                    height: 1,
+                  // Counter tap button
+                  GestureDetector(
+                    onTap: _increment,
+                    child: AnimatedBuilder(
+                      animation: _pulseAnim,
+                      builder: (_, child) => Transform.scale(
+                        scale: _pulseAnim.value,
+                        child: child,
+                      ),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // Ripple ring
+                          AnimatedBuilder(
+                            animation: _rippleAnim,
+                            builder: (_, __) => Opacity(
+                              opacity: (1 - _rippleAnim.value).clamp(0.0, 1.0),
+                              child: Container(
+                                width: 140 + 60 * _rippleAnim.value,
+                                height: 140 + 60 * _rippleAnim.value,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: zikrColor.withValues(alpha: 0.35),
+                                    width: 2,
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 6),
-                              Text(
-                                'ট্যাপ করুন',
-                                style: GoogleFonts.hindSiliguri(
-                                  fontSize: 13,
-                                  color: Colors.white.withValues(alpha: 0.75),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
-                        ),
+                          // Main circle
+                          Container(
+                            width: 130,
+                            height: 130,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: LinearGradient(
+                                colors: [zikrColor, zikrColor.withValues(alpha: 0.75)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: zikrColor.withValues(alpha: 0.45),
+                                  blurRadius: 24,
+                                  spreadRadius: 2,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                AnimatedBuilder(
+                                  animation: _countAnim,
+                                  builder: (_, child) => Transform.scale(
+                                    scale: _countAnim.value,
+                                    child: child,
+                                  ),
+                                  child: Text(
+                                    _bn(_counter),
+                                    style: GoogleFonts.hindSiliguri(
+                                      fontSize: 46,
+                                      fontWeight: FontWeight.w900,
+                                      color: Colors.white,
+                                      height: 1,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'ট্যাপ করুন',
+                                  style: GoogleFonts.hindSiliguri(
+                                    fontSize: 11,
+                                    color: Colors.white.withValues(alpha: 0.75),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
 
@@ -594,6 +688,253 @@ class _TasbihCounterState extends State<TasbihCounter>
             const SizedBox(height: 24),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _BeadSlide — data class for queued animations
+// ─────────────────────────────────────────────────────────────────────────────
+class _BeadSlide {
+  final int intervalMs;
+  const _BeadSlide({required this.intervalMs});
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _TasbihBeadRow — real tasbih bead string visual
+// ─────────────────────────────────────────────────────────────────────────────
+class _TasbihBeadRow extends StatelessWidget {
+  final int total;        // total beads (capped for display)
+  final int counted;      // how many have slid to the right
+  final int? animatingIndex; // which bead is mid-slide
+  final double animatingOffset; // 0.0 → 1.0 slide progress
+  final Color color;
+  final bool isDark;
+
+  const _TasbihBeadRow({
+    required this.total,
+    required this.counted,
+    required this.animatingIndex,
+    required this.animatingOffset,
+    required this.color,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // We show at most 33 beads visually; if target > 33 we group them
+    const int maxVisible = 33;
+    final int visibleTotal = total.clamp(1, maxVisible);
+    // Scale counted/animating to visible range
+    final double ratio = visibleTotal / total;
+    final int visibleCounted = (counted * ratio).floor().clamp(0, visibleTotal);
+    final int? visibleAnimating = animatingIndex != null
+        ? ((animatingIndex! * ratio).floor()).clamp(0, visibleTotal - 1)
+        : null;
+
+    return SizedBox(
+      height: 72,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final double width = constraints.maxWidth - 32;
+          // Bead size scales with count
+          final double beadD = (width / (visibleTotal + 1)).clamp(10.0, 26.0);
+          final double beadR = beadD / 2;
+          final double stringY = 36.0;
+
+          // Divider x position: separates counted (right) from remaining (left)
+          // Beads are evenly spaced; counted beads cluster to the right
+          final double spacing = width / (visibleTotal + 1);
+
+          return Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // ── String line ──────────────────────────────
+              Positioned(
+                left: 16,
+                right: 16,
+                top: stringY - 1.5,
+                child: Container(
+                  height: 3,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(2),
+                    gradient: LinearGradient(
+                      colors: [
+                        color.withValues(alpha: 0.4),
+                        color.withValues(alpha: 0.8),
+                        color.withValues(alpha: 0.4),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              // ── Left knot ────────────────────────────────
+              Positioned(
+                left: 12,
+                top: stringY - 5,
+                child: Container(
+                  width: 10, height: 10,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: color.withValues(alpha: 0.6),
+                  ),
+                ),
+              ),
+
+              // ── Right knot ───────────────────────────────
+              Positioned(
+                right: 12,
+                top: stringY - 5,
+                child: Container(
+                  width: 10, height: 10,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: color.withValues(alpha: 0.6),
+                  ),
+                ),
+              ),
+
+              // ── Beads ────────────────────────────────────
+              ...List.generate(visibleTotal, (i) {
+                final bool isCounted = i < visibleCounted;
+                final bool isAnimating = visibleAnimating != null && i == visibleAnimating;
+
+                // Layout: slots 0..visibleTotal-1 evenly spaced left to right.
+                // Uncounted beads occupy left slots (0-based from left).
+                // Counted beads occupy right slots (0-based from right).
+                //
+                // Slot assignment:
+                //   uncounted beads: slot index = their order among uncounted (left side)
+                //   counted beads:   slot index = visibleTotal-1 - their order among counted (right side)
+                //   animating bead:  interpolates from its uncounted slot → first right slot
+
+                double slotX(int slot) => 16 + (slot + 1) * spacing - beadR;
+
+                double baseX;
+                if (isCounted) {
+                  // i goes 0..visibleCounted-1; rightmost counted = slot visibleTotal-1
+                  final int countedOrder = i; // 0 = first counted (rightmost)
+                  final int slot = visibleTotal - 1 - countedOrder;
+                  baseX = slotX(slot);
+                } else if (isAnimating) {
+                  // How many uncounted beads are to the left of this one?
+                  final int uncountedOrder = i - visibleCounted;
+                  final double fromX = slotX(uncountedOrder);
+                  // Target: the slot that will become the newest counted bead
+                  final int targetSlot = visibleTotal - 1 - visibleCounted;
+                  final double toX = slotX(targetSlot);
+                  baseX = fromX + (toX - fromX) * animatingOffset;
+                } else {
+                  // Pure uncounted bead — shift left by 1 if animating bead was before it
+                  int uncountedOrder = i - visibleCounted;
+                  if (visibleAnimating != null && i > visibleAnimating!) {
+                    uncountedOrder -= 1;
+                  }
+                  baseX = slotX(uncountedOrder);
+                }
+
+                // Slight vertical arc: beads in the middle dip a little
+                final double midFraction = (i / (visibleTotal - 1).clamp(1, 999)) - 0.5;
+                final double arcDip = 8 * (1 - 4 * midFraction * midFraction).clamp(0.0, 1.0);
+                final double beadY = stringY - beadR + arcDip;
+
+                return Positioned(
+                  left: baseX,
+                  top: beadY,
+                  child: _Bead(
+                    diameter: beadD,
+                    color: color,
+                    isCounted: isCounted,
+                    isAnimating: isAnimating,
+                    progress: isAnimating ? animatingOffset : 0,
+                    isDark: isDark,
+                  ),
+                );
+              }),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _Bead — single tasbih bead
+// ─────────────────────────────────────────────────────────────────────────────
+class _Bead extends StatelessWidget {
+  final double diameter;
+  final Color color;
+  final bool isCounted;
+  final bool isAnimating;
+  final double progress;
+  final bool isDark;
+
+  const _Bead({
+    required this.diameter,
+    required this.color,
+    required this.isCounted,
+    required this.isAnimating,
+    required this.progress,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final double scale = isAnimating ? (1.0 + 0.25 * sin(progress * pi)) : 1.0;
+    final Color beadColor = isCounted
+        ? color
+        : (isDark ? color.withValues(alpha: 0.28) : color.withValues(alpha: 0.18));
+    final Color borderColor = isCounted
+        ? color.withValues(alpha: 0.9)
+        : color.withValues(alpha: 0.45);
+
+    return Transform.scale(
+      scale: scale,
+      child: Container(
+        width: diameter,
+        height: diameter,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: beadColor,
+          border: Border.all(color: borderColor, width: 1.2),
+          boxShadow: isCounted || isAnimating
+              ? [
+                  BoxShadow(
+                    color: color.withValues(alpha: isAnimating ? 0.55 : 0.3),
+                    blurRadius: isAnimating ? 8 : 4,
+                    spreadRadius: isAnimating ? 1 : 0,
+                  ),
+                ]
+              : null,
+          gradient: isCounted
+              ? LinearGradient(
+                  colors: [
+                    color.withValues(alpha: 0.9),
+                    color,
+                    color.withValues(alpha: 0.7),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
+        ),
+        // Shine dot on counted beads
+        child: isCounted
+            ? Align(
+                alignment: const Alignment(-0.3, -0.3),
+                child: Container(
+                  width: diameter * 0.22,
+                  height: diameter * 0.22,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withValues(alpha: 0.45),
+                  ),
+                ),
+              )
+            : null,
       ),
     );
   }

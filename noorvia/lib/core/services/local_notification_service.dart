@@ -59,6 +59,12 @@ class LocalNotificationService {
             AndroidFlutterLocalNotificationsPlugin>()
         ?.requestNotificationsPermission();
 
+    // Request SCHEDULE_EXACT_ALARM permission (Android 12+)
+    await _plugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.requestExactAlarmsPermission();
+
     _initialised = true;
   }
 

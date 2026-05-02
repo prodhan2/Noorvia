@@ -353,7 +353,7 @@ class _RuqyahListPageState extends State<RuqyahListPage>
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new,
-              color: Colors.black87, size: 18),
+              color: Colors.black, size: 18),
           onPressed: () => Navigator.pop(context),
         ),
         title: Column(
@@ -365,7 +365,7 @@ class _RuqyahListPageState extends State<RuqyahListPage>
               style: GoogleFonts.hindSiliguri(
                 fontSize: 17,
                 fontWeight: FontWeight.w800,
-                color: Colors.black87,
+                color: Colors.black,
                 height: 1.2,
               ),
             ),
@@ -373,7 +373,7 @@ class _RuqyahListPageState extends State<RuqyahListPage>
               'কোরআন সুন্নাহ ভিত্তিক চিকিৎসা',
               style: GoogleFonts.hindSiliguri(
                 fontSize: 10,
-                color: Colors.black54,
+                color: Colors.black,
                 height: 1.2,
               ),
             ),
@@ -381,12 +381,12 @@ class _RuqyahListPageState extends State<RuqyahListPage>
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.black87, size: 20),
+            icon: const Icon(Icons.refresh, color: Colors.black, size: 20),
             onPressed: _fetchData,
             tooltip: 'রিফ্রেশ',
           ),
           IconButton(
-            icon: const Icon(Icons.menu, color: Colors.black87, size: 22),
+            icon: const Icon(Icons.menu, color: Colors.black, size: 22),
             onPressed: () => _scaffoldKey.currentState?.openDrawer(),
             tooltip: 'মেনু',
           ),
@@ -394,10 +394,10 @@ class _RuqyahListPageState extends State<RuqyahListPage>
         ],
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: Colors.black87,
+          indicatorColor: Colors.black,
           indicatorWeight: 3,
-          labelColor: Colors.black87,
-          unselectedLabelColor: Colors.black45,
+          labelColor: Colors.black,
+          unselectedLabelColor: Colors.black,
           labelStyle: GoogleFonts.hindSiliguri(
               fontSize: 13, fontWeight: FontWeight.w700),
           unselectedLabelStyle: GoogleFonts.hindSiliguri(fontSize: 12),

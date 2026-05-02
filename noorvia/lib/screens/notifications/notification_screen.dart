@@ -284,7 +284,6 @@ class _NotificationList extends StatelessWidget {
     final textColor = isDark ? AppColors.darkText : AppColors.lightText;
     final subColor = isDark ? AppColors.darkSubText : AppColors.lightSubText;
     return CustomScrollView(slivers: [
-      SliverToBoxAdapter(child: _StatusBanner(isDark: isDark, provider: provider, secondsLeft: secondsLeft)),
       SliverToBoxAdapter(child: _RandomHighlight(isDark: isDark, provider: provider, cardBg: cardBg, textColor: textColor, subColor: subColor)),
       SliverPadding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
@@ -485,18 +484,7 @@ class _RandomHighlightState extends State<_RandomHighlight> {
               const SizedBox(height: 8),
               Text('— ${_random!.reference}', style: GoogleFonts.hindSiliguri(fontSize: 11, color: Colors.white60, fontStyle: FontStyle.italic)),
             ],
-            const SizedBox(height: 4),
-            Row(children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(6)),
-                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  const Icon(Icons.offline_bolt_rounded, size: 10, color: Colors.white70),
-                  const SizedBox(width: 4),
-                  Text('লোকাল ক্যাশ থেকে', style: GoogleFonts.hindSiliguri(fontSize: 10, color: Colors.white70)),
-                ]),
-              ),
-            ]),
+
           ]),
         ),
       ),
@@ -543,7 +531,7 @@ class _NotificationCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: cardBg,
+        color: isDark ? cardBg : Colors.white,
         borderRadius: BorderRadius.circular(14),
         boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.06), blurRadius: 10, offset: const Offset(0, 3))],
         border: Border.all(color: AppColors.primary.withValues(alpha: 0.08), width: 1),
