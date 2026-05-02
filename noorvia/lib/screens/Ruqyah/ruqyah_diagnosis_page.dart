@@ -267,7 +267,7 @@ class _RuqyahDiagnosisPageState extends State<RuqyahDiagnosisPage> {
                 fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white)),
         const SizedBox(height: 4),
         Text('প্রশ্নের উত্তর দিন এবং জানুন আপনার সমস্যার ধরন ও সমাধান',
-            style: GoogleFonts.hindSiliguri(fontSize: 12, color: Colors.white80, height: 1.5)),
+            style: GoogleFonts.hindSiliguri(fontSize: 12, color: Colors.white70, height: 1.5)),
       ])),
     ]),
   );
