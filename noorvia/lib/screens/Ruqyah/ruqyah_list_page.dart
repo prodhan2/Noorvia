@@ -7,8 +7,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/providers/theme_provider.dart';
 import 'ruqyah_detail_page.dart';
+import 'ruqyah_ayat_detail_page.dart';
 
-// ─── Model ────────────────────────────────────────────────────────────────────
+// ─── Notes Model ──────────────────────────────────────────────────────────────
 
 class RuqyahChapter {
   final String id;
@@ -35,10 +36,86 @@ class RuqyahChapter {
   }
 }
 
+// ─── Ayat Models ──────────────────────────────────────────────────────────────
+
+class RuqyahAyah {
+  final int id;
+  final int ayahNumber;
+  final String ayahArabic;
+  final String ayahBangla;
+  final String? ayahTitle;
+  final String? ayahNote;
+  final String? audiopath;
+  final int groupId;
+
+  const RuqyahAyah({
+    required this.id,
+    required this.ayahNumber,
+    required this.ayahArabic,
+    required this.ayahBangla,
+    this.ayahTitle,
+    this.ayahNote,
+    this.audiopath,
+    required this.groupId,
+  });
+
+  factory RuqyahAyah.fromJson(Map<String, dynamic> json) {
+    return RuqyahAyah(
+      id: (json['id'] as num?)?.toInt() ?? 0,
+      ayahNumber: (json['ayah_number'] as num?)?.toInt() ?? 0,
+      ayahArabic: json['ayah_arabic']?.toString() ?? '',
+      ayahBangla: json['ayah_bangla']?.toString() ?? '',
+      ayahTitle: json['ayah_title']?.toString(),
+      ayahNote: json['ayah_note']?.toString(),
+      audiopath: json['audiopath']?.toString(),
+      groupId: (json['group_id'] as num?)?.toInt() ?? 0,
+    );
+  }
+}
+
+class RuqyahAyatGroup {
+  final int id;
+  final String title;
+  final String subtitle;
+  final List<RuqyahAyah> ayahs;
+
+  const RuqyahAyatGroup({
+    required this.id,
+    required this.title,
+    required this.subtitle,
+    required this.ayahs,
+  });
+
+  factory RuqyahAyatGroup.fromJson(Map<String, dynamic> json) {
+    final rawAyahs = json['ayahs'];
+    final ayahs = (rawAyahs is List)
+        ? rawAyahs
+            .whereType<Map<String, dynamic>>()
+            .map((a) => RuqyahAyah.fromJson(a))
+            .where((a) => a.ayahArabic.isNotEmpty)
+            .toList()
+        : <RuqyahAyah>[];
+    return RuqyahAyatGroup(
+      id: (json['id'] as num?)?.toInt() ?? 0,
+      title: json['title']?.toString() ?? '',
+      subtitle: json['subtitle']?.toString() ?? '',
+      ayahs: ayahs,
+    );
+  }
+
+  String get preview {
+    if (ayahs.isEmpty) return '';
+    final first = ayahs.first.ayahBangla.trim();
+    return first.length > 100 ? '${first.substring(0, 100)}...' : first;
+  }
+}
+
 // ─── List Page ────────────────────────────────────────────────────────────────
 
 class RuqyahListPage extends StatefulWidget {
-  const RuqyahListPage({super.key});
+  final int initialTab;
+
+  const RuqyahListPage({super.key, this.initialTab = 0});
 
   @override
   State<RuqyahListPage> createState() => _RuqyahListPageState();
@@ -46,13 +123,15 @@ class RuqyahListPage extends StatefulWidget {
 
 class _RuqyahListPageState extends State<RuqyahListPage>
     with SingleTickerProviderStateMixin {
-  static const _apiUrl =
+  static const _notesApiUrl =
       'https://raw.githubusercontent.com/prodhan2/App_Backend_Data/main/MyApi/rukaiya.json';
+  static const _ayatApiUrl =
+      'https://raw.githubusercontent.com/prodhan2/App_Backend_Data/main/MyApi/My_Ruqiya/ruqyah_ayat_merged.json';
 
   List<RuqyahChapter> _notes = [];
-  List<RuqyahChapter> _ayat = [];
+  List<RuqyahAyatGroup> _ayatGroups = [];
   List<RuqyahChapter> _filteredNotes = [];
-  List<RuqyahChapter> _filteredAyat = [];
+  List<RuqyahAyatGroup> _filteredAyatGroups = [];
 
   bool _loading = true;
   String? _error;
@@ -65,7 +144,8 @@ class _RuqyahListPageState extends State<RuqyahListPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(
+        length: 2, vsync: this, initialIndex: widget.initialTab);
     _searchCtrl.addListener(_onSearch);
     _fetchData();
   }
@@ -87,62 +167,101 @@ class _RuqyahListPageState extends State<RuqyahListPage>
     final prefs = await SharedPreferences.getInstance();
 
     // ── ১. Cache থেকে তাৎক্ষণিক দেখাও ───────────────────────
-    final cached = prefs.getString('ruqyah_cache');
-    if (cached != null) {
-      _parseAndSet(cached, fromCache: true);
+    final cachedNotes = prefs.getString('ruqyah_cache');
+    if (cachedNotes != null) {
+      _parseNotesAndSet(cachedNotes, fromCache: true);
+    }
+    final cachedAyat = prefs.getString('ruqyah_ayat_cache');
+    if (cachedAyat != null) {
+      _parseAyatAndSet(cachedAyat, fromCache: true);
     }
 
     // ── ২. Network থেকে fresh data আনো ───────────────────────
+    bool hasError = false;
     try {
-      final response = await http
-          .get(Uri.parse(_apiUrl))
+      final notesResponse = await http
+          .get(Uri.parse(_notesApiUrl))
           .timeout(const Duration(seconds: 15));
-
-      if (response.statusCode == 200) {
-        final raw = utf8.decode(response.bodyBytes);
+      if (notesResponse.statusCode == 200) {
+        final raw = utf8.decode(notesResponse.bodyBytes);
         await prefs.setString('ruqyah_cache', raw);
-        _parseAndSet(raw, fromCache: false);
+        _parseNotesAndSet(raw, fromCache: false);
       } else {
-        if (_notes.isEmpty && _ayat.isEmpty) {
-          setState(() {
-            _error = 'সার্ভার থেকে ডেটা আনা যায়নি (${response.statusCode})';
-            _loading = false;
-          });
-        } else {
-          setState(() { _loading = false; _offline = true; });
-        }
+        hasError = true;
       }
-    } catch (e) {
-      if (_notes.isEmpty && _ayat.isEmpty) {
+    } catch (_) {
+      hasError = true;
+    }
+
+    try {
+      final ayatResponse = await http
+          .get(Uri.parse(_ayatApiUrl))
+          .timeout(const Duration(seconds: 15));
+      if (ayatResponse.statusCode == 200) {
+        final raw = utf8.decode(ayatResponse.bodyBytes);
+        await prefs.setString('ruqyah_ayat_cache', raw);
+        _parseAyatAndSet(raw, fromCache: false);
+      } else {
+        hasError = true;
+      }
+    } catch (_) {
+      hasError = true;
+    }
+
+    if (mounted) {
+      if (hasError && _notes.isEmpty && _ayatGroups.isEmpty) {
         setState(() {
           _error = 'ইন্টারনেট সংযোগ পরীক্ষা করুন।';
           _loading = false;
         });
       } else {
-        setState(() { _loading = false; _offline = true; });
+        setState(() {
+          _loading = false;
+          _offline = hasError;
+        });
       }
     }
   }
 
-  void _parseAndSet(String raw, {required bool fromCache}) {
+  void _parseNotesAndSet(String raw, {required bool fromCache}) {
     try {
       final Map<String, dynamic> jsonMap = json.decode(raw);
-      final notes = _parseList(jsonMap['notes']);
-      final ayat = _parseList(jsonMap['ayat']);
-      setState(() {
-        _notes = notes;
-        _ayat = ayat;
-        _filteredNotes = notes;
-        _filteredAyat = ayat;
-        _loading = false;
-        _offline = fromCache;
-      });
+      final notes = _parseNotesList(jsonMap['notes']);
+      if (mounted) {
+        setState(() {
+          _notes = notes;
+          _filteredNotes = notes;
+          _loading = false;
+          if (!fromCache) _offline = false;
+        });
+      }
     } catch (_) {
-      if (!fromCache) setState(() { _loading = false; });
+      if (!fromCache && mounted) setState(() => _loading = false);
     }
   }
 
-  List<RuqyahChapter> _parseList(dynamic raw) {
+  void _parseAyatAndSet(String raw, {required bool fromCache}) {
+    try {
+      final List<dynamic> jsonList = json.decode(raw);
+      final groups = jsonList
+          .whereType<Map<String, dynamic>>()
+          .map((g) => RuqyahAyatGroup.fromJson(g))
+          .where((g) => g.title.isNotEmpty)
+          .toList();
+      if (mounted) {
+        setState(() {
+          _ayatGroups = groups;
+          _filteredAyatGroups = groups;
+          _loading = false;
+          if (!fromCache) _offline = false;
+        });
+      }
+    } catch (_) {
+      if (!fromCache && mounted) setState(() => _loading = false);
+    }
+  }
+
+  List<RuqyahChapter> _parseNotesList(dynamic raw) {
     if (raw == null || raw is! List) return [];
     return raw.map<RuqyahChapter>((item) {
       if (item is String) {
@@ -169,12 +288,15 @@ class _RuqyahListPageState extends State<RuqyahListPage>
                   c.title.toLowerCase().contains(q) ||
                   c.body.toLowerCase().contains(q))
               .toList();
-      _filteredAyat = q.isEmpty
-          ? _ayat
-          : _ayat
-              .where((c) =>
-                  c.title.toLowerCase().contains(q) ||
-                  c.body.toLowerCase().contains(q))
+      _filteredAyatGroups = q.isEmpty
+          ? _ayatGroups
+          : _ayatGroups
+              .where((g) =>
+                  g.title.toLowerCase().contains(q) ||
+                  g.subtitle.toLowerCase().contains(q) ||
+                  g.ayahs.any((a) =>
+                      a.ayahBangla.toLowerCase().contains(q) ||
+                      (a.ayahTitle?.toLowerCase().contains(q) ?? false)))
               .toList();
     });
   }
@@ -257,7 +379,7 @@ class _RuqyahListPageState extends State<RuqyahListPage>
           unselectedLabelStyle: GoogleFonts.hindSiliguri(fontSize: 12),
           tabs: [
             Tab(text: '📖 নোটস (${_notes.length})'),
-            Tab(text: '📿 আয়াত (${_ayat.length})'),
+            Tab(text: '📿 আয়াত (${_ayatGroups.length})'),
           ],
         ),
       ),
@@ -337,7 +459,7 @@ class _RuqyahListPageState extends State<RuqyahListPage>
                       child: TabBarView(
                         controller: _tabController,
                         children: [
-                          _buildList(
+                          _buildNotesList(
                             _filteredNotes,
                             cardColor,
                             textColor,
@@ -345,13 +467,12 @@ class _RuqyahListPageState extends State<RuqyahListPage>
                             isDark,
                             emptyMsg: 'কোনো নোট পাওয়া যায়নি',
                           ),
-                          _buildList(
-                            _filteredAyat,
+                          _buildAyatGroupList(
+                            _filteredAyatGroups,
                             cardColor,
                             textColor,
                             subColor,
                             isDark,
-                            emptyMsg: 'কোনো আয়াত পাওয়া যায়নি',
                           ),
                         ],
                       ),
@@ -415,7 +536,7 @@ class _RuqyahListPageState extends State<RuqyahListPage>
                   children: [
                     _drawerBadge('📖 নোটস', _notes.length),
                     const SizedBox(width: 8),
-                    _drawerBadge('📿 আয়াত', _ayat.length),
+                    _drawerBadge('📿 আয়াত', _ayatGroups.length),
                   ],
                 ),
               ],
@@ -442,8 +563,8 @@ class _RuqyahListPageState extends State<RuqyahListPage>
                   Expanded(
                     child: TabBarView(
                       children: [
-                        _drawerList(_notes, textColor, subColor, 0),
-                        _drawerList(_ayat, textColor, subColor, 1),
+                        _drawerNotesList(_notes, textColor, subColor, 0),
+                        _drawerAyatList(_ayatGroups, textColor, subColor),
                       ],
                     ),
                   ),
@@ -494,7 +615,7 @@ class _RuqyahListPageState extends State<RuqyahListPage>
     );
   }
 
-  Widget _drawerList(
+  Widget _drawerNotesList(
       List<RuqyahChapter> items, Color textColor, Color subColor, int tabIndex) {
     if (items.isEmpty) {
       return Center(
@@ -553,16 +674,95 @@ class _RuqyahListPageState extends State<RuqyahListPage>
             color: AppColors.primary.withValues(alpha: 0.5),
           ),
           onTap: () {
-            Navigator.pop(context); // close drawer
-            // switch to correct tab
+            Navigator.pop(context);
             _tabController.animateTo(tabIndex);
-            // navigate to detail
             Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (_) => RuqyahDetailPage(
                   chapter: chapter,
                   allChapters: items,
+                  currentIndex: index,
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _drawerAyatList(
+      List<RuqyahAyatGroup> groups, Color textColor, Color subColor) {
+    if (groups.isEmpty) {
+      return Center(
+        child: Text(
+          'কোনো আয়াত নেই',
+          style: GoogleFonts.hindSiliguri(color: subColor, fontSize: 13),
+        ),
+      );
+    }
+    return ListView.separated(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      itemCount: groups.length,
+      separatorBuilder: (_, __) => Divider(
+        height: 1,
+        color: AppColors.primary.withValues(alpha: 0.08),
+        indent: 16,
+        endIndent: 16,
+      ),
+      itemBuilder: (context, index) {
+        final group = groups[index];
+        return ListTile(
+          dense: true,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+          leading: Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              gradient: AppColors.gradient,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Center(
+              child: Text(
+                '${index + 1}',
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+          title: Text(
+            group.title,
+            style: GoogleFonts.hindSiliguri(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: textColor,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          subtitle: Text(
+            '${group.ayahs.length} টি আয়াত',
+            style: GoogleFonts.hindSiliguri(fontSize: 11, color: subColor),
+          ),
+          trailing: Icon(
+            Icons.arrow_forward_ios,
+            size: 12,
+            color: AppColors.primary.withValues(alpha: 0.5),
+          ),
+          onTap: () {
+            Navigator.pop(context);
+            _tabController.animateTo(1);
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => RuqyahAyatDetailPage(
+                  group: group,
+                  allGroups: groups,
                   currentIndex: index,
                 ),
               ),
@@ -612,7 +812,7 @@ class _RuqyahListPageState extends State<RuqyahListPage>
     );
   }
 
-  Widget _buildList(
+  Widget _buildNotesList(
     List<RuqyahChapter> items,
     Color cardColor,
     Color textColor,
@@ -657,6 +857,61 @@ class _RuqyahListPageState extends State<RuqyahListPage>
                 builder: (_) => RuqyahDetailPage(
                   chapter: chapter,
                   allChapters: items,
+                  currentIndex: index,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildAyatGroupList(
+    List<RuqyahAyatGroup> groups,
+    Color cardColor,
+    Color textColor,
+    Color subColor,
+    bool isDark,
+  ) {
+    if (groups.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('🔍', style: TextStyle(fontSize: 48)),
+            const SizedBox(height: 12),
+            Text(
+              'কোনো আয়াত পাওয়া যায়নি',
+              style: GoogleFonts.hindSiliguri(color: subColor, fontSize: 15),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      color: AppColors.primary,
+      onRefresh: _fetchData,
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+        itemCount: groups.length,
+        itemBuilder: (context, index) {
+          final group = groups[index];
+          return _AyatGroupCard(
+            group: group,
+            index: index,
+            isDark: isDark,
+            cardColor: cardColor,
+            textColor: textColor,
+            subColor: subColor,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => RuqyahAyatDetailPage(
+                  group: group,
+                  allGroups: groups,
                   currentIndex: index,
                 ),
               ),
@@ -760,6 +1015,137 @@ class _ChapterCard extends StatelessWidget {
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 14,
+                color: AppColors.primary.withValues(alpha: 0.6),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Ayat Group Card ──────────────────────────────────────────────────────────
+
+class _AyatGroupCard extends StatelessWidget {
+  final RuqyahAyatGroup group;
+  final int index;
+  final bool isDark;
+  final Color cardColor;
+  final Color textColor;
+  final Color subColor;
+  final VoidCallback onTap;
+
+  const _AyatGroupCard({
+    required this.group,
+    required this.index,
+    required this.isDark,
+    required this.cardColor,
+    required this.textColor,
+    required this.subColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: isDark
+                  ? Colors.black.withValues(alpha: 0.25)
+                  : AppColors.primary.withValues(alpha: 0.07),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+          border: Border.all(
+            color: AppColors.primary.withValues(alpha: isDark ? 0.15 : 0.08),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Number badge
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  gradient: AppColors.gradient,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Text(
+                    '${index + 1}',
+                    style: GoogleFonts.poppins(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      group.title,
+                      style: GoogleFonts.hindSiliguri(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: textColor,
+                        height: 1.4,
+                      ),
+                    ),
+                    if (group.subtitle.isNotEmpty) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        group.subtitle,
+                        style: GoogleFonts.hindSiliguri(
+                          fontSize: 12,
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                    const SizedBox(height: 6),
+                    Text(
+                      group.preview,
+                      style: GoogleFonts.hindSiliguri(
+                        fontSize: 12,
+                        color: subColor,
+                        height: 1.5,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '${group.ayahs.length} টি আয়াত',
+                      style: GoogleFonts.hindSiliguri(
+                        fontSize: 11,
+                        color: AppColors.primary.withValues(alpha: 0.8),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),

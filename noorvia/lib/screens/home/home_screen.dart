@@ -16,9 +16,12 @@ import '../IslamicFeatures/calendar.dart';
 import '../IslamicFeatures/AsmaulHusna/asmaul_husna_page.dart';
 import '../IslamicFeatures/qibla_direction_page.dart';
 import '../Ruqyah/ruqyah_list_page.dart';
+import '../Ruqyah/ruqyah_home_page.dart';
 import '../IslamicNames/islamic_names_page.dart';
 import '../ArabicAlphabet/arabic_alphabet_home.dart';
+import '../IslamicBooks/islamic_books_page.dart';
 
+import '../IslamicFeatures/namaz_tracker_page.dart';
 import '../common/coming_soon_page.dart';
 import 'widgets/section_header.dart';
 import 'widgets/feature_grid_item.dart';
@@ -297,7 +300,7 @@ class _HomeScreenState extends State<HomeScreen>
     FeatureItem(
       emoji: '📚',
       label: 'কিতাব',
-      onTap: () => _go(context, const ChapterListPage()),
+      onTap: () => _go(context, const IslamicBooksPage()),
     ),
     FeatureItem(
       emoji: '📜',
@@ -328,7 +331,12 @@ class _HomeScreenState extends State<HomeScreen>
     FeatureItem(
       emoji: '🌿',
       label: 'রুকইয়াহ',
-      onTap: () => _go(context, const RuqyahListPage()),
+      onTap: () => _go(context, const RuqyahHomePage()),
+    ),
+    FeatureItem(
+      emoji: '🗓️',
+      label: 'নামাজ\nট্র্যাকার',
+      onTap: () => _go(context, const NamazTrackerPage()),
     ),
   ];
 

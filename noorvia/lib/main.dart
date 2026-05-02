@@ -13,6 +13,8 @@ import 'core/providers/settings_provider.dart';
 import 'core/providers/notification_provider.dart';
 import 'core/services/local_notification_service.dart';
 import 'core/services/data_sync_service.dart';
+import 'core/services/shake_detector_service.dart';
+import 'core/services/scheduled_notification_service.dart';
 import 'screens/splash/splash_screen.dart';
 import 'widgets/floating_audio_player.dart';
 
@@ -25,6 +27,8 @@ void main() async {
     } catch (_) {}
     // Initialise local notifications (Android only)
     await LocalNotificationService.init();
+    // Schedule daily morning (8:00) & night (21:00) notifications
+    unawaited(ScheduledNotificationService.init());
   }
 
   // Background JSON sync — net পেলেই silently সব JSON reload করে
@@ -61,20 +65,78 @@ class NoorviaApp extends StatelessWidget {
         builder: (context, themeProvider, audioProvider, settings, _) {
           return _AudioOverlayInjector(
             audioProvider: audioProvider,
-            child: MaterialApp(
-              navigatorKey: _navKey,
-              title: 'নূরভিয়া',
-              debugShowCheckedModeBanner: false,
-              theme: AppTheme.buildLight(settings.banglaFont, settings.accent),
-              darkTheme: AppTheme.buildDark(settings.banglaFont, settings.accent),
-              themeMode: themeProvider.themeMode,
-              home: const SplashScreen(),
+            child: _GlobalShakeDetector(
+              child: MaterialApp(
+                navigatorKey: _navKey,
+                title: 'নূরভিয়া',
+                debugShowCheckedModeBanner: false,
+                theme: AppTheme.buildLight(settings.banglaFont, settings.accent),
+                darkTheme: AppTheme.buildDark(settings.banglaFont, settings.accent),
+                themeMode: themeProvider.themeMode,
+                home: const SplashScreen(),
+              ),
             ),
           );
         },
       ),
     );
   }
+}
+
+// ─────────────────────────────────────────────────────────────
+// _GlobalShakeDetector
+// App-wide shake detection — works on every screen, even when
+// the notification screen is not open.
+// Reads NotificationProvider from the root MultiProvider.
+// ─────────────────────────────────────────────────────────────
+class _GlobalShakeDetector extends StatefulWidget {
+  final Widget child;
+  const _GlobalShakeDetector({required this.child});
+
+  @override
+  State<_GlobalShakeDetector> createState() => _GlobalShakeDetectorState();
+}
+
+class _GlobalShakeDetectorState extends State<_GlobalShakeDetector>
+    with WidgetsBindingObserver {
+  ShakeDetectorService? _shakeDetector;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _startShake());
+  }
+
+  void _startShake() {
+    _shakeDetector?.dispose();
+    _shakeDetector = ShakeDetectorService(onShake: () async {
+      final provider = context.read<NotificationProvider>();
+      await provider.showRandomLocalNotification();
+    });
+    _shakeDetector!.start();
+  }
+
+  // Pause shake when app goes to background, resume when foreground
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _startShake();
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      _shakeDetector?.stop();
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _shakeDetector?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 // ─────────────────────────────────────────────────────────────

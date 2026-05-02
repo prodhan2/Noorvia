@@ -11,17 +11,15 @@ import '../../core/providers/notification_provider.dart';
 import '../../core/providers/theme_provider.dart';
 import '../../core/models/notification_model.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/services/shake_detector_service.dart';
 
 class NotificationScreen extends StatelessWidget {
   const NotificationScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => NotificationProvider(),
-      child: const _NotificationView(),
-    );
+    // Root MultiProvider থেকে NotificationProvider নিয়ে pass করি
+    // নতুন instance তৈরি করা হচ্ছে না — global provider ব্যবহার হচ্ছে
+    return const _NotificationView();
   }
 }
 
@@ -33,7 +31,6 @@ class _NotificationView extends StatefulWidget {
 }
 
 class _NotificationViewState extends State<_NotificationView> {
-  ShakeDetectorService? _shakeDetector;
   Timer? _demoTimer;
   int _secondsLeft = 60;
   Timer? _countdownTimer;
@@ -42,7 +39,6 @@ class _NotificationViewState extends State<_NotificationView> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _startShakeDetector();
       _startDemoTimer();
       _startCountdown();
     });
@@ -84,37 +80,8 @@ class _NotificationViewState extends State<_NotificationView> {
     ));
   }
 
-  void _startShakeDetector() {
-    final provider = context.read<NotificationProvider>();
-    _shakeDetector = ShakeDetectorService(onShake: () async {
-      if (!mounted) return;
-      final sent = await provider.showRandomLocalNotification();
-      if (!mounted) return;
-      _showShakeSnackBar(sent);
-    });
-    _shakeDetector!.start();
-  }
-
-  void _showShakeSnackBar(bool sent) {
-    ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Row(children: [
-        Text(sent ? '📳' : '❌', style: const TextStyle(fontSize: 18)),
-        const SizedBox(width: 10),
-        Text(sent ? 'Shake! নতুন বার্তা এসেছে 🎉' : 'ডেটা পাওয়া যায়নি',
-            style: GoogleFonts.hindSiliguri(fontSize: 13, fontWeight: FontWeight.w600)),
-      ]),
-      backgroundColor: sent ? const Color(0xFF1B5E20) : Colors.red.shade700,
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      duration: const Duration(seconds: 2),
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-    ));
-  }
-
   @override
   void dispose() {
-    _shakeDetector?.dispose();
     _demoTimer?.cancel();
     _countdownTimer?.cancel();
     super.dispose();
