@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/gradient_helper.dart';
 import '../../../core/providers/prayer_provider.dart';
@@ -773,12 +775,18 @@ class _RamadanMiniCardState extends State<RamadanMiniCard>
   String _iftarTime  = '';   // "HH:MM"
   bool   _loading    = true;
   String? _error;
+  bool   _isOffline  = false;  // Offline indicator
 
   // ── Live countdown ────────────────────────────────────────
   Timer? _timer;
   String _sehriCountdown = '--:--:--';
   String _iftarCountdown = '--:--:--';
   String _activeLabel    = 'সাহরির বাকি';
+
+  // ── Cache keys ────────────────────────────────────────────
+  static const String _cacheKeySehri = 'ramadan_sehri_time';
+  static const String _cacheKeyIftar = 'ramadan_iftar_time';
+  static const String _cacheKeyDate  = 'ramadan_cache_date';
 
   // ── Entrance animation ────────────────────────────────────
   late final AnimationController _enterCtrl;
@@ -801,7 +809,7 @@ class _RamadanMiniCardState extends State<RamadanMiniCard>
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _enterCtrl, curve: Curves.easeOutCubic));
 
-    _fetchTodayTimes();
+    _loadCachedDataAndFetch();
   }
 
   @override
@@ -809,6 +817,75 @@ class _RamadanMiniCardState extends State<RamadanMiniCard>
     _timer?.cancel();
     _enterCtrl.dispose();
     super.dispose();
+  }
+
+  // ── Load cached data first, then fetch from API ──────────
+  Future<void> _loadCachedDataAndFetch() async {
+    // 1. Load from cache first (instant display)
+    await _loadFromCache();
+    
+    // 2. Check network connectivity
+    final connectivityResult = await Connectivity().checkConnectivity();
+    final hasInternet = connectivityResult != ConnectivityResult.none;
+    
+    if (hasInternet) {
+      // 3. Fetch fresh data from API
+      await _fetchTodayTimes();
+    } else {
+      // 4. No internet - use cached data
+      if (mounted) {
+        setState(() {
+          _isOffline = true;
+          _loading = false;
+          if (_sehriTime.isEmpty || _iftarTime.isEmpty) {
+            _error = 'নেটওয়ার্ক ত্রুটি';
+          }
+        });
+      }
+    }
+  }
+
+  // ── Load cached times from SharedPreferences ──────────────
+  Future<void> _loadFromCache() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cachedDate = prefs.getString(_cacheKeyDate);
+      final today = DateTime.now();
+      final todayStr = '${today.day}-${today.month}-${today.year}';
+      
+      // Only use cache if it's from today
+      if (cachedDate == todayStr) {
+        final sehri = prefs.getString(_cacheKeySehri);
+        final iftar = prefs.getString(_cacheKeyIftar);
+        
+        if (sehri != null && iftar != null && mounted) {
+          setState(() {
+            _sehriTime = sehri;
+            _iftarTime = iftar;
+            _loading = false;
+          });
+          _startCountdown();
+          _enterCtrl.forward();
+        }
+      }
+    } catch (e) {
+      // Ignore cache errors
+    }
+  }
+
+  // ── Save times to cache ───────────────────────────────────
+  Future<void> _saveToCache(String sehri, String iftar) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final today = DateTime.now();
+      final todayStr = '${today.day}-${today.month}-${today.year}';
+      
+      await prefs.setString(_cacheKeySehri, sehri);
+      await prefs.setString(_cacheKeyIftar, iftar);
+      await prefs.setString(_cacheKeyDate, todayStr);
+    } catch (e) {
+      // Ignore cache save errors
+    }
   }
 
   // ── Fetch today's Fajr (সাহরি) & Maghrib (ইফতার) ─────────
@@ -830,11 +907,16 @@ class _RamadanMiniCardState extends State<RamadanMiniCard>
         final fajr    = (timings['Fajr']    as String).split(' ').first;
         final maghrib = (timings['Maghrib'] as String).split(' ').first;
 
+        // Save to cache
+        await _saveToCache(fajr, maghrib);
+
         if (mounted) {
           setState(() {
             _sehriTime = fajr;
             _iftarTime = maghrib;
             _loading   = false;
+            _isOffline = false;
+            _error     = null;
           });
           _startCountdown();
           _enterCtrl.forward();
@@ -843,7 +925,13 @@ class _RamadanMiniCardState extends State<RamadanMiniCard>
         if (mounted) setState(() { _loading = false; _error = 'লোড ব্যর্থ'; });
       }
     } catch (e) {
-      if (mounted) setState(() { _loading = false; _error = 'নেটওয়ার্ক ত্রুটি'; });
+      if (mounted) {
+        setState(() { 
+          _loading = false; 
+          _error = 'নেটওয়ার্ক ত্রুটি';
+          _isOffline = true;
+        });
+      }
     }
   }
 
@@ -982,7 +1070,9 @@ class _RamadanMiniCardState extends State<RamadanMiniCard>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'সাহরি ও ইফতারের সময় পাওয়া যায়নি',
+                    _isOffline && _sehriTime.isNotEmpty
+                        ? 'অফলাইন মোড (ক্যাশ ডেটা)'
+                        : 'সাহরি ও ইফতারের সময় পাওয়া যায়নি',
                     style: GoogleFonts.hindSiliguri(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -991,7 +1081,9 @@ class _RamadanMiniCardState extends State<RamadanMiniCard>
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'ইন্টারনেট চালু করে আবার চেষ্টা করুন',
+                    _isOffline && _sehriTime.isNotEmpty
+                        ? 'পুরাতন ডেটা দেখানো হচ্ছে'
+                        : 'ইন্টারনেট চালু করে আবার চেষ্টা করুন',
                     style: GoogleFonts.hindSiliguri(
                       fontSize: 11,
                       color: isDark ? AppColors.darkSubText : Colors.black54,
@@ -1007,7 +1099,7 @@ class _RamadanMiniCardState extends State<RamadanMiniCard>
                   _loading = true;
                   _error = null;
                 });
-                _fetchTodayTimes();
+                _loadCachedDataAndFetch();
               },
               child: Container(
                 padding: const EdgeInsets.symmetric(
@@ -1146,6 +1238,48 @@ class _RamadanMiniCardState extends State<RamadanMiniCard>
                 ),
               ),
             ),
+
+            // ── Offline badge (top left) ─────────────────────
+            if (_isOffline && _sehriTime.isNotEmpty)
+              Positioned(
+                top: 8,
+                left: 8,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.12)
+                        : const Color(0xFFFF9800).withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.25)
+                          : const Color(0xFFFF9800).withValues(alpha: 0.40),
+                      width: 0.8,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.wifi_off_rounded,
+                        size: 11,
+                        color: isDark ? Colors.white70 : const Color(0xFFFF6F00),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'অফলাইন',
+                        style: GoogleFonts.hindSiliguri(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.white70 : const Color(0xFFFF6F00),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
 
             // ── Expand icon — top right corner ───────────────
             Positioned(

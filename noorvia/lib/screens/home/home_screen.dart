@@ -20,10 +20,12 @@ import '../Ruqyah/ruqyah_home_page.dart';
 import '../IslamicNames/islamic_names_page.dart';
 import '../ArabicAlphabet/arabic_alphabet_home.dart';
 import '../IslamicBooks/islamic_books_page.dart';
+import '../location/nearby_mosques_screen.dart';
 
 import '../common/web_view_page.dart';
 
 import '../IslamicFeatures/namaz_tracker_page.dart';
+import '../IslamicFeatures/azan_alarm_page.dart';
 import '../common/coming_soon_page.dart';
 import 'widgets/section_header.dart';
 import 'widgets/feature_grid_item.dart';
@@ -352,6 +354,11 @@ class _HomeScreenState extends State<HomeScreen>
       onTap: () => _go(context, const PrayerTimesCalendarPage()),
     ),
     FeatureItem(
+      emoji: '🔔',
+      label: 'আযান\nঅ্যালার্ম',
+      onTap: () => _go(context, const AzanAlarmPage()),
+    ),
+    FeatureItem(
       emoji: '📖',
       label: 'তিলাওয়াত',
       onTap: () => _go(context, const SurahListPage()),
@@ -470,8 +477,7 @@ class _HomeScreenState extends State<HomeScreen>
     FeatureItem(
       emoji: '🕌',
       label: 'আমার\nমসজিদ',
-      onTap: () =>
-          _soon(context, 'আমার মসজিদ', '🕌', 'আপনার মসজিদের তথ্য ও সময়সূচি'),
+      onTap: () => _go(context, const NearbyMosquesScreen()),
     ),
     FeatureItem(
       emoji: '✨',

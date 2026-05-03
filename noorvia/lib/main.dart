@@ -4,10 +4,12 @@ import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:async' show unawaited;
 import 'package:firebase_core/firebase_core.dart';
+import 'package:timezone/data/latest_all.dart' as tz;
 import 'core/theme/app_theme.dart';
 import 'core/providers/theme_provider.dart';
 import 'core/providers/nav_provider.dart';
 import 'core/providers/prayer_provider.dart';
+import 'core/providers/prayer_alarm_provider.dart';
 import 'core/providers/audio_provider.dart';
 import 'core/providers/settings_provider.dart';
 import 'core/providers/notification_provider.dart';
@@ -20,6 +22,9 @@ import 'widgets/floating_audio_player.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize timezone for prayer alarm scheduling
+  tz.initializeTimeZones();
 
   if (!kIsWeb) {
     try {
@@ -57,6 +62,7 @@ class NoorviaApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => NavProvider()),
         ChangeNotifierProvider(create: (_) => PrayerProvider()),
+        ChangeNotifierProvider(create: (_) => PrayerAlarmProvider()),
         ChangeNotifierProvider(create: (_) => AudioProvider()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),

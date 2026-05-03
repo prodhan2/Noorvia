@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/providers/prayer_provider.dart';
+import 'prayer_alarm_settings_page.dart';
 
 // ─── Model ────────────────────────────────────────────────────
 class DayPrayerRecord {
@@ -226,6 +227,19 @@ class _NamazTrackerPageState extends State<NamazTrackerPage> {
                     onPressed: () => Navigator.pop(context),
                   ),
                   actions: [
+                    IconButton(
+                      icon: const Icon(Icons.alarm_rounded,
+                          color: Colors.white),
+                      tooltip: 'আযান সেটিংস',
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const PrayerAlarmSettingsPage(),
+                          ),
+                        );
+                      },
+                    ),
                     IconButton(
                       icon: const Icon(Icons.bar_chart_rounded,
                           color: Colors.white),
@@ -1144,15 +1158,20 @@ class _SettingsCard extends StatelessWidget {
             icon: Icons.notifications_rounded,
             iconBg: const Color(0xFFEDE9FE),
             iconColor: AppColors.primary,
-            title: 'নামাজ রিমাইন্ডার',
-            subtitle: 'সময়মতো নামাজের জন্য রিমাইন্ডার পান',
-            trailing: Switch(
-              value: true,
-              onChanged: (_) {},
-              activeThumbColor: AppColors.primary,
-            ),
+            title: 'নামাজ রিমাইন্ডার ও আযান',
+            subtitle: 'সময়মতো নামাজের জন্য আযান সেট করুন',
+            trailing: const Icon(Icons.chevron_right_rounded,
+                color: Colors.grey),
             textColor: textColor,
             subColor: subColor,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const PrayerAlarmSettingsPage(),
+                ),
+              );
+            },
           ),
           const Divider(height: 1, indent: 16, endIndent: 16),
           _SettingsTile(
@@ -1190,6 +1209,7 @@ class _SettingsTile extends StatelessWidget {
   final String title, subtitle;
   final Widget trailing;
   final Color textColor, subColor;
+  final VoidCallback? onTap;
 
   const _SettingsTile({
     required this.icon,
@@ -1200,40 +1220,44 @@ class _SettingsTile extends StatelessWidget {
     required this.trailing,
     required this.textColor,
     required this.subColor,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: iconBg,
-              borderRadius: BorderRadius.circular(12),
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: iconBg,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: iconColor, size: 20),
             ),
-            child: Icon(icon, color: iconColor, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title,
-                    style: TextStyle(
-                        color: textColor,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600)),
-                Text(subtitle,
-                    style: TextStyle(color: subColor, fontSize: 11)),
-              ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: TextStyle(
+                          color: textColor,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600)),
+                  Text(subtitle,
+                      style: TextStyle(color: subColor, fontSize: 11)),
+                ],
+              ),
             ),
-          ),
-          trailing,
-        ],
+            trailing,
+          ],
+        ),
       ),
     );
   }
