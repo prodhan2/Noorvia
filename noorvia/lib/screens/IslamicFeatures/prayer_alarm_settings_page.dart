@@ -65,48 +65,29 @@ class _PrayerAlarmSettingsPageState extends State<PrayerAlarmSettingsPage> {
           return CustomScrollView(
             physics: const BouncingScrollPhysics(),
             slivers: [
-              // ── AppBar ──────────────────────────────────
+              // ── AppBar (Small & Fixed) ──────────────────
               SliverAppBar(
-                expandedHeight: 120,
                 pinned: true,
-                backgroundColor: Colors.transparent,
-                flexibleSpace: FlexibleSpaceBar(
-                  background: Container(
-                    decoration: BoxDecoration(
-                      gradient: AppColors.gradient,
-                    ),
-                    child: SafeArea(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            const Text(
-                              'নামাজের আযান সেটিংস',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            const Text(
-                              'প্রতিটি নামাজের জন্য আলাদা সেটিংস করুন',
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ],
-                        ),
+                floating: false,
+                elevation: 2,
+                backgroundColor: AppColors.primary,
+                title: const Row(
+                  children: [
+                    Icon(Icons.settings_rounded, color: Colors.white, size: 24),
+                    SizedBox(width: 8),
+                    Text(
+                      'নামাজের আযান সেটিংস',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),
+                  ],
                 ),
                 leading: IconButton(
                   icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                      color: Colors.white),
+                      color: Colors.white, size: 20),
                   onPressed: () => Navigator.pop(context),
                 ),
               ),
@@ -117,6 +98,84 @@ class _PrayerAlarmSettingsPageState extends State<PrayerAlarmSettingsPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // ── Location & Date Info Card ─────────
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColors.primary.withValues(alpha: 0.1),
+                              AppColors.primary.withValues(alpha: 0.05),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: AppColors.primary.withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.location_on_rounded,
+                                      color: AppColors.primary, size: 18),
+                                  const SizedBox(width: 6),
+                                  Flexible(
+                                    child: Text(
+                                      prayerProvider.cityDisplayName,
+                                      style: TextStyle(
+                                        color: isDark
+                                            ? AppColors.darkText
+                                            : AppColors.lightText,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.calendar_today_rounded,
+                                      color: AppColors.primary, size: 18),
+                                  const SizedBox(width: 6),
+                                  Flexible(
+                                    child: Text(
+                                      prayerProvider.banglaDate,
+                                      style: TextStyle(
+                                        color: isDark
+                                            ? AppColors.darkText
+                                            : AppColors.lightText,
+                                        fontSize: 13,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // ── Subtitle ──────────────────────────
+                      Text(
+                        'প্রতিটি নামাজের জন্য আলাদা সেটিংস করুন',
+                        style: TextStyle(
+                          color: isDark
+                              ? AppColors.darkSubText
+                              : AppColors.lightSubText,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
                       // ── Prayer Alarms ─────────────────────
                       _PrayerAlarmCard(
                         prayerName: 'ফজর',

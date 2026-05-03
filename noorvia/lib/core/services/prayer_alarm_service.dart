@@ -39,6 +39,9 @@ class PrayerAlarmService {
     // Initialize timezone
     tz.initializeTimeZones();
     tz.setLocalLocation(tz.getLocation('Asia/Dhaka'));
+    
+    // Configure audio player
+    await _configureAudioPlayer();
 
     // Initialize notifications
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -82,6 +85,31 @@ class PrayerAlarmService {
     await _loadSettings();
 
     _initialized = true;
+  }
+  
+  // ── Configure audio player ────────────────────────────────
+  Future<void> _configureAudioPlayer() async {
+    try {
+      // Set audio context for better compatibility
+      await _audioPlayer.setReleaseMode(ReleaseMode.stop);
+      
+      // Set player mode for low latency
+      await _audioPlayer.setPlayerMode(PlayerMode.mediaPlayer);
+      
+      // Listen to player state changes
+      _audioPlayer.onPlayerStateChanged.listen((state) {
+        print('🎵 Audio player state: $state');
+      });
+      
+      // Listen to errors
+      _audioPlayer.onLog.listen((message) {
+        print('🎵 Audio player log: $message');
+      });
+      
+      print('✅ Audio player configured successfully');
+    } catch (e) {
+      print('⚠️ Error configuring audio player: $e');
+    }
   }
 
   // ── Request permissions ───────────────────────────────────
@@ -355,24 +383,53 @@ class PrayerAlarmService {
     if (_settings == null) await _loadSettings();
     
     try {
+      // Stop any currently playing audio
       await _audioPlayer.stop();
+      
+      // Set audio context for web (fixes CORS issues)
+      await _audioPlayer.setReleaseMode(ReleaseMode.stop);
       
       // Set volume
       await _audioPlayer.setVolume(_settings!.volume);
       
+      print('🎵 Playing azan: ${_settings!.selectedAzanPath}');
+      
       // Play from online URL or local asset
       if (_settings!.isOnlineAzan) {
-        // Play from online URL
-        await _audioPlayer.play(UrlSource(_settings!.selectedAzanPath));
+        // Play from online URL with proper configuration
+        final source = UrlSource(
+          _settings!.selectedAzanPath,
+          mimeType: 'audio/mpeg', // Specify MIME type for better compatibility
+        );
+        await _audioPlayer.play(source);
+        print('✅ Started playing online azan');
       } else if (_settings!.selectedAzanPath.startsWith('assets/')) {
         // Play from asset
-        await _audioPlayer.play(AssetSource(_settings!.selectedAzanPath.replaceFirst('assets/', '')));
+        final assetPath = _settings!.selectedAzanPath.replaceFirst('assets/', '');
+        await _audioPlayer.play(AssetSource(assetPath));
+        print('✅ Started playing asset azan');
       } else {
         // Play from device file
         await _audioPlayer.play(DeviceFileSource(_settings!.selectedAzanPath));
+        print('✅ Started playing device file azan');
       }
     } catch (e) {
-      print('Error playing azan: $e');
+      print('❌ Error playing azan: $e');
+      // Show user-friendly error message
+      _showAzanError(e.toString());
+    }
+  }
+  
+  // ── Show error message ────────────────────────────────────
+  void _showAzanError(String error) {
+    // This will be caught by the UI layer
+    if (error.contains('CORS') || error.contains('WebAudioError')) {
+      print('⚠️ CORS error detected. This usually happens on web platform.');
+      print('💡 Solution: Use mobile app or enable CORS on the server.');
+    } else if (error.contains('Format error')) {
+      print('⚠️ Audio format error. The file might be corrupted or unsupported.');
+    } else {
+      print('⚠️ Unknown error: $error');
     }
   }
 

@@ -135,12 +135,22 @@ class PrayerAlarmProvider extends ChangeNotifier {
 
   // ── Play test azan ────────────────────────────────────────
   Future<void> playTestAzan() async {
-    await _alarmService.playAzan();
+    try {
+      await _alarmService.playAzan();
+    } catch (e) {
+      print('❌ Error playing test azan: $e');
+      // Notify listeners about the error
+      notifyListeners();
+    }
   }
 
   // ── Stop azan ─────────────────────────────────────────────
   Future<void> stopAzan() async {
-    await _alarmService.stopAzan();
+    try {
+      await _alarmService.stopAzan();
+    } catch (e) {
+      print('❌ Error stopping azan: $e');
+    }
   }
 
   // ── Get pending alarms ────────────────────────────────────
