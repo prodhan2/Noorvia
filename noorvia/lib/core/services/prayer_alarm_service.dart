@@ -396,6 +396,12 @@ class PrayerAlarmService {
       
       // Play from online URL or local asset
       if (_settings!.isOnlineAzan) {
+        // Check if running on web
+        if (kIsWeb) {
+          print('⚠️ Running on web platform - CORS may cause issues');
+          print('💡 For best experience, use mobile app (Android/iOS)');
+        }
+        
         // Play from online URL with proper configuration
         final source = UrlSource(
           _settings!.selectedAzanPath,
@@ -425,9 +431,14 @@ class PrayerAlarmService {
     // This will be caught by the UI layer
     if (error.contains('CORS') || error.contains('WebAudioError')) {
       print('⚠️ CORS error detected. This usually happens on web platform.');
-      print('💡 Solution: Use mobile app or enable CORS on the server.');
+      print('💡 Solution 1: Use mobile app (Android/iOS) - works perfectly!');
+      print('💡 Solution 2: Download azan files and use local assets');
+      print('💡 Solution 3: Run on desktop app instead of web browser');
     } else if (error.contains('Format error')) {
       print('⚠️ Audio format error. The file might be corrupted or unsupported.');
+      print('💡 Try selecting a different azan from the list');
+    } else if (error.contains('Network')) {
+      print('⚠️ Network error. Check your internet connection.');
     } else {
       print('⚠️ Unknown error: $error');
     }
