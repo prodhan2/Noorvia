@@ -39,6 +39,9 @@ dependencies:
   pdf: ^3.11.1
   printing: ^5.13.2
   path_provider: ^2.1.4
+  shimmer: ^3.0.0
+  adhan_dart: ^1.2.0
+  hijri: ^3.0.0
 
 dev_dependencies:
   flutter_test:
