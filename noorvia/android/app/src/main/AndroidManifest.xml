@@ -12,6 +12,11 @@
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <!-- Full screen intent for prayer alarms -->
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <!-- Wake lock to ensure alarms work when device is sleeping -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- Foreground service for reliable alarm delivery -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <!-- Compass / sensor for Qibla direction -->
     <uses-feature android:name="android.hardware.sensor.compass" android:required="false" />
     <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="false" />

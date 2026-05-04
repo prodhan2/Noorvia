@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../core/models/mosque.dart';
 import '../../core/services/mosque_service.dart';
 
@@ -58,7 +59,7 @@ class _NearbyMosquesScreenState extends State<NearbyMosquesScreen> {
     }
 
     try {
-      // Get current location
+      // Get current location - this will request permissions if needed
       final position = await _mosqueService.getCurrentLocation();
       
       // Get mosques with cache (returns cached data immediately if available)
@@ -89,11 +90,39 @@ class _NearbyMosquesScreenState extends State<NearbyMosquesScreen> {
           // No mosques found nearby. Increase search radius.
         });
       }
-    } catch (e) {
+    } on Exception catch (e) {
       setState(() {
         _isLoading = false;
         _isRefreshingInBackground = false;
         _errorMessage = e.toString().replaceAll('Exception: ', '');
+      });
+      
+      // Show snackbar for permission errors
+      if (mounted && e.toString().contains('অনুমতি')) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              e.toString().replaceAll('Exception: ', ''),
+              style: const TextStyle(fontFamily: 'Kalpurush'),
+            ),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: 'সেটিংস',
+              textColor: Colors.white,
+              onPressed: () async {
+                // Open app settings
+                await Geolocator.openAppSettings();
+              },
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _isRefreshingInBackground = false;
+        _errorMessage = 'একটি ত্রুটি ঘটেছে। আবার চেষ্টা করুন।';
       });
     }
   }
@@ -166,6 +195,7 @@ class _NearbyMosquesScreenState extends State<NearbyMosquesScreen> {
               style: TextStyle(
                 fontFamily: 'Kalpurush',
                 fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
             ),
             // Show small indicator when refreshing in background
@@ -183,15 +213,18 @@ class _NearbyMosquesScreenState extends State<NearbyMosquesScreen> {
           ],
         ),
         centerTitle: true,
-        elevation: 0,
+        backgroundColor: Theme.of(context).primaryColor,
+        foregroundColor: Colors.white,
+        elevation: 2,
+        shadowColor: Theme.of(context).primaryColor.withValues(alpha: 0.3),
         actions: [
           IconButton(
-            icon: const Icon(Icons.tune),
+            icon: const Icon(Icons.tune, color: Colors.white),
             tooltip: 'অনুসন্ধান পরিসীমা',
             onPressed: _showRadiusDialog,
           ),
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, color: Colors.white),
             tooltip: 'রিফ্রেশ করুন',
             onPressed: _loadNearbyMosques,
           ),

@@ -31,7 +31,6 @@ import 'widgets/section_header.dart';
 import 'widgets/feature_grid_item.dart';
 import 'widgets/prayer_card.dart';
 import 'widgets/banner_card.dart';
-import 'widgets/donation_card.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -265,9 +264,6 @@ class _HomeScreenState extends State<HomeScreen>
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: _buildGrid(_bibidhoItems(context), isDark),
             ),
-            const SizedBox(height: 16),
-
-            const DonationCard(),
             const SizedBox(height: 24),
           ],
         ),

@@ -7,7 +7,13 @@ import '../models/mosque.dart';
 /// Service class to handle mosque-related operations
 /// Fetches nearby mosques from OpenStreetMap Overpass API with caching
 class MosqueService {
-  static const String _overpassApiUrl = 'https://overpass-api.de/api/interpreter';
+  // Multiple Overpass API endpoints for redundancy
+  static const List<String> _overpassApiUrls = [
+    'https://overpass-api.de/api/interpreter',
+    'https://overpass.kumi.systems/api/interpreter',
+    'https://overpass.openstreetmap.ru/api/interpreter',
+  ];
+  
   static const String _cacheKey = 'cached_mosques';
   static const String _cacheLocationKey = 'cached_location';
   static const String _cacheRadiusKey = 'cached_radius';
@@ -56,24 +62,66 @@ class MosqueService {
     required double longitude,
     int radiusInMeters = 5000,
   }) async {
+    // Try multiple API endpoints
+    Exception? lastError;
+    
+    for (int i = 0; i < _overpassApiUrls.length; i++) {
+      final apiUrl = _overpassApiUrls[i];
+      
+      try {
+        print('🌐 Trying Overpass API endpoint ${i + 1}/${_overpassApiUrls.length}: $apiUrl');
+        
+        return await _fetchFromEndpoint(
+          apiUrl: apiUrl,
+          latitude: latitude,
+          longitude: longitude,
+          radiusInMeters: radiusInMeters,
+        );
+      } catch (e) {
+        print('❌ Endpoint ${i + 1} failed: $e');
+        lastError = e is Exception ? e : Exception(e.toString());
+        
+        // If not the last endpoint, continue to next one
+        if (i < _overpassApiUrls.length - 1) {
+          print('⏭️ Trying next endpoint...');
+          await Future.delayed(const Duration(milliseconds: 500));
+          continue;
+        }
+      }
+    }
+    
+    // All endpoints failed
+    throw lastError ?? Exception('সব সার্ভার থেকে ডেটা লোড করতে ব্যর্থ হয়েছে।');
+  }
+  
+  /// Fetch from a specific Overpass API endpoint
+  Future<List<Mosque>> _fetchFromEndpoint({
+    required String apiUrl,
+    required double latitude,
+    required double longitude,
+    required int radiusInMeters,
+  }) async {
     try {
       // Build Overpass QL query
       // This query searches for places of worship that are mosques
       final query = '''
-        [out:json][timeout:25];
-        (
-          node["amenity"="place_of_worship"]["religion"="muslim"](around:$radiusInMeters,$latitude,$longitude);
-          way["amenity"="place_of_worship"]["religion"="muslim"](around:$radiusInMeters,$latitude,$longitude);
-          relation["amenity"="place_of_worship"]["religion"="muslim"](around:$radiusInMeters,$latitude,$longitude);
-        );
-        out center;
-      ''';
+[out:json][timeout:25];
+(
+  node["amenity"="place_of_worship"]["religion"="muslim"](around:$radiusInMeters,$latitude,$longitude);
+  way["amenity"="place_of_worship"]["religion"="muslim"](around:$radiusInMeters,$latitude,$longitude);
+  relation["amenity"="place_of_worship"]["religion"="muslim"](around:$radiusInMeters,$latitude,$longitude);
+);
+out center;
+''';
 
       // Make HTTP POST request to Overpass API
       final response = await http.post(
-        Uri.parse(_overpassApiUrl),
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: {'data': query},
+        Uri.parse(apiUrl),
+        headers: {
+          'Content-Type': 'text/plain; charset=utf-8',
+          'Accept': 'application/json',
+        },
+        body: query,
       ).timeout(
         const Duration(seconds: 30),
         onTimeout: () {
@@ -122,14 +170,27 @@ class MosqueService {
         // Sort mosques by distance (nearest first)
         mosques.sort((a, b) => a.distanceInMeters.compareTo(b.distanceInMeters));
 
+        print('✅ Found ${mosques.length} mosques from $apiUrl');
         return mosques;
+      } else if (response.statusCode == 429) {
+        throw Exception('সার্ভার ব্যস্ত আছে। কিছুক্ষণ পর আবার চেষ্টা করুন।');
+      } else if (response.statusCode >= 500) {
+        throw Exception('সার্ভার সমস্যা। অন্য সার্ভার চেষ্টা করা হচ্ছে...');
       } else {
         throw Exception('ডেটা লোড করতে ব্যর্থ। স্ট্যাটাস কোড: ${response.statusCode}'); 
         // Failed to load data
       }
+    } on http.ClientException catch (e) {
+      // Network connection error
+      throw Exception('ইন্টারনেট সংযোগ নেই। দয়া করে আপনার সংযোগ পরীক্ষা করুন।');
+    } on FormatException catch (e) {
+      // JSON parsing error
+      throw Exception('ডেটা প্রসেস করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
     } catch (e) {
       if (e.toString().contains('SocketException') || 
-          e.toString().contains('NetworkException')) {
+          e.toString().contains('NetworkException') ||
+          e.toString().contains('ClientException') ||
+          e.toString().contains('Failed to fetch')) {
         throw Exception('ইন্টারনেট সংযোগ নেই। দয়া করে আপনার সংযোগ পরীক্ষা করুন।'); 
         // No internet connection
       }

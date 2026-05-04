@@ -5,6 +5,7 @@
 // ============================================================
 
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -118,8 +119,18 @@ class PrayerAlarmService {
         AndroidFlutterLocalNotificationsPlugin>();
     
     if (android != null) {
-      await android.requestNotificationsPermission();
-      await android.requestExactAlarmsPermission();
+      // Request notification permission
+      final notificationGranted = await android.requestNotificationsPermission();
+      if (notificationGranted != true) {
+        print('⚠️ Notification permission denied');
+      }
+      
+      // Request exact alarm permission (critical for prayer alarms)
+      final alarmGranted = await android.requestExactAlarmsPermission();
+      if (alarmGranted != true) {
+        print('⚠️ Exact alarm permission denied - alarms may not work reliably');
+        print('💡 User needs to enable "Alarms & reminders" in app settings');
+      }
     }
 
     final ios = _notifications.resolvePlatformSpecificImplementation<
@@ -132,6 +143,19 @@ class PrayerAlarmService {
         sound: true,
       );
     }
+  }
+  
+  // ── Check if permissions are granted ──────────────────────
+  Future<bool> arePermissionsGranted() async {
+    final android = _notifications.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    
+    if (android != null) {
+      final notificationGranted = await android.areNotificationsEnabled();
+      return notificationGranted ?? false;
+    }
+    
+    return true; // Assume granted on other platforms
   }
 
   // ── Load settings from storage ────────────────────────────
@@ -265,14 +289,21 @@ class PrayerAlarmService {
         alarmTime = alarmTime.add(const Duration(days: 1));
       }
 
-      // Convert to timezone
-      final tzAlarmTime = tz.TZDateTime.from(alarmTime, tz.local);
+      // Convert to timezone - IMPORTANT: Use TZDateTime constructor for daily recurring
+      final tzAlarmTime = tz.TZDateTime(
+        tz.local,
+        alarmTime.year,
+        alarmTime.month,
+        alarmTime.day,
+        alarmTime.hour,
+        alarmTime.minute,
+      );
 
       // Calculate actual prayer time for notification
       final actualPrayerTime = alarmTime.add(Duration(minutes: preAlarmMinutes));
       final prayerTimeStr = '${actualPrayerTime.hour.toString().padLeft(2, '0')}:${actualPrayerTime.minute.toString().padLeft(2, '0')}';
 
-      // Schedule notification
+      // Schedule notification with daily recurrence
       await _notifications.zonedSchedule(
         notificationId,
         '🕌 $prayerName নামাজের সময়',
@@ -294,6 +325,11 @@ class PrayerAlarmService {
             category: AndroidNotificationCategory.alarm,
             icon: '@mipmap/ic_launcher',
             largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
+            // Add visibility for lock screen
+            visibility: NotificationVisibility.public,
+            // Add ongoing flag to make it persistent
+            ongoing: false,
+            autoCancel: false,
             styleInformation: BigTextStyleInformation(
               preAlarmMinutes > 0
                   ? '$preAlarmMinutes মিনিট পরে $prayerName নামাজের সময় হবে। প্রস্তুতি নিন।'
@@ -322,12 +358,13 @@ class PrayerAlarmService {
                 ? '$preAlarmMinutes মিনিট পরে নামাজের সময়'
                 : 'নামাজের সময় হয়েছে',
             threadIdentifier: 'prayer_alarm',
+            interruptionLevel: InterruptionLevel.timeSensitive,
           ),
         ),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
-        matchDateTimeComponents: DateTimeComponents.time,
+        matchDateTimeComponents: DateTimeComponents.time, // This makes it repeat daily
         payload: jsonEncode({
           'prayer': prayerName,
           'time': prayerTimeStr,
@@ -336,7 +373,7 @@ class PrayerAlarmService {
         }),
       );
 
-      print('✅ Alarm scheduled for $prayerName at ${tzAlarmTime.toString()}');
+      print('✅ Alarm scheduled for $prayerName at ${tzAlarmTime.toString()} (Daily recurring)');
     } catch (e) {
       // Handle error
       print('❌ Error scheduling alarm for $prayerName: $e');
