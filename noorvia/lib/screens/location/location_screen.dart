@@ -5,9 +5,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/providers/prayer_provider.dart';
-import 'google_maps_view.dart';
 
 // ─────────────────────────────────────────────────────────────
 // City data
@@ -485,17 +485,14 @@ class _MapPreview extends StatelessWidget {
               top: 8,
               right: 8,
               child: GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => GoogleMapsView(
-                        latitude: lat,
-                        longitude: lon,
-                        cityName: cityName,
-                      ),
-                    ),
+                onTap: () async {
+                  // Open Google Maps directly
+                  final uri = Uri.parse(
+                    'https://www.google.com/maps/search/mosque/@$lat,$lon,15z',
                   );
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  }
                 },
                 child: Container(
                   width: 44,

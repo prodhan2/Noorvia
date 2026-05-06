@@ -281,145 +281,131 @@ class _PrayerAlarmSettingsPageState extends State<PrayerAlarmSettingsPage> {
   }
 
   void _showAzanPicker(BuildContext context, PrayerAlarmProvider provider) {
-    final azanList = OnlineAzanList.getAzanList();
-
+    // Show local file picker for azan.mp3
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
-        minChildSize: 0.5,
-        maxChildSize: 0.9,
-        expand: false,
-        builder: (context, scrollController) => Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'আযান নির্বাচন করুন',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'আযান নির্বাচন করুন',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close_rounded),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'স্থানীয় ফাইল থেকে আযান নির্বাচন করুন',
+              style: TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+            const SizedBox(height: 16),
+            Card(
+              elevation: provider.settings?.selectedAzanPath == 'assets/audio/azan.mp3' ? 4 : 1,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(
+                  color: provider.settings?.selectedAzanPath == 'assets/audio/azan.mp3'
+                      ? AppColors.primary
+                      : Colors.transparent,
+                  width: 2,
+                ),
+              ),
+              child: ListTile(
+                leading: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: provider.settings?.selectedAzanPath == 'assets/audio/azan.mp3'
+                        ? AppColors.primary
+                        : AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    provider.settings?.selectedAzanPath == 'assets/audio/azan.mp3'
+                        ? Icons.check_circle
+                        : Icons.music_note_rounded,
+                    color: provider.settings?.selectedAzanPath == 'assets/audio/azan.mp3'
+                        ? Colors.white
+                        : AppColors.primary,
+                    size: 24,
+                  ),
+                ),
+                title: const Text(
+                  'নূরভিয়া আযান (স্থানীয়)',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: const Text(
+                  'lib/core/utils/azan.mp3',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+                trailing: provider.settings?.selectedAzanPath == 'assets/audio/azan.mp3'
+                    ? const Icon(Icons.check_circle, color: AppColors.primary)
+                    : null,
+                onTap: () {
+                  provider.selectAzan('assets/audio/azan.mp3', 'নূরভিয়া আযান (স্থানীয়)');
+                  Navigator.pop(context);
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      provider.playTestAzan();
+                      Navigator.pop(context);
+                    },
+                    icon: const Icon(Icons.play_arrow_rounded, size: 18),
+                    label: const Text('টেস্ট করুন'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '${azanList.length} টি আযান উপলব্ধ (islamcan.com)',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey[600],
                 ),
-              ),
-              const SizedBox(height: 16),
-              
-              // Azan List
-              Expanded(
-                child: ListView.builder(
-                  controller: scrollController,
-                  itemCount: azanList.length,
-                  itemBuilder: (context, index) {
-                    final azan = azanList[index];
-                    final url = azan['url']!;
-                    final name = azan['name']!;
-                    final isSelected = provider.settings?.selectedAzanPath == url;
-                    final isLoading = provider.azanLoadingStatus[url] ?? false;
-                    final isCached = provider.azanCachedStatus[url] ?? false;
-
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      elevation: isSelected ? 4 : 1,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      provider.stopAzan();
+                      Navigator.pop(context);
+                    },
+                    icon: const Icon(Icons.stop_rounded, size: 18),
+                    label: const Text('বন্ধ করুন'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      side: const BorderSide(color: AppColors.primary),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(
-                          color: isSelected
-                              ? AppColors.primary
-                              : Colors.transparent,
-                          width: 2,
-                        ),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      child: ListTile(
-                        leading: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppColors.primary
-                                : AppColors.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Icon(
-                            Icons.music_note_rounded,
-                            color: isSelected
-                                ? Colors.white
-                                : AppColors.primary,
-                            size: 20,
-                          ),
-                        ),
-                        title: Text(
-                          name,
-                          style: TextStyle(
-                            fontWeight: isSelected
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                            color: isSelected
-                                ? AppColors.primary
-                                : null,
-                          ),
-                        ),
-                        subtitle: Text(
-                          isLoading
-                              ? 'লোড হচ্ছে...'
-                              : isCached
-                                  ? 'প্রস্তুত ✓'
-                                  : 'অনলাইন',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: isLoading
-                                ? Colors.orange
-                                : isCached
-                                    ? Colors.green
-                                    : Colors.grey,
-                          ),
-                        ),
-                        trailing: isSelected
-                            ? const Icon(
-                                Icons.check_circle,
-                                color: AppColors.primary,
-                              )
-                            : isLoading
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : null,
-                        onTap: () {
-                          provider.selectAzan(url, name);
-                          Navigator.pop(context);
-                        },
-                      ),
-                    );
-                  },
+                    ),
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
         ),
       ),
     );

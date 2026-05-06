@@ -1,8 +1,12 @@
 // ============================================================
 //  prayer_alarm_settings.dart
 //  Model for prayer alarm settings with pre-alarm customization
-//  Now supports online Azan loading from islamcan.com
+//  Uses local azan.mp3 asset only
 // ============================================================
+
+// Local azan asset path
+const String kLocalAzanPath = 'audio/azan.mp3';
+const String kLocalAzanName = 'নূরভিয়া আযান';
 
 class PrayerAlarmSettings {
   // Individual prayer alarm enabled/disabled
@@ -19,10 +23,9 @@ class PrayerAlarmSettings {
   int maghribPreAlarm;
   int ishaPreAlarm;
 
-  // Selected Azan audio (now supports online URLs)
+  // Selected Azan audio (local asset only)
   String selectedAzanPath;
   String selectedAzanName;
-  bool isOnlineAzan; // true if URL, false if local asset
 
   // Volume settings
   double volume;
@@ -31,20 +34,19 @@ class PrayerAlarmSettings {
   bool vibrationEnabled;
 
   PrayerAlarmSettings({
-    this.fajrEnabled = true,
-    this.dhuhrEnabled = true,
-    this.asrEnabled = true,
-    this.maghribEnabled = true,
-    this.ishaEnabled = true,
-    this.fajrPreAlarm = 10,
-    this.dhuhrPreAlarm = 10,
-    this.asrPreAlarm = 10,
-    this.maghribPreAlarm = 10,
-    this.ishaPreAlarm = 10,
-    this.selectedAzanPath = 'https://www.islamcan.com/audio/adhan/azan1.mp3',
-    this.selectedAzanName = 'আযান ১',
-    this.isOnlineAzan = true,
-    this.volume = 0.8,
+    this.fajrEnabled = false,   // default OFF — user must enable
+    this.dhuhrEnabled = false,
+    this.asrEnabled = false,
+    this.maghribEnabled = false,
+    this.ishaEnabled = false,
+    this.fajrPreAlarm = 0,
+    this.dhuhrPreAlarm = 0,
+    this.asrPreAlarm = 0,
+    this.maghribPreAlarm = 0,
+    this.ishaPreAlarm = 0,
+    this.selectedAzanPath = kLocalAzanPath,
+    this.selectedAzanName = kLocalAzanName,
+    this.volume = 1.0,
     this.vibrationEnabled = true,
   });
 
@@ -62,7 +64,6 @@ class PrayerAlarmSettings {
         'ishaPreAlarm': ishaPreAlarm,
         'selectedAzanPath': selectedAzanPath,
         'selectedAzanName': selectedAzanName,
-        'isOnlineAzan': isOnlineAzan,
         'volume': volume,
         'vibrationEnabled': vibrationEnabled,
       };
@@ -70,20 +71,19 @@ class PrayerAlarmSettings {
   // Create from JSON
   factory PrayerAlarmSettings.fromJson(Map<String, dynamic> json) {
     return PrayerAlarmSettings(
-      fajrEnabled: json['fajrEnabled'] ?? true,
-      dhuhrEnabled: json['dhuhrEnabled'] ?? true,
-      asrEnabled: json['asrEnabled'] ?? true,
-      maghribEnabled: json['maghribEnabled'] ?? true,
-      ishaEnabled: json['ishaEnabled'] ?? true,
-      fajrPreAlarm: json['fajrPreAlarm'] ?? 10,
-      dhuhrPreAlarm: json['dhuhrPreAlarm'] ?? 10,
-      asrPreAlarm: json['asrPreAlarm'] ?? 10,
-      maghribPreAlarm: json['maghribPreAlarm'] ?? 10,
-      ishaPreAlarm: json['ishaPreAlarm'] ?? 10,
-      selectedAzanPath: json['selectedAzanPath'] ?? 'https://www.islamcan.com/audio/adhan/azan1.mp3',
-      selectedAzanName: json['selectedAzanName'] ?? 'আযান ১',
-      isOnlineAzan: json['isOnlineAzan'] ?? true,
-      volume: json['volume'] ?? 0.8,
+      fajrEnabled: json['fajrEnabled'] ?? false,
+      dhuhrEnabled: json['dhuhrEnabled'] ?? false,
+      asrEnabled: json['asrEnabled'] ?? false,
+      maghribEnabled: json['maghribEnabled'] ?? false,
+      ishaEnabled: json['ishaEnabled'] ?? false,
+      fajrPreAlarm: json['fajrPreAlarm'] ?? 0,
+      dhuhrPreAlarm: json['dhuhrPreAlarm'] ?? 0,
+      asrPreAlarm: json['asrPreAlarm'] ?? 0,
+      maghribPreAlarm: json['maghribPreAlarm'] ?? 0,
+      ishaPreAlarm: json['ishaPreAlarm'] ?? 0,
+      selectedAzanPath: kLocalAzanPath, // always local
+      selectedAzanName: kLocalAzanName,
+      volume: (json['volume'] as num?)?.toDouble() ?? 1.0,
       vibrationEnabled: json['vibrationEnabled'] ?? true,
     );
   }
@@ -188,30 +188,6 @@ class PrayerAlarmSettings {
 }
 
 // ============================================================
-// Online Azan List - 20 Azans from islamcan.com
+// Online Azan List - removed (using local asset only)
 // ============================================================
-class OnlineAzanList {
-  static const String baseUrl = 'https://www.islamcan.com/audio/adhan/';
-  
-  static List<Map<String, String>> getAzanList() {
-    return List.generate(20, (index) {
-      final num = index + 1;
-      return {
-        'url': '${baseUrl}azan$num.mp3',
-        'name': 'আযান $num',
-        'id': 'azan$num',
-      };
-    });
-  }
-  
-  static String getAzanUrl(int number) {
-    if (number < 1 || number > 20) return '${baseUrl}azan1.mp3';
-    return '${baseUrl}azan$number.mp3';
-  }
-  
-  static String getAzanName(int number) {
-    if (number < 1 || number > 20) return 'আযান ১';
-    return 'আযান $number';
-  }
-}
 

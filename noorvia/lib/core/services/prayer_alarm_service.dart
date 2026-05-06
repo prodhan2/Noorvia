@@ -1,7 +1,8 @@
 // ============================================================
 //  prayer_alarm_service.dart
 //  Manages prayer alarms using flutter_local_notifications
-//  and workmanager for background scheduling
+//  Background-safe: works even when app is closed
+//  Audio: local asset only (assets/audio/azan.mp3)
 // ============================================================
 
 import 'dart:convert';
@@ -13,25 +14,36 @@ import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:audioplayers/audioplayers.dart';
 import '../models/prayer_alarm_settings.dart';
 
+// ── Background notification handler (top-level, vm:entry-point) ──
+@pragma('vm:entry-point')
+void notificationTapBackground(NotificationResponse response) {
+  // Background tap: play azan via a fresh service instance
+  if (response.actionId == 'play_azan' || response.payload != null) {
+    final service = PrayerAlarmService();
+    service.playAzan();
+  }
+}
+
 class PrayerAlarmService {
+  // Singleton
   static final PrayerAlarmService _instance = PrayerAlarmService._internal();
   factory PrayerAlarmService() => _instance;
   PrayerAlarmService._internal();
 
   final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
-  
-  final AudioPlayer _audioPlayer = AudioPlayer();
-  
+
+  AudioPlayer? _audioPlayer;
+
   bool _initialized = false;
   PrayerAlarmSettings? _settings;
 
   // Notification IDs for each prayer
-  static const int _fajrId = 100;
-  static const int _dhuhrId = 101;
-  static const int _asrId = 102;
+  static const int _fajrId    = 100;
+  static const int _dhuhrId   = 101;
+  static const int _asrId     = 102;
   static const int _maghribId = 103;
-  static const int _ishaId = 104;
+  static const int _ishaId    = 104;
 
   // ── Initialize service ────────────────────────────────────
   Future<void> initialize() async {
@@ -40,30 +52,28 @@ class PrayerAlarmService {
     // Initialize timezone
     tz.initializeTimeZones();
     tz.setLocalLocation(tz.getLocation('Asia/Dhaka'));
-    
-    // Configure audio player
-    await _configureAudioPlayer();
 
     // Initialize notifications
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
       requestSoundPermission: true,
     );
 
-    const initSettings = InitializationSettings(
-      android: androidSettings,
-      iOS: iosSettings,
-    );
-
     await _notifications.initialize(
-      initSettings,
+      const InitializationSettings(
+        android: androidSettings,
+        iOS: iosSettings,
+      ),
       onDidReceiveNotificationResponse: _onNotificationTapped,
-      onDidReceiveBackgroundNotificationResponse: _onBackgroundNotificationTapped,
+      onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
     );
 
-    // Create notification channel
+    // Create high-importance notification channel (no custom sound file
+    // needed — the azan is played via AudioPlayer on notification tap /
+    // alarm trigger, not via the system sound slot)
     const channel = AndroidNotificationChannel(
       'prayer_alarm_channel',
       'নামাজের আযান',
@@ -71,7 +81,6 @@ class PrayerAlarmService {
       importance: Importance.max,
       playSound: true,
       enableVibration: true,
-      sound: RawResourceAndroidNotificationSound('azan_notification'),
     );
 
     await _notifications
@@ -87,75 +96,32 @@ class PrayerAlarmService {
 
     _initialized = true;
   }
-  
-  // ── Configure audio player ────────────────────────────────
-  Future<void> _configureAudioPlayer() async {
-    try {
-      // Set audio context for better compatibility
-      await _audioPlayer.setReleaseMode(ReleaseMode.stop);
-      
-      // Set player mode for low latency
-      await _audioPlayer.setPlayerMode(PlayerMode.mediaPlayer);
-      
-      // Listen to player state changes
-      _audioPlayer.onPlayerStateChanged.listen((state) {
-        print('🎵 Audio player state: $state');
-      });
-      
-      // Listen to errors
-      _audioPlayer.onLog.listen((message) {
-        print('🎵 Audio player log: $message');
-      });
-      
-      print('✅ Audio player configured successfully');
-    } catch (e) {
-      print('⚠️ Error configuring audio player: $e');
-    }
-  }
 
   // ── Request permissions ───────────────────────────────────
   Future<void> _requestPermissions() async {
     final android = _notifications.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();
-    
+
     if (android != null) {
-      // Request notification permission
-      final notificationGranted = await android.requestNotificationsPermission();
-      if (notificationGranted != true) {
-        print('⚠️ Notification permission denied');
-      }
-      
-      // Request exact alarm permission (critical for prayer alarms)
-      final alarmGranted = await android.requestExactAlarmsPermission();
-      if (alarmGranted != true) {
-        print('⚠️ Exact alarm permission denied - alarms may not work reliably');
-        print('💡 User needs to enable "Alarms & reminders" in app settings');
-      }
+      await android.requestNotificationsPermission();
+      await android.requestExactAlarmsPermission();
     }
 
     final ios = _notifications.resolvePlatformSpecificImplementation<
         IOSFlutterLocalNotificationsPlugin>();
-    
     if (ios != null) {
-      await ios.requestPermissions(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
+      await ios.requestPermissions(alert: true, badge: true, sound: true);
     }
   }
-  
+
   // ── Check if permissions are granted ──────────────────────
   Future<bool> arePermissionsGranted() async {
     final android = _notifications.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();
-    
     if (android != null) {
-      final notificationGranted = await android.areNotificationsEnabled();
-      return notificationGranted ?? false;
+      return (await android.areNotificationsEnabled()) ?? false;
     }
-    
-    return true; // Assume granted on other platforms
+    return true;
   }
 
   // ── Load settings from storage ────────────────────────────
@@ -163,14 +129,13 @@ class PrayerAlarmService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final json = prefs.getString('prayer_alarm_settings');
-      
       if (json != null) {
         _settings = PrayerAlarmSettings.fromJson(jsonDecode(json));
       } else {
         _settings = PrayerAlarmSettings();
         await _saveSettings();
       }
-    } catch (e) {
+    } catch (_) {
       _settings = PrayerAlarmSettings();
     }
   }
@@ -178,23 +143,16 @@ class PrayerAlarmService {
   // ── Save settings to storage ──────────────────────────────
   Future<void> _saveSettings() async {
     if (_settings == null) return;
-    
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(
-        'prayer_alarm_settings',
-        jsonEncode(_settings!.toJson()),
-      );
-    } catch (e) {
-      // Handle error
-    }
+          'prayer_alarm_settings', jsonEncode(_settings!.toJson()));
+    } catch (_) {}
   }
 
   // ── Get current settings ──────────────────────────────────
   Future<PrayerAlarmSettings> getSettings() async {
-    if (_settings == null) {
-      await _loadSettings();
-    }
+    if (_settings == null) await _loadSettings();
     return _settings!;
   }
 
@@ -209,53 +167,27 @@ class PrayerAlarmService {
     if (!_initialized) await initialize();
     if (_settings == null) await _loadSettings();
 
-    // Cancel existing alarms
     await cancelAllAlarms();
 
-    // Schedule each prayer
     if (_settings!.fajrEnabled && prayerTimes.containsKey('fajr')) {
-      await _scheduleAlarm(
-        'ফজর',
-        prayerTimes['fajr']!,
-        _settings!.fajrPreAlarm,
-        _fajrId,
-      );
+      await _scheduleAlarm('ফজর', prayerTimes['fajr']!,
+          _settings!.fajrPreAlarm, _fajrId);
     }
-
     if (_settings!.dhuhrEnabled && prayerTimes.containsKey('dhuhr')) {
-      await _scheduleAlarm(
-        'যোহর',
-        prayerTimes['dhuhr']!,
-        _settings!.dhuhrPreAlarm,
-        _dhuhrId,
-      );
+      await _scheduleAlarm('যোহর', prayerTimes['dhuhr']!,
+          _settings!.dhuhrPreAlarm, _dhuhrId);
     }
-
     if (_settings!.asrEnabled && prayerTimes.containsKey('asr')) {
-      await _scheduleAlarm(
-        'আসর',
-        prayerTimes['asr']!,
-        _settings!.asrPreAlarm,
-        _asrId,
-      );
+      await _scheduleAlarm('আসর', prayerTimes['asr']!,
+          _settings!.asrPreAlarm, _asrId);
     }
-
     if (_settings!.maghribEnabled && prayerTimes.containsKey('maghrib')) {
-      await _scheduleAlarm(
-        'মাগরিব',
-        prayerTimes['maghrib']!,
-        _settings!.maghribPreAlarm,
-        _maghribId,
-      );
+      await _scheduleAlarm('মাগরিব', prayerTimes['maghrib']!,
+          _settings!.maghribPreAlarm, _maghribId);
     }
-
     if (_settings!.ishaEnabled && prayerTimes.containsKey('isha')) {
-      await _scheduleAlarm(
-        'ইশা',
-        prayerTimes['isha']!,
-        _settings!.ishaPreAlarm,
-        _ishaId,
-      );
+      await _scheduleAlarm('ইশা', prayerTimes['isha']!,
+          _settings!.ishaPreAlarm, _ishaId);
     }
   }
 
@@ -267,29 +199,21 @@ class PrayerAlarmService {
     int notificationId,
   ) async {
     try {
-      // Parse prayer time (format: "HH:mm")
       final parts = prayerTime.split(':');
       if (parts.length != 2) return;
 
-      final hour = int.parse(parts[0]);
+      final hour   = int.parse(parts[0]);
       final minute = int.parse(parts[1]);
 
-      // Calculate alarm time (prayer time - pre-alarm minutes)
       final now = DateTime.now();
-      var alarmTime = DateTime(
-        now.year,
-        now.month,
-        now.day,
-        hour,
-        minute,
-      ).subtract(Duration(minutes: preAlarmMinutes));
+      var alarmTime = DateTime(now.year, now.month, now.day, hour, minute)
+          .subtract(Duration(minutes: preAlarmMinutes));
 
-      // If alarm time has passed today, schedule for tomorrow
+      // If already passed today → schedule for tomorrow
       if (alarmTime.isBefore(now)) {
         alarmTime = alarmTime.add(const Duration(days: 1));
       }
 
-      // Convert to timezone - IMPORTANT: Use TZDateTime constructor for daily recurring
       final tzAlarmTime = tz.TZDateTime(
         tz.local,
         alarmTime.year,
@@ -299,11 +223,12 @@ class PrayerAlarmService {
         alarmTime.minute,
       );
 
-      // Calculate actual prayer time for notification
-      final actualPrayerTime = alarmTime.add(Duration(minutes: preAlarmMinutes));
-      final prayerTimeStr = '${actualPrayerTime.hour.toString().padLeft(2, '0')}:${actualPrayerTime.minute.toString().padLeft(2, '0')}';
+      final actualPrayerTime =
+          alarmTime.add(Duration(minutes: preAlarmMinutes));
+      final prayerTimeStr =
+          '${actualPrayerTime.hour.toString().padLeft(2, '0')}:'
+          '${actualPrayerTime.minute.toString().padLeft(2, '0')}';
 
-      // Schedule notification with daily recurrence
       await _notifications.zonedSchedule(
         notificationId,
         '🕌 $prayerName নামাজের সময়',
@@ -320,14 +245,12 @@ class PrayerAlarmService {
             priority: Priority.high,
             playSound: true,
             enableVibration: _settings!.vibrationEnabled,
-            sound: const RawResourceAndroidNotificationSound('azan_notification'),
             fullScreenIntent: true,
             category: AndroidNotificationCategory.alarm,
             icon: '@mipmap/ic_launcher',
-            largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
-            // Add visibility for lock screen
+            largeIcon:
+                const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
             visibility: NotificationVisibility.public,
-            // Add ongoing flag to make it persistent
             ongoing: false,
             autoCancel: false,
             styleInformation: BigTextStyleInformation(
@@ -343,17 +266,13 @@ class PrayerAlarmService {
                 '▶️ আযান শুনুন',
                 showsUserInterface: true,
               ),
-              const AndroidNotificationAction(
-                'dismiss',
-                '✖️ বন্ধ করুন',
-              ),
+              const AndroidNotificationAction('dismiss', '✖️ বন্ধ করুন'),
             ],
           ),
           iOS: DarwinNotificationDetails(
             presentAlert: true,
             presentBadge: true,
             presentSound: true,
-            sound: 'azan_notification.mp3',
             subtitle: preAlarmMinutes > 0
                 ? '$preAlarmMinutes মিনিট পরে নামাজের সময়'
                 : 'নামাজের সময় হয়েছে',
@@ -364,19 +283,17 @@ class PrayerAlarmService {
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
-        matchDateTimeComponents: DateTimeComponents.time, // This makes it repeat daily
+        matchDateTimeComponents: DateTimeComponents.time, // daily repeat
         payload: jsonEncode({
           'prayer': prayerName,
           'time': prayerTimeStr,
           'preAlarm': preAlarmMinutes,
-          'azanPath': _settings!.selectedAzanPath,
         }),
       );
 
-      print('✅ Alarm scheduled for $prayerName at ${tzAlarmTime.toString()} (Daily recurring)');
+      debugPrint('✅ Alarm scheduled: $prayerName at $tzAlarmTime (daily)');
     } catch (e) {
-      // Handle error
-      print('❌ Error scheduling alarm for $prayerName: $e');
+      debugPrint('❌ Error scheduling alarm for $prayerName: $e');
     }
   }
 
@@ -387,127 +304,65 @@ class PrayerAlarmService {
 
   // ── Cancel specific prayer alarm ──────────────────────────
   Future<void> cancelPrayerAlarm(String prayerName) async {
-    int id;
-    switch (prayerName.toLowerCase()) {
-      case 'fajr':
-      case 'ফজর':
-        id = _fajrId;
-        break;
-      case 'dhuhr':
-      case 'যোহর':
-        id = _dhuhrId;
-        break;
-      case 'asr':
-      case 'আসর':
-        id = _asrId;
-        break;
-      case 'maghrib':
-      case 'মাগরিব':
-        id = _maghribId;
-        break;
-      case 'isha':
-      case 'ইশা':
-        id = _ishaId;
-        break;
-      default:
-        return;
-    }
-    await _notifications.cancel(id);
+    final id = _idForPrayer(prayerName);
+    if (id != null) await _notifications.cancel(id);
   }
 
-  // ── Play Azan audio ───────────────────────────────────────
-  Future<void> playAzan() async {
-    if (_settings == null) await _loadSettings();
-    
-    try {
-      // Stop any currently playing audio
-      await _audioPlayer.stop();
-      
-      // Set audio context for web (fixes CORS issues)
-      await _audioPlayer.setReleaseMode(ReleaseMode.stop);
-      
-      // Set volume
-      await _audioPlayer.setVolume(_settings!.volume);
-      
-      print('🎵 Playing azan: ${_settings!.selectedAzanPath}');
-      
-      // Play from online URL or local asset
-      if (_settings!.isOnlineAzan) {
-        // Check if running on web
-        if (kIsWeb) {
-          print('⚠️ Running on web platform - CORS may cause issues');
-          print('💡 For best experience, use mobile app (Android/iOS)');
-        }
-        
-        // Play from online URL with proper configuration
-        final source = UrlSource(
-          _settings!.selectedAzanPath,
-          mimeType: 'audio/mpeg', // Specify MIME type for better compatibility
-        );
-        await _audioPlayer.play(source);
-        print('✅ Started playing online azan');
-      } else if (_settings!.selectedAzanPath.startsWith('assets/')) {
-        // Play from asset
-        final assetPath = _settings!.selectedAzanPath.replaceFirst('assets/', '');
-        await _audioPlayer.play(AssetSource(assetPath));
-        print('✅ Started playing asset azan');
-      } else {
-        // Play from device file
-        await _audioPlayer.play(DeviceFileSource(_settings!.selectedAzanPath));
-        print('✅ Started playing device file azan');
-      }
-    } catch (e) {
-      print('❌ Error playing azan: $e');
-      // Show user-friendly error message
-      _showAzanError(e.toString());
+  int? _idForPrayer(String name) {
+    switch (name.toLowerCase()) {
+      case 'fajr':
+      case 'ফজর':
+        return _fajrId;
+      case 'dhuhr':
+      case 'যোহর':
+        return _dhuhrId;
+      case 'asr':
+      case 'আসর':
+        return _asrId;
+      case 'maghrib':
+      case 'মাগরিব':
+        return _maghribId;
+      case 'isha':
+      case 'ইশা':
+        return _ishaId;
+      default:
+        return null;
     }
   }
-  
-  // ── Show error message ────────────────────────────────────
-  void _showAzanError(String error) {
-    // This will be caught by the UI layer
-    if (error.contains('CORS') || error.contains('WebAudioError')) {
-      print('⚠️ CORS error detected. This usually happens on web platform.');
-      print('💡 Solution 1: Use mobile app (Android/iOS) - works perfectly!');
-      print('💡 Solution 2: Download azan files and use local assets');
-      print('💡 Solution 3: Run on desktop app instead of web browser');
-    } else if (error.contains('Format error')) {
-      print('⚠️ Audio format error. The file might be corrupted or unsupported.');
-      print('💡 Try selecting a different azan from the list');
-    } else if (error.contains('Network')) {
-      print('⚠️ Network error. Check your internet connection.');
-    } else {
-      print('⚠️ Unknown error: $error');
+
+  // ── Play Azan audio (local asset only) ────────────────────
+  Future<void> playAzan() async {
+    if (_settings == null) await _loadSettings();
+
+    try {
+      // Dispose previous player if any
+      await _audioPlayer?.stop();
+      await _audioPlayer?.dispose();
+      _audioPlayer = AudioPlayer();
+
+      await _audioPlayer!.setReleaseMode(ReleaseMode.stop);
+      await _audioPlayer!.setPlayerMode(PlayerMode.mediaPlayer);
+      await _audioPlayer!.setVolume(_settings!.volume);
+
+      // Always play from local asset
+      await _audioPlayer!.play(AssetSource('audio/azan.mp3'));
+      debugPrint('✅ Playing local azan: assets/audio/azan.mp3');
+    } catch (e) {
+      debugPrint('❌ Error playing azan: $e');
     }
   }
 
   // ── Stop Azan audio ───────────────────────────────────────
   Future<void> stopAzan() async {
-    await _audioPlayer.stop();
+    await _audioPlayer?.stop();
   }
 
-  // ── Handle notification tap ──────────────────────────────
+  // ── Handle notification tap (foreground) ─────────────────
   void _onNotificationTapped(NotificationResponse response) {
-    if (response.actionId == 'play_azan') {
-      // Play azan when "আযান শুনুন" button is tapped
-      playAzan();
-    } else if (response.actionId == 'dismiss') {
-      // Just dismiss the notification
-      return;
-    } else if (response.payload != null) {
-      // Notification body tapped - play azan
-      playAzan();
-    }
-  }
-
-  // ── Handle background notification tap ───────────────────
-  @pragma('vm:entry-point')
-  static void _onBackgroundNotificationTapped(NotificationResponse response) {
-    // Background handler - create new instance to play azan
     if (response.actionId == 'play_azan' || response.payload != null) {
-      final service = PrayerAlarmService();
-      service.playAzan();
+      playAzan();
     }
+    // 'dismiss' action → do nothing
   }
 
   // ── Get pending notifications ─────────────────────────────
@@ -517,6 +372,7 @@ class PrayerAlarmService {
 
   // ── Dispose ───────────────────────────────────────────────
   void dispose() {
-    _audioPlayer.dispose();
+    _audioPlayer?.dispose();
+    _audioPlayer = null;
   }
 }
