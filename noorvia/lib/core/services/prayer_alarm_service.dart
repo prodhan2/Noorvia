@@ -128,11 +128,21 @@ class PrayerAlarmService {
   Future<void> _loadSettings() async {
     try {
       final prefs = await SharedPreferences.getInstance();
+
+      // ── One-time migration: reset old settings that had alarms ON by default ──
+      const migrationKey = 'alarm_default_off_v1';
+      final migrated = prefs.getBool(migrationKey) ?? false;
+      if (!migrated) {
+        // Clear old settings so new defaults (all OFF) take effect
+        await prefs.remove('prayer_alarm_settings');
+        await prefs.setBool(migrationKey, true);
+      }
+
       final json = prefs.getString('prayer_alarm_settings');
       if (json != null) {
         _settings = PrayerAlarmSettings.fromJson(jsonDecode(json));
       } else {
-        _settings = PrayerAlarmSettings();
+        _settings = PrayerAlarmSettings(); // all alarms OFF by default
         await _saveSettings();
       }
     } catch (_) {
@@ -333,6 +343,12 @@ class PrayerAlarmService {
   // ── Play Azan audio (local asset only) ────────────────────
   Future<void> playAzan() async {
     if (_settings == null) await _loadSettings();
+
+    // Web platform does not support local asset audio via audioplayers
+    if (kIsWeb) {
+      debugPrint('⚠️ Azan audio is not supported on web platform. Use Android/iOS app.');
+      return;
+    }
 
     try {
       // Dispose previous player if any
