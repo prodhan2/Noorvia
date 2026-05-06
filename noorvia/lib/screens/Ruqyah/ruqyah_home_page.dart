@@ -11,6 +11,8 @@ import 'ruqyah_detail_page.dart';
 import 'ruqyah_faq_page.dart';
 import 'ruqyah_dua_page.dart';
 import 'ruqyah_diagnosis_page.dart';
+import 'ruqyah_audio_page.dart';
+import 'ruqyah_gosol_page.dart';
 
 // ═══════════════════════════════════════════════════════════════
 // Ruqyah Home Page
@@ -117,6 +119,8 @@ class _RuqyahHomePageState extends State<RuqyahHomePage>
   static const List<Map<String, dynamic>> _menuItems = [
     {'icon': '📖', 'title': 'রুকইয়াহ নোটস',    'color': Color(0xFF6C3CE1)},
     {'icon': '📿', 'title': 'রুকইয়াহ আয়াত',    'color': Color(0xFF0891B2)},
+    {'icon': '🎵', 'title': 'রুকইয়াহ অডিও',    'color': Color(0xFF7C3AED)},
+    {'icon': '💧', 'title': 'রুকইয়াহ গোসল',    'color': Color(0xFF06B6D4)},
     {'icon': '❓', 'title': 'প্রশ্ন ও উত্তর',    'color': Color(0xFF059669)},
     {'icon': '🤲', 'title': 'রুকইয়াহ দোয়া',    'color': Color(0xFFD97706)},
     {'icon': '🔍', 'title': 'সেলফ ডায়াগনোসিস', 'color': Color(0xFFDC2626)},
@@ -128,12 +132,18 @@ class _RuqyahHomePageState extends State<RuqyahHomePage>
       case 0: _openPage(isNotes: true); break;
       case 1: _openPage(isNotes: false); break;
       case 2:
-        Navigator.push(context, MaterialPageRoute(builder: (_) => const RuqyahFaqPage()));
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const RuqyahAudioPage()));
         break;
       case 3:
-        Navigator.push(context, MaterialPageRoute(builder: (_) => const RuqyahDuaPage()));
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const RuqyahGosolPage()));
         break;
       case 4:
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const RuqyahFaqPage()));
+        break;
+      case 5:
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const RuqyahDuaPage()));
+        break;
+      case 6:
         Navigator.push(context, MaterialPageRoute(builder: (_) => const RuqyahDiagnosisPage()));
         break;
     }
@@ -345,6 +355,26 @@ class _RuqyahHomePageState extends State<RuqyahHomePage>
             subtitle: 'জিন, যাদু ও বদনজর থেকে মুক্তির কোরআনিক আয়াত',
             badge: _ayat.isNotEmpty ? '${_ayat.length} টি আয়াত' : null,
             onTap: () => _openPage(isNotes: false),
+          ),
+          const SizedBox(height: 12),
+
+          _buildWhiteCard(
+            isDark: isDark, cardColor: cardColor, textColor: textColor, subColor: subColor,
+            icon: '🎵', accentColor: const Color(0xFF7C3AED),
+            title: 'রুকইয়াহ অডিও',
+            subtitle: 'শোনুন এবং সুস্থ হন - রুকইয়াহ অডিও সংগ্রহ',
+            onTap: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const RuqyahAudioPage())),
+          ),
+          const SizedBox(height: 12),
+
+          _buildWhiteCard(
+            isDark: isDark, cardColor: cardColor, textColor: textColor, subColor: subColor,
+            icon: '💧', accentColor: const Color(0xFF06B6D4),
+            title: 'রুকইয়াহ গোসল',
+            subtitle: 'জিন, যাদু ও বদনজর থেকে মুক্তির গোসল পদ্ধতি',
+            onTap: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const RuqyahGosolPage())),
           ),
           const SizedBox(height: 12),
 

@@ -7,6 +7,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/providers/prayer_provider.dart';
+import 'google_maps_view.dart';
 
 // ─────────────────────────────────────────────────────────────
 // City data

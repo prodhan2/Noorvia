@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/mosque.dart';
+import 'location_permission_service.dart';
 
 /// Service class to handle mosque-related operations
 /// Fetches nearby mosques from OpenStreetMap Overpass API with caching
@@ -24,27 +25,23 @@ class MosqueService {
   
   /// Get user's current location with proper permission handling
   Future<Position> getCurrentLocation() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    // Check if location services are enabled
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      throw Exception('লোকেশন সার্ভিস বন্ধ আছে। দয়া করে চালু করুন।'); // Location services are disabled
-    }
-
-    // Check location permission
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        throw Exception('লোকেশন অনুমতি প্রত্যাখ্যান করা হয়েছে।'); // Location permission denied
+    final permissionService = LocationPermissionService();
+    
+    // Verify permission is still valid
+    final isGranted = await permissionService.verifyPermission();
+    
+    if (!isGranted) {
+      if (permissionService.isPermissionDeniedForever()) {
+        throw Exception('লোকেশন অনুমতি স্থায়ীভাবে প্রত্যাখ্যান করা হয়েছে। সেটিংস থেকে অনুমতি দিন।');
+      } else {
+        throw Exception('লোকেশন অনুমতি প্রত্যাখ্যান করা হয়েছে।');
       }
     }
-    
-    if (permission == LocationPermission.deniedForever) {
-      throw Exception('লোকেশন অনুমতি স্থায়ীভাবে প্রত্যাখ্যান করা হয়েছে। সেটিংস থেকে অনুমতি দিন।'); 
-      // Location permission permanently denied
+
+    // Check if location services are enabled
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      throw Exception('লোকেশন সার্ভিস বন্ধ আছে। দয়া করে চালু করুন।');
     }
 
     // Get current position with high accuracy

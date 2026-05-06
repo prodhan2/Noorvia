@@ -6,6 +6,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/providers/theme_provider.dart';
 import '../../core/providers/nav_provider.dart';
 import '../../core/config/app_routes.dart';
+import '../../core/services/location_permission_service.dart';
 import '../IslamicFeatures/BangalQUran/BanglaQuran.dart';
 import '../IslamicFeatures/tashbi.dart';
 import '../IslamicFeatures/NamazNiyom.dart';
@@ -107,20 +108,35 @@ class _HomeScreenState extends State<HomeScreen>
   // ── মসজিদ খুঁজি — Google Maps এ নিয়ে যাবে ──────────────
   Future<void> _findMosque(BuildContext context) async {
     try {
-      // Permission check
-      LocationPermission perm = await Geolocator.checkPermission();
-      if (perm == LocationPermission.denied) {
-        perm = await Geolocator.requestPermission();
-      }
-      if (perm == LocationPermission.deniedForever ||
-          perm == LocationPermission.denied) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('লোকেশন পারমিশন দিন'),
-              backgroundColor: Colors.red,
-            ),
-          );
+      final permissionService = LocationPermissionService();
+      
+      // Verify permission is still valid
+      final isGranted = await permissionService.verifyPermission();
+      
+      if (!isGranted) {
+        if (permissionService.isPermissionDeniedForever()) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text('লোকেশন পারমিশন স্থায়ীভাবে প্রত্যাখ্যান করা হয়েছে'),
+                backgroundColor: Colors.red,
+                action: SnackBarAction(
+                  label: 'সেটিংস',
+                  textColor: Colors.white,
+                  onPressed: () => permissionService.openAppSettings(),
+                ),
+              ),
+            );
+          }
+        } else {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('লোকেশন পারমিশন দিন'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
         }
         return;
       }

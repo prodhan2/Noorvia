@@ -17,6 +17,7 @@ import 'core/services/local_notification_service.dart';
 import 'core/services/data_sync_service.dart';
 import 'core/services/shake_detector_service.dart';
 import 'core/services/scheduled_notification_service.dart';
+import 'core/services/location_permission_service.dart';
 import 'screens/splash/splash_screen.dart';
 import 'widgets/floating_audio_player.dart';
 
@@ -34,6 +35,9 @@ void main() async {
     await LocalNotificationService.init();
     // Schedule daily morning (8:00) & night (21:00) notifications
     unawaited(ScheduledNotificationService.init());
+    
+    // Initialize location permissions at app startup (once only)
+    unawaited(LocationPermissionService().initializePermissions());
   }
 
   // Background JSON sync — net পেলেই silently সব JSON reload করে

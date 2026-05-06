@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -134,6 +133,61 @@ class AudioProvider extends ChangeNotifier {
       notifyListeners();
     } catch (_) {
       isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // ── Play generic audio (for Rukaiya audio, etc.) ─────────────
+  Future<void> playAudio({
+    required String url,
+    required String surahName,
+    required int playingVerseId,
+  }) async {
+    try {
+      // Validate URL
+      if (url.isEmpty) {
+        return;
+      }
+
+      // Toggle pause if same audio
+      if (this.playingVerseId == playingVerseId && isPlaying) {
+        await _player.pause();
+        return;
+      }
+      // Resume if paused on same audio
+      if (this.playingVerseId == playingVerseId && !isPlaying) {
+        await _player.resume();
+        return;
+      }
+
+      await _player.stop();
+      isLoading = true;
+      this.playingVerseId = playingVerseId;
+      this.surahName = surahName;
+      isVisible = true;
+      duration = null;
+      position = null;
+      notifyListeners();
+
+      // Try to play from cache first if enabled
+      if (useCached && !kIsWeb) {
+        try {
+          final f = await _cache.getSingleFile(url);
+          await _player.play(DeviceFileSource(f.path));
+        } catch (_) {
+          // If cache fails, play from URL
+          await _player.play(UrlSource(url));
+        }
+      } else {
+        // Play directly from URL
+        await _player.play(UrlSource(url));
+      }
+
+      isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      isLoading = false;
+      isVisible = false;
       notifyListeners();
     }
   }

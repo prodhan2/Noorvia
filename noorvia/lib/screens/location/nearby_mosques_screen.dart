@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../core/models/mosque.dart';
 import '../../core/services/mosque_service.dart';
+import '../../core/services/location_permission_service.dart';
 
 /// Screen to display nearby mosques based on user's current location
 class NearbyMosquesScreen extends StatefulWidget {
@@ -99,6 +100,7 @@ class _NearbyMosquesScreenState extends State<NearbyMosquesScreen> {
       
       // Show snackbar for permission errors
       if (mounted && e.toString().contains('অনুমতি')) {
+        final permissionService = LocationPermissionService();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -107,14 +109,16 @@ class _NearbyMosquesScreenState extends State<NearbyMosquesScreen> {
             ),
             backgroundColor: Colors.orange,
             duration: const Duration(seconds: 5),
-            action: SnackBarAction(
-              label: 'সেটিংস',
-              textColor: Colors.white,
-              onPressed: () async {
-                // Open app settings
-                await Geolocator.openAppSettings();
-              },
-            ),
+            action: permissionService.isPermissionDeniedForever()
+                ? SnackBarAction(
+                    label: 'সেটিংস',
+                    textColor: Colors.white,
+                    onPressed: () async {
+                      // Open app settings
+                      await permissionService.openAppSettings();
+                    },
+                  )
+                : null,
           ),
         );
       }
