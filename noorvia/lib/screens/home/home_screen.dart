@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:noorvia/screens/iqc/iqc_home_page.dart';
 import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -65,26 +66,26 @@ class _HomeScreenState extends State<HomeScreen>
       parent: _ctrl,
       curve: const Interval(0.0, 0.65, curve: Curves.easeOut),
     );
-    _prayerSlide = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _ctrl,
-      curve: const Interval(0.0, 0.65, curve: Curves.easeOutCubic),
-    ));
+    _prayerSlide = Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _ctrl,
+            curve: const Interval(0.0, 0.65, curve: Curves.easeOutCubic),
+          ),
+        );
 
     // Banner card — starts at 35%, done by 100%
     _bannerFade = CurvedAnimation(
       parent: _ctrl,
       curve: const Interval(0.35, 1.0, curve: Curves.easeOut),
     );
-    _bannerSlide = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _ctrl,
-      curve: const Interval(0.35, 1.0, curve: Curves.easeOutCubic),
-    ));
+    _bannerSlide = Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _ctrl,
+            curve: const Interval(0.35, 1.0, curve: Curves.easeOutCubic),
+          ),
+        );
 
     _ctrl.forward();
   }
@@ -109,16 +110,18 @@ class _HomeScreenState extends State<HomeScreen>
   Future<void> _findMosque(BuildContext context) async {
     try {
       final permissionService = LocationPermissionService();
-      
+
       // Verify permission is still valid
       final isGranted = await permissionService.verifyPermission();
-      
+
       if (!isGranted) {
         if (permissionService.isPermissionDeniedForever()) {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: const Text('লোকেশন পারমিশন স্থায়ীভাবে প্রত্যাখ্যান করা হয়েছে'),
+                content: const Text(
+                  'লোকেশন পারমিশন স্থায়ীভাবে প্রত্যাখ্যান করা হয়েছে',
+                ),
                 backgroundColor: Colors.red,
                 action: SnackBarAction(
                   label: 'সেটিংস',
@@ -161,9 +164,7 @@ class _HomeScreenState extends State<HomeScreen>
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       } else {
         // Fallback: maps intent
-        final fallback = Uri.parse(
-          'geo:$lat,$lng?q=mosque&z=15',
-        );
+        final fallback = Uri.parse('geo:$lat,$lng?q=mosque&z=15');
         await launchUrl(fallback, mode: LaunchMode.externalApplication);
       }
     } catch (e) {
@@ -437,15 +438,7 @@ class _HomeScreenState extends State<HomeScreen>
       label: 'কুইজ',
       imageUrl:
           'https://raw.githubusercontent.com/prodhan2/App_Backend_Data/main/MyApi/islamic_Quiz/quiz.webp',
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const WebViewPage(
-            url: 'https://www.iqcbd.org/',
-            title: 'ইসলামিক কুইজ',
-          ),
-        ),
-      ),
+      onTap: () => _go(context, const IQCHomePage()),
     ),
     FeatureItem(
       emoji: '💑',
