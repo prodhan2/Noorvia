@@ -118,39 +118,42 @@ class _RuqyahHomePageState extends State<RuqyahHomePage>
 
   // ── Menu items data ──────────────────────────────────────────
   static const List<Map<String, dynamic>> _menuItems = [
-    {'icon': '📖', 'title': 'রুকইয়াহ নোটস',    'color': Color(0xFF6C3CE1)},
-    {'icon': '📿', 'title': 'রুকইয়াহ আয়াত',    'color': Color(0xFF0891B2)},
-    {'icon': '🎵', 'title': 'রুকইয়াহ অডিও',    'color': Color(0xFF7C3AED)},
-    {'icon': '💧', 'title': 'রুকইয়াহ গোসল',    'color': Color(0xFF06B6D4)},
-    {'icon': '🌿', 'title': 'ডিটক্স রুকইয়াহ',   'color': Color(0xFF10B981)},
-    {'icon': '❓', 'title': 'প্রশ্ন ও উত্তর',    'color': Color(0xFF059669)},
-    {'icon': '🤲', 'title': 'রুকইয়াহ দোয়া',    'color': Color(0xFFD97706)},
-    {'icon': '🔍', 'title': 'সেলফ ডায়াগনোসিস', 'color': Color(0xFFDC2626)},
-    
+    {'icon': '🔍', 'title': 'সেলফ ডায়াগনেসিস', 'color': Color(0xFFDC2626)},
+    {'icon': '❓', 'title': 'প্রশ্ন ও উত্তর', 'color': Color(0xFF059669)},
+    {'icon': '🤲', 'title': 'মাসনুন আমল (নিরাপত্তার দোয়া)', 'color': Color(0xFFD97706)},
+    {'icon': '🎵', 'title': 'রুকইয়াহ অডিও', 'color': Color(0xFF7C3AED)},
+    {'icon': '📿', 'title': 'রুকইয়াহ আয়াত', 'color': Color(0xFF0891B2)},
+    {'icon': '💧', 'title': 'রুকইয়াহ গোসল', 'color': Color(0xFF06B6D4)},
+    {'icon': '🌿', 'title': 'ডিটক্স রুকইয়াহ', 'color': Color(0xFF10B981)},
+    {'icon': '📖', 'title': 'রুকইয়াহ নোটস', 'color': Color(0xFF6C3CE1)},
   ];
 
   void _navigateFromMenu(int index) {
     Navigator.pop(context); // close drawer
     switch (index) {
-      case 0: _openPage(isNotes: true); break;
-      case 1: _openPage(isNotes: false); break;
-      case 2:
-        Navigator.push(context, MaterialPageRoute(builder: (_) => const RuqyahAudioPage()));
+      case 0:
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const RuqyahDiagnosisPage()));
         break;
-      case 3:
-        Navigator.push(context, MaterialPageRoute(builder: (_) => const RuqyahGosolPage()));
-        break;
-      case 4:
-        Navigator.push(context, MaterialPageRoute(builder: (_) => const RuqyahDetoxPage()));
-        break;
-      case 5:
+      case 1:
         Navigator.push(context, MaterialPageRoute(builder: (_) => const RuqyahFaqPage()));
         break;
-      case 6:
+      case 2:
         Navigator.push(context, MaterialPageRoute(builder: (_) => const RuqyahDuaPage()));
         break;
+      case 3:
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const RuqyahAudioPage()));
+        break;
+      case 4:
+        _openPage(isNotes: false);
+        break;
+      case 5:
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const RuqyahGosolPage()));
+        break;
+      case 6:
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const RuqyahDetoxPage()));
+        break;
       case 7:
-        Navigator.push(context, MaterialPageRoute(builder: (_) => const RuqyahDiagnosisPage()));
+        _openPage(isNotes: true);
         break;
     }
   }
@@ -346,28 +349,38 @@ class _RuqyahHomePageState extends State<RuqyahHomePage>
           // ── White-style feature cards ──────────────────────
           _buildWhiteCard(
             isDark: isDark, cardColor: cardColor, textColor: textColor, subColor: subColor,
-            icon: '📖', accentColor: const Color(0xFF6C3CE1),
-            title: 'রুকইয়াহ নোটস',
-            subtitle: 'রুকইয়াহ সম্পর্কিত গুরুত্বপূর্ণ নোট ও গাইডলাইন',
-            badge: _notes.isNotEmpty ? '${_notes.length} টি নোট' : null,
-            onTap: () => _openPage(isNotes: true),
+            icon: '🔍', accentColor: const Color(0xFFDC2626),
+            title: 'সেলফ ডায়াগনেসিস',
+            subtitle: 'প্রশ্নের উত্তর দিয়ে নিজেই জানুন আপনার সমস্যার ধরন ও সমাধান',
+            onTap: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const RuqyahDiagnosisPage())),
           ),
           const SizedBox(height: 12),
 
           _buildWhiteCard(
             isDark: isDark, cardColor: cardColor, textColor: textColor, subColor: subColor,
-            icon: '📿', accentColor: const Color(0xFF0891B2),
-            title: 'রুকইয়াহ আয়াত',
-            subtitle: 'জিন, যাদু ও বদনজর থেকে মুক্তির কোরআনিক আয়াত',
-            badge: _ayat.isNotEmpty ? '${_ayat.length} টি আয়াত' : null,
-            onTap: () => _openPage(isNotes: false),
+            icon: '❓', accentColor: const Color(0xFF059669),
+            title: 'প্রশ্ন ও উত্তর',
+            subtitle: 'রুকইয়াহ বিষয়ক সাধারণ জিজ্ঞাসা ও বিস্তারিত জবাব',
+            onTap: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const RuqyahFaqPage())),
+          ),
+          const SizedBox(height: 12),
+
+          _buildWhiteCard(
+            isDark: isDark, cardColor: cardColor, textColor: textColor, subColor: subColor,
+            icon: '🤲', accentColor: const Color(0xFFD97706),
+            title: 'মাসনুন আমল (নিরাপত্তার দোয়া)',
+            subtitle: 'সকাল-সন্ধ্যা ও হিফাজতের দোয়াসমূহ',
+            onTap: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const RuqyahDuaPage())),
           ),
           const SizedBox(height: 12),
 
           _buildWhiteCard(
             isDark: isDark, cardColor: cardColor, textColor: textColor, subColor: subColor,
             icon: '🎵', accentColor: const Color(0xFF7C3AED),
-            title: 'রুকইয়াহ অডিও',
+            title: 'রুকইয়াহ অডিও',
             subtitle: 'শোনুন এবং সুস্থ হন - রুকইয়াহ অডিও সংগ্রহ',
             onTap: () => Navigator.push(context,
                 MaterialPageRoute(builder: (_) => const RuqyahAudioPage())),
@@ -376,8 +389,18 @@ class _RuqyahHomePageState extends State<RuqyahHomePage>
 
           _buildWhiteCard(
             isDark: isDark, cardColor: cardColor, textColor: textColor, subColor: subColor,
+            icon: '📿', accentColor: const Color(0xFF0891B2),
+            title: 'রুকইয়াহ আয়াত',
+            subtitle: 'জিন, যাদু ও বদনজর থেকে মুক্তির কোরআনিক আয়াত',
+            badge: _ayat.isNotEmpty ? '${_ayat.length} টি আয়াত' : null,
+            onTap: () => _openPage(isNotes: false),
+          ),
+          const SizedBox(height: 12),
+
+          _buildWhiteCard(
+            isDark: isDark, cardColor: cardColor, textColor: textColor, subColor: subColor,
             icon: '💧', accentColor: const Color(0xFF06B6D4),
-            title: 'রুকইয়াহ গোসল',
+            title: 'রুকইয়াহ গোসল',
             subtitle: 'জিন, যাদু ও বদনজর থেকে মুক্তির গোসল পদ্ধতি',
             onTap: () => Navigator.push(context,
                 MaterialPageRoute(builder: (_) => const RuqyahGosolPage())),
@@ -396,31 +419,11 @@ class _RuqyahHomePageState extends State<RuqyahHomePage>
 
           _buildWhiteCard(
             isDark: isDark, cardColor: cardColor, textColor: textColor, subColor: subColor,
-            icon: '❓', accentColor: const Color(0xFF059669),
-            title: 'প্রশ্ন ও উত্তর',
-            subtitle: 'রুকইয়াহ বিষয়ক সাধারণ জিজ্ঞাসা ও বিস্তারিত জবাব',
-            onTap: () => Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const RuqyahFaqPage())),
-          ),
-          const SizedBox(height: 12),
-
-          _buildWhiteCard(
-            isDark: isDark, cardColor: cardColor, textColor: textColor, subColor: subColor,
-            icon: '🤲', accentColor: const Color(0xFFD97706),
-            title: 'রুকইয়াহ দোয়া',
-            subtitle: 'সকাল-সন্ধ্যা ও হিফাজতের দোয়াসমূহ',
-            onTap: () => Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const RuqyahDuaPage())),
-          ),
-          const SizedBox(height: 12),
-
-          _buildWhiteCard(
-            isDark: isDark, cardColor: cardColor, textColor: textColor, subColor: subColor,
-            icon: '🔍', accentColor: const Color(0xFFDC2626),
-            title: 'সেলফ ডায়াগনোসিস',
-            subtitle: 'প্রশ্নের উত্তর দিয়ে নিজেই জানুন আপনার সমস্যার ধরন ও সমাধান',
-            onTap: () => Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const RuqyahDiagnosisPage())),
+            icon: '📖', accentColor: const Color(0xFF6C3CE1),
+            title: 'রুকইয়াহ নোটস',
+            subtitle: 'রুকইয়াহ সম্পর্কিত গুরুত্বপূর্ণ নোট ও গাইডলাইন',
+            badge: _notes.isNotEmpty ? '${_notes.length} টি নোট' : null,
+            onTap: () => _openPage(isNotes: true),
           ),
 
           const SizedBox(height: 28),
