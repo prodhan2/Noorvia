@@ -683,8 +683,7 @@ class _RuqyahDuaPageState extends State<RuqyahDuaPage> {
                 arText,
                 textAlign: TextAlign.right,
                 textDirection: TextDirection.rtl,
-                style: TextStyle(
-                  fontFamily: 'Amiri',
+                style: GoogleFonts.scheherazadeNew(
                   fontSize: _fontSize + 5,
                   color: AppColors.primary,
                   height: 2.0,

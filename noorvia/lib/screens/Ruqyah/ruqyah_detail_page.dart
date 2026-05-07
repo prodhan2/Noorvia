@@ -312,11 +312,10 @@ class _ArabicBlock extends StatelessWidget {
         text,
         textAlign: TextAlign.right,
         textDirection: TextDirection.rtl,
-        style: const TextStyle(
-          fontFamily: 'Amiri',
+        style: GoogleFonts.scheherazadeNew(
           fontSize: 20,
           height: 2.0,
-          color: Color(0xFF6C3CE1),
+          color: const Color(0xFF6C3CE1),
         ),
       ),
     );

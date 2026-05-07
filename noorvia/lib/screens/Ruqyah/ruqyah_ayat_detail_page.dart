@@ -342,11 +342,10 @@ class _AyahCard extends StatelessWidget {
                     ayah.ayahArabic,
                     textAlign: TextAlign.right,
                     textDirection: TextDirection.rtl,
-                    style: const TextStyle(
-                      fontFamily: 'Amiri',
+                    style: GoogleFonts.scheherazadeNew(
                       fontSize: 22,
                       height: 2.0,
-                      color: Color(0xFF6C3CE1),
+                      color: const Color(0xFF6C3CE1),
                     ),
                   ),
                 ),
