@@ -13,6 +13,7 @@ import 'ruqyah_diagnosis_page.dart';
 import 'ruqyah_audio_page.dart';
 import 'ruqyah_gosol_page.dart';
 import 'ruqyah_detox_page.dart';
+import 'promotion.dart';
 
 // ═══════════════════════════════════════════════════════════════
 // Ruqyah Home Page
@@ -125,6 +126,7 @@ class _RuqyahHomePageState extends State<RuqyahHomePage>
     {'icon': '💧', 'title': 'রুকইয়াহ গোসল', 'color': Color(0xFF06B6D4)},
     {'icon': '🌿', 'title': 'ডিটক্স রুকইয়াহ', 'color': Color(0xFF10B981)},
     {'icon': '📖', 'title': 'রুকইয়াহ নোটস', 'color': Color(0xFF6C3CE1)},
+    {'icon': '🏥', 'title': 'Ruqyah Center Info', 'color': Color(0xFF0EA5E9)},
   ];
 
   void _navigateFromMenu(int index) {
@@ -153,6 +155,9 @@ class _RuqyahHomePageState extends State<RuqyahHomePage>
         break;
       case 7:
         _openPage(isNotes: true);
+        break;
+      case 8:
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const RuqyahPromotionPage()));
         break;
     }
   }
@@ -423,6 +428,16 @@ class _RuqyahHomePageState extends State<RuqyahHomePage>
             subtitle: 'রুকইয়াহ সম্পর্কিত গুরুত্বপূর্ণ নোট ও গাইডলাইন',
             badge: _notes.isNotEmpty ? '${_notes.length} টি নোট' : null,
             onTap: () => _openPage(isNotes: true),
+          ),
+          const SizedBox(height: 12),
+
+          _buildWhiteCard(
+            isDark: isDark, cardColor: cardColor, textColor: textColor, subColor: subColor,
+            icon: '🏥', accentColor: const Color(0xFF0EA5E9),
+            title: 'Ruqyah Center Info',
+            subtitle: 'রুকইয়াহ সেন্টারের যোগাযোগ, ঠিকানা ও সোশ্যাল লিংক',
+            onTap: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const RuqyahPromotionPage())),
           ),
         ],
       ),
