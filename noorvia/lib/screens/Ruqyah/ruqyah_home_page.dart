@@ -7,7 +7,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/providers/theme_provider.dart';
 import 'ruqyah_list_page.dart';
-import 'ruqyah_detail_page.dart';
 import 'ruqyah_faq_page.dart';
 import 'ruqyah_dua_page.dart';
 import 'ruqyah_diagnosis_page.dart';
@@ -425,35 +424,6 @@ class _RuqyahHomePageState extends State<RuqyahHomePage>
             badge: _notes.isNotEmpty ? '${_notes.length} টি নোট' : null,
             onTap: () => _openPage(isNotes: true),
           ),
-
-          const SizedBox(height: 28),
-
-          // ── Quick preview — Notes ──────────────────────────
-          if (_notes.isNotEmpty) ...[
-            _buildSectionHeader(
-              icon: '📖', title: 'সাম্প্রতিক নোটস',
-              onSeeAll: () => _openPage(isNotes: true), isDark: isDark,
-            ),
-            const SizedBox(height: 12),
-            ..._notes.take(3).toList().asMap().entries.map((e) =>
-                _buildPreviewTile(
-                    chapter: e.value, index: e.key,
-                    isDark: isDark, allChapters: _notes)),
-            const SizedBox(height: 24),
-          ],
-
-          // ── Quick preview — Ayat ───────────────────────────
-          if (_ayat.isNotEmpty) ...[
-            _buildSectionHeader(
-              icon: '📿', title: 'সাম্প্রতিক আয়াত',
-              onSeeAll: () => _openPage(isNotes: false), isDark: isDark,
-            ),
-            const SizedBox(height: 12),
-            ..._ayat.take(3).toList().asMap().entries.map((e) =>
-                _buildPreviewTile(
-                    chapter: e.value, index: e.key,
-                    isDark: isDark, allChapters: _ayat)),
-          ],
         ],
       ),
     );
@@ -551,91 +521,6 @@ class _RuqyahHomePageState extends State<RuqyahHomePage>
       style: GoogleFonts.hindSiliguri(
           fontSize: 18, fontWeight: FontWeight.w800,
           color: isDark ? AppColors.darkText : AppColors.lightText));
-
-  Widget _buildSectionHeader({
-    required String icon, required String title,
-    required VoidCallback onSeeAll, required bool isDark,
-  }) => Row(children: [
-    Text(icon, style: const TextStyle(fontSize: 18)),
-    const SizedBox(width: 8),
-    Text(title,
-        style: GoogleFonts.hindSiliguri(
-            fontSize: 16, fontWeight: FontWeight.w800,
-            color: isDark ? AppColors.darkText : AppColors.lightText)),
-    const Spacer(),
-    GestureDetector(
-      onTap: onSeeAll,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-        decoration: BoxDecoration(
-            gradient: AppColors.gradient,
-            borderRadius: BorderRadius.circular(20)),
-        child: Text('সব দেখুন',
-            style: GoogleFonts.hindSiliguri(
-                fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white)),
-      ),
-    ),
-  ]);
-
-  Widget _buildPreviewTile({
-    required RuqyahChapter chapter, required int index,
-    required bool isDark, required List<RuqyahChapter> allChapters,
-  }) {
-    final cardColor = isDark ? AppColors.darkCard : Colors.white;
-    final textColor = isDark ? AppColors.darkText : AppColors.lightText;
-    final subColor  = isDark ? AppColors.darkSubText : AppColors.lightSubText;
-
-    return GestureDetector(
-      onTap: () => Navigator.push(context, MaterialPageRoute(
-        builder: (_) => RuqyahDetailPage(
-            chapter: chapter, allChapters: allChapters, currentIndex: index),
-      )),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: cardColor,
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: [
-            BoxShadow(
-              color: isDark
-                  ? Colors.black.withValues(alpha: 0.2)
-                  : AppColors.primary.withValues(alpha: 0.06),
-              blurRadius: 8, offset: const Offset(0, 3),
-            ),
-          ],
-          border: Border.all(
-              color: AppColors.primary.withValues(alpha: isDark ? 0.15 : 0.08)),
-        ),
-        child: Row(children: [
-          Container(
-            width: 38, height: 38,
-            decoration: BoxDecoration(
-                gradient: AppColors.gradient,
-                borderRadius: BorderRadius.circular(10)),
-            child: Center(child: Text('${index + 1}',
-                style: GoogleFonts.poppins(
-                    fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white))),
-          ),
-          const SizedBox(width: 12),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(chapter.title,
-                style: GoogleFonts.hindSiliguri(
-                    fontSize: 13, fontWeight: FontWeight.w700, color: textColor),
-                maxLines: 1, overflow: TextOverflow.ellipsis),
-            const SizedBox(height: 3),
-            Text(chapter.preview,
-                style: GoogleFonts.hindSiliguri(
-                    fontSize: 11, color: subColor, height: 1.4),
-                maxLines: 2, overflow: TextOverflow.ellipsis),
-          ])),
-          const SizedBox(width: 8),
-          Icon(Icons.arrow_forward_ios_rounded,
-              size: 13, color: AppColors.primary.withValues(alpha: 0.5)),
-        ]),
-      ),
-    );
-  }
 
   void _openPage({required bool isNotes}) => Navigator.push(context,
       MaterialPageRoute(builder: (_) => RuqyahListPage(initialTab: isNotes ? 0 : 1)));
