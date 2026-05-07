@@ -13,6 +13,7 @@ import 'ruqyah_dua_page.dart';
 import 'ruqyah_diagnosis_page.dart';
 import 'ruqyah_audio_page.dart';
 import 'ruqyah_gosol_page.dart';
+import 'ruqyah_detox_page.dart';
 
 // ═══════════════════════════════════════════════════════════════
 // Ruqyah Home Page
@@ -121,9 +122,11 @@ class _RuqyahHomePageState extends State<RuqyahHomePage>
     {'icon': '📿', 'title': 'রুকইয়াহ আয়াত',    'color': Color(0xFF0891B2)},
     {'icon': '🎵', 'title': 'রুকইয়াহ অডিও',    'color': Color(0xFF7C3AED)},
     {'icon': '💧', 'title': 'রুকইয়াহ গোসল',    'color': Color(0xFF06B6D4)},
+    {'icon': '🌿', 'title': 'ডিটক্স রুকইয়াহ',   'color': Color(0xFF10B981)},
     {'icon': '❓', 'title': 'প্রশ্ন ও উত্তর',    'color': Color(0xFF059669)},
     {'icon': '🤲', 'title': 'রুকইয়াহ দোয়া',    'color': Color(0xFFD97706)},
     {'icon': '🔍', 'title': 'সেলফ ডায়াগনোসিস', 'color': Color(0xFFDC2626)},
+    
   ];
 
   void _navigateFromMenu(int index) {
@@ -138,12 +141,15 @@ class _RuqyahHomePageState extends State<RuqyahHomePage>
         Navigator.push(context, MaterialPageRoute(builder: (_) => const RuqyahGosolPage()));
         break;
       case 4:
-        Navigator.push(context, MaterialPageRoute(builder: (_) => const RuqyahFaqPage()));
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const RuqyahDetoxPage()));
         break;
       case 5:
-        Navigator.push(context, MaterialPageRoute(builder: (_) => const RuqyahDuaPage()));
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const RuqyahFaqPage()));
         break;
       case 6:
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const RuqyahDuaPage()));
+        break;
+      case 7:
         Navigator.push(context, MaterialPageRoute(builder: (_) => const RuqyahDiagnosisPage()));
         break;
     }
@@ -375,6 +381,16 @@ class _RuqyahHomePageState extends State<RuqyahHomePage>
             subtitle: 'জিন, যাদু ও বদনজর থেকে মুক্তির গোসল পদ্ধতি',
             onTap: () => Navigator.push(context,
                 MaterialPageRoute(builder: (_) => const RuqyahGosolPage())),
+          ),
+          const SizedBox(height: 12),
+
+          _buildWhiteCard(
+            isDark: isDark, cardColor: cardColor, textColor: textColor, subColor: subColor,
+            icon: '🌿', accentColor: const Color(0xFF10B981),
+            title: 'ডিটক্স রুকইয়াহ',
+            subtitle: '৭ দিনের ডিটক্স রুকইয়াহ প্রোগ্রাম ও প্রস্তুতি',
+            onTap: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const RuqyahDetoxPage())),
           ),
           const SizedBox(height: 12),
 
