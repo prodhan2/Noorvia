@@ -13,12 +13,12 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/theme_provider.dart';
 import '../../../widgets/shimmer.dart';
-
+import '../../quran/mushaf_page.dart';
 
 // ─── App theme colors ─────────────────────────────────────────
-const _kPrimary      = AppColors.primary;       // 0xFF6C3CE1
-const _kPrimaryDark  = AppColors.primaryDark;   // 0xFF4A2BAD
-const _kPrimaryLight = AppColors.primaryLight;  // 0xFF9B6FF5
+const _kPrimary = AppColors.primary; // 0xFF6C3CE1
+const _kPrimaryDark = AppColors.primaryDark; // 0xFF4A2BAD
+const _kPrimaryLight = AppColors.primaryLight; // 0xFF9B6FF5
 
 // ─── Background task setup ────────────────────────────────────
 void main() {
@@ -68,7 +68,9 @@ Future<bool> _fetchAndCacheSurahs(SharedPreferences prefs) async {
     if (conn == ConnectivityResult.none) return false;
     const url =
         'https://cdn.jsdelivr.net/npm/quran-cloud@1.0.0/dist/chapters/bn/index.json';
-    final res = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 30));
+    final res = await http
+        .get(Uri.parse(url))
+        .timeout(const Duration(seconds: 30));
     if (res.statusCode == 200) {
       await prefs.setString('cachedSurahs', res.body);
       await prefs.setInt('lastUpdate', DateTime.now().millisecondsSinceEpoch);
@@ -88,9 +90,9 @@ class QuranApp extends StatelessWidget {
   const QuranApp({super.key});
   @override
   Widget build(BuildContext context) => MaterialApp(
-        debugShowCheckedModeBanner: false,
-        home: const SurahListPage(),
-      );
+    debugShowCheckedModeBanner: false,
+    home: const SurahListPage(),
+  );
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -137,10 +139,11 @@ class _SurahListPageState extends State<SurahListPage>
     _setupBgTasks();
     await _loadAll();
     _connSub = Connectivity().onConnectivityChanged.listen((r) {
-      final offline = r == ConnectivityResult.none ||
+      final offline =
+          r == ConnectivityResult.none ||
           (!r.contains(ConnectivityResult.wifi) &&
-           !r.contains(ConnectivityResult.mobile) &&
-           !r.contains(ConnectivityResult.ethernet));
+              !r.contains(ConnectivityResult.mobile) &&
+              !r.contains(ConnectivityResult.ethernet));
       if (!offline && isOffline) _checkUpdatesOnResume();
       setState(() => isOffline = offline);
     });
@@ -151,7 +154,8 @@ class _SurahListPageState extends State<SurahListPage>
     try {
       await Workmanager().cancelByTag("quranUpdate");
       await Workmanager().registerPeriodicTask(
-        "quranUpdateTask", "quranBackgroundUpdate",
+        "quranUpdateTask",
+        "quranBackgroundUpdate",
         frequency: const Duration(hours: 6),
         constraints: Constraints(networkType: NetworkType.connected),
         tag: "quranUpdate",
@@ -175,7 +179,9 @@ class _SurahListPageState extends State<SurahListPage>
 
   Future<void> _loadSurahs() async {
     final prefs = await SharedPreferences.getInstance();
-    final age = DateTime.now().millisecondsSinceEpoch - (prefs.getInt('lastUpdate') ?? 0);
+    final age =
+        DateTime.now().millisecondsSinceEpoch -
+        (prefs.getInt('lastUpdate') ?? 0);
     if (age > const Duration(hours: 1).inMilliseconds ||
         !prefs.containsKey('cachedSurahs')) {
       await _fetchAndCacheSurahs(prefs);
@@ -213,7 +219,9 @@ class _SurahListPageState extends State<SurahListPage>
         ? List.from(allSurahs)
         : allSurahs.where((s) {
             return (s['name'] ?? '').toString().toLowerCase().contains(q) ||
-                (s['transliteration'] ?? '').toString().toLowerCase().contains(q) ||
+                (s['transliteration'] ?? '').toString().toLowerCase().contains(
+                  q,
+                ) ||
                 (s['translation'] ?? '').toString().toLowerCase().contains(q);
           }).toList();
     if (mounted) setState(() {});
@@ -248,19 +256,21 @@ class _SurahListPageState extends State<SurahListPage>
 
   void _snack(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg, style: GoogleFonts.hindSiliguri()),
-      backgroundColor: _kPrimary,
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      duration: const Duration(seconds: 2),
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg, style: GoogleFonts.hindSiliguri()),
+        backgroundColor: _kPrimary,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   // ── Bangla number helper ──────────────────────────────────
   String _bn(dynamic n) {
-    const e = ['0','1','2','3','4','5','6','7','8','9'];
-    const b = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+    const e = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    const b = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
     var s = n.toString();
     for (int i = 0; i < e.length; i++) s = s.replaceAll(e[i], b[i]);
     return s;
@@ -283,18 +293,37 @@ class _SurahListPageState extends State<SurahListPage>
             if (isOffline)
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 color: Colors.orange.shade100,
                 child: Row(
                   children: [
                     const Icon(Icons.wifi_off, size: 16, color: Colors.orange),
                     const SizedBox(width: 8),
-                    Text('অফলাইন মোড — ক্যাশ ডেটা ব্যবহার হচ্ছে',
-                        style: GoogleFonts.hindSiliguri(
-                            fontSize: 12, color: Colors.orange.shade800)),
+                    Text(
+                      'অফলাইন মোড — ক্যাশ ডেটা ব্যবহার হচ্ছে',
+                      style: GoogleFonts.hindSiliguri(
+                        fontSize: 12,
+                        color: Colors.orange.shade800,
+                      ),
+                    ),
                   ],
                 ),
               ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+              child: _MushafShortcutCard(
+                isDark: isDark,
+                cardColor: cardColor,
+                textColor: textColor,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const MushafPage()),
+                ),
+              ),
+            ),
             // Search bar
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
@@ -304,8 +333,9 @@ class _SurahListPageState extends State<SurahListPage>
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 8)
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 8,
+                    ),
                   ],
                 ),
                 child: TextField(
@@ -315,19 +345,28 @@ class _SurahListPageState extends State<SurahListPage>
                     _filter();
                   },
                   style: GoogleFonts.hindSiliguri(
-                      color: isDark ? AppColors.darkText : Colors.black87),
+                    color: isDark ? AppColors.darkText : Colors.black87,
+                  ),
                   decoration: InputDecoration(
                     hintText: 'সূরার নাম বা অনুবাদ দিয়ে খুঁজুন...',
                     hintStyle: GoogleFonts.hindSiliguri(
-                        color: isDark ? AppColors.darkSubText : Colors.grey,
-                        fontSize: 13),
-                    prefixIcon:
-                        const Icon(Icons.search, color: AppColors.primary, size: 20),
+                      color: isDark ? AppColors.darkSubText : Colors.grey,
+                      fontSize: 13,
+                    ),
+                    prefixIcon: const Icon(
+                      Icons.search,
+                      color: AppColors.primary,
+                      size: 20,
+                    ),
                     suffixIcon: searchQuery.isNotEmpty
                         ? IconButton(
-                            icon: Icon(Icons.clear,
-                                color: isDark ? AppColors.darkSubText : Colors.grey,
-                                size: 18),
+                            icon: Icon(
+                              Icons.clear,
+                              color: isDark
+                                  ? AppColors.darkSubText
+                                  : Colors.grey,
+                              size: 18,
+                            ),
                             onPressed: () {
                               _searchCtrl.clear();
                               searchQuery = '';
@@ -346,50 +385,55 @@ class _SurahListPageState extends State<SurahListPage>
               child: isLoading
                   ? SurahListShimmer(isDark: isDark)
                   : filteredSurahs.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Text('🔍',
-                                  style: TextStyle(fontSize: 48)),
-                              const SizedBox(height: 12),
-                              Text('কোনো সূরা পাওয়া যায়নি',
-                                  style: GoogleFonts.hindSiliguri(
-                                      color: isDark ? AppColors.darkSubText : Colors.grey,
-                                      fontSize: 16)),
-                            ],
-                          ),
-                        )
-                      : RefreshIndicator(
-                          color: _kPrimary,
-                          onRefresh: () => _refresh(),
-                          child: ListView.builder(
-                            padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
-                            itemCount: filteredSurahs.length,
-                            itemBuilder: (ctx, i) =>
-                                _SurahTile(
-                              surah: filteredSurahs[i],
-                              isFav: favSurahIds
-                                  .contains(filteredSurahs[i]['id'].toString()),
-                              onFavTap: () =>
-                                  _toggleFav(filteredSurahs[i]['id'] as int),
-                              bnNumber: _bn(filteredSurahs[i]['id']),
-                              isDark: isDark,
-                              cardColor: cardColor,
-                              textColor: textColor,
-                              onTap: () async {
-                                await Navigator.push(
-                                  ctx,
-                                  MaterialPageRoute(
-                                    builder: (_) => SurahDetailPage(
-                                        surahInfo: filteredSurahs[i]),
-                                  ),
-                                );
-                                await _loadFavs();
-                              },
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text('🔍', style: TextStyle(fontSize: 48)),
+                          const SizedBox(height: 12),
+                          Text(
+                            'কোনো সূরা পাওয়া যায়নি',
+                            style: GoogleFonts.hindSiliguri(
+                              color: isDark
+                                  ? AppColors.darkSubText
+                                  : Colors.grey,
+                              fontSize: 16,
                             ),
                           ),
+                        ],
+                      ),
+                    )
+                  : RefreshIndicator(
+                      color: _kPrimary,
+                      onRefresh: () => _refresh(),
+                      child: ListView.builder(
+                        padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
+                        itemCount: filteredSurahs.length,
+                        itemBuilder: (ctx, i) => _SurahTile(
+                          surah: filteredSurahs[i],
+                          isFav: favSurahIds.contains(
+                            filteredSurahs[i]['id'].toString(),
+                          ),
+                          onFavTap: () =>
+                              _toggleFav(filteredSurahs[i]['id'] as int),
+                          bnNumber: _bn(filteredSurahs[i]['id']),
+                          isDark: isDark,
+                          cardColor: cardColor,
+                          textColor: textColor,
+                          onTap: () async {
+                            await Navigator.push(
+                              ctx,
+                              MaterialPageRoute(
+                                builder: (_) => SurahDetailPage(
+                                  surahInfo: filteredSurahs[i],
+                                ),
+                              ),
+                            );
+                            await _loadFavs();
+                          },
                         ),
+                      ),
+                    ),
             ),
           ],
         ),
@@ -404,8 +448,11 @@ class _SurahListPageState extends State<SurahListPage>
       backgroundColor: _kPrimary,
       leading: Navigator.canPop(context)
           ? IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new,
-                  color: Colors.white, size: 20),
+              icon: const Icon(
+                Icons.arrow_back_ios_new,
+                color: Colors.white,
+                size: 20,
+              ),
               onPressed: () => Navigator.pop(context),
             )
           : null,
@@ -415,17 +462,24 @@ class _SurahListPageState extends State<SurahListPage>
         children: [
           const Text('📖', style: TextStyle(fontSize: 18)),
           const SizedBox(width: 8),
-          Text('পবিত্র কুরআন',
-              style: GoogleFonts.hindSiliguri(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white)),
+          Text(
+            'পবিত্র কুরআন',
+            style: GoogleFonts.hindSiliguri(
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+            ),
+          ),
           const SizedBox(width: 8),
           Container(width: 1.2, height: 16, color: Colors.white30),
           const SizedBox(width: 8),
-          Text('বাংলা অনুবাদ ও তিলাওয়াত',
-              style: GoogleFonts.hindSiliguri(
-                  fontSize: 11, color: Colors.white70)),
+          Text(
+            'বাংলা অনুবাদ ও তিলাওয়াত',
+            style: GoogleFonts.hindSiliguri(
+              fontSize: 11,
+              color: Colors.white70,
+            ),
+          ),
         ],
       ),
       centerTitle: false,
@@ -437,15 +491,99 @@ class _SurahListPageState extends State<SurahListPage>
           tooltip: 'রিফ্রেশ',
         ),
         IconButton(
-          icon: const Icon(Icons.favorite_border, color: Colors.white, size: 20),
+          icon: const Icon(
+            Icons.favorite_border,
+            color: Colors.white,
+            size: 20,
+          ),
           tooltip: 'পছন্দের সূরা',
           onPressed: () async {
-            await Navigator.push(context,
-                MaterialPageRoute(builder: (_) => FavoritesPage()));
+            await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => FavoritesPage()),
+            );
             await _loadFavs();
           },
         ),
       ],
+    );
+  }
+}
+
+class _MushafShortcutCard extends StatelessWidget {
+  final bool isDark;
+  final Color cardColor;
+  final Color textColor;
+  final VoidCallback onTap;
+
+  const _MushafShortcutCard({
+    required this.isDark,
+    required this.cardColor,
+    required this.textColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final subTextColor = isDark ? AppColors.darkSubText : Colors.black54;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: _kPrimary.withValues(alpha: 0.16)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 7,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: _kPrimary.withValues(alpha: 0.10),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.menu_book_rounded, color: _kPrimary),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'কুরআন মুসহাফ',
+                    style: GoogleFonts.hindSiliguri(
+                      color: textColor,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'পেজ অনুযায়ী মুসহাফ পড়ুন',
+                    style: GoogleFonts.hindSiliguri(
+                      color: subTextColor,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios, size: 15, color: _kPrimary),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -490,7 +628,9 @@ class _SurahTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04), blurRadius: 6)
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 6,
+            ),
           ],
         ),
         child: Padding(

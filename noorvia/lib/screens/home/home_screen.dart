@@ -9,6 +9,7 @@ import '../../core/providers/nav_provider.dart';
 import '../../core/config/app_routes.dart';
 import '../../core/services/location_permission_service.dart';
 import '../IslamicFeatures/BangalQUran/BanglaQuran.dart';
+import '../quran/mushaf_page.dart';
 import '../IslamicFeatures/tashbi.dart';
 import '../IslamicFeatures/NamazNiyom.dart';
 import '../IslamicFeatures/hidithdemo.dart';
@@ -17,14 +18,11 @@ import '../IslamicFeatures/ramadancalender.dart';
 import '../IslamicFeatures/calendar.dart';
 import '../IslamicFeatures/AsmaulHusna/asmaul_husna_page.dart';
 import '../IslamicFeatures/qibla_direction_page.dart';
-import '../Ruqyah/ruqyah_list_page.dart';
 import '../Ruqyah/ruqyah_home_page.dart';
 import '../IslamicNames/islamic_names_page.dart';
 import '../ArabicAlphabet/arabic_alphabet_home.dart';
 import '../IslamicBooks/islamic_books_page.dart';
 import '../location/nearby_mosques_screen.dart';
-
-import '../common/web_view_page.dart';
 
 import '../IslamicFeatures/namaz_tracker_page.dart';
 import '../IslamicFeatures/azan_alarm_page.dart';
@@ -374,7 +372,7 @@ class _HomeScreenState extends State<HomeScreen>
     FeatureItem(
       emoji: '📖',
       label: 'তিলাওয়াত',
-      onTap: () => _go(context, const SurahListPage()),
+      onTap: () => _go(context, const MushafPage()),
     ),
     FeatureItem(
       emoji: '🤲',
