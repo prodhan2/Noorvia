@@ -43,6 +43,8 @@ dependencies:
   adhan_dart: ^1.2.0
   hijri: ^3.0.0
   webview_flutter: ^4.10.0
+  webview_flutter_android: ^4.12.0
+  webview_flutter_wkwebview: ^3.25.1
 
 dev_dependencies:
   flutter_test:
