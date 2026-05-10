@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:noorvia/core/models/mosque.dart';
+import 'package:muslim_view/core/models/mosque.dart';
 
 /// Unit tests for Mosque Finder feature
 /// Run with: flutter test test/mosque_finder_test.dart
@@ -56,10 +56,7 @@ void main() {
       final json = {
         'lat': 23.8103,
         'lon': 90.4125,
-        'tags': {
-          'amenity': 'place_of_worship',
-          'religion': 'muslim',
-        },
+        'tags': {'amenity': 'place_of_worship', 'religion': 'muslim'},
       };
       final userLat = 23.8100;
       final userLon = 90.4120;
@@ -76,9 +73,7 @@ void main() {
       final json = {
         'lat': 23.8103,
         'lon': 90.4125,
-        'tags': {
-          'name': 'Test Mosque',
-        },
+        'tags': {'name': 'Test Mosque'},
       };
       final userLat = 23.8100;
       final userLon = 90.4120;
@@ -97,9 +92,7 @@ void main() {
       final json = {
         'lat': 23.8103,
         'lon': 90.4125,
-        'tags': {
-          'name': 'Test Mosque',
-        },
+        'tags': {'name': 'Test Mosque'},
       };
       final userLat = 23.8100;
       final userLon = 90.4120;
@@ -109,7 +102,10 @@ void main() {
       final formattedDistance = mosque.getFormattedDistance();
 
       // Assert
-      expect(formattedDistance, contains('মিটার')); // Should contain "meters" in Bengali
+      expect(
+        formattedDistance,
+        contains('মিটার'),
+      ); // Should contain "meters" in Bengali
     });
 
     test('Formatted distance should show kilometers for long distances', () {
@@ -117,9 +113,7 @@ void main() {
       final json = {
         'lat': 24.0000, // Far away location
         'lon': 91.0000,
-        'tags': {
-          'name': 'Test Mosque',
-        },
+        'tags': {'name': 'Test Mosque'},
       };
       final userLat = 23.8100;
       final userLon = 90.4120;
@@ -129,7 +123,10 @@ void main() {
       final formattedDistance = mosque.getFormattedDistance();
 
       // Assert
-      expect(formattedDistance, contains('কিলোমিটার')); // Should contain "kilometers" in Bengali
+      expect(
+        formattedDistance,
+        contains('কিলোমিটার'),
+      ); // Should contain "kilometers" in Bengali
     });
 
     test('Google Maps URL should be correctly formatted', () {
@@ -137,9 +134,7 @@ void main() {
       final json = {
         'lat': 23.8103,
         'lon': 90.4125,
-        'tags': {
-          'name': 'Test Mosque',
-        },
+        'tags': {'name': 'Test Mosque'},
       };
       final userLat = 23.8100;
       final userLon = 90.4120;
@@ -159,9 +154,7 @@ void main() {
       final json = {
         'lat': '23.8103', // String instead of double
         'lon': '90.4125', // String instead of double
-        'tags': {
-          'name': 'Test Mosque',
-        },
+        'tags': {'name': 'Test Mosque'},
       };
       final userLat = 23.8100;
       final userLon = 90.4120;
@@ -179,10 +172,7 @@ void main() {
       final json = {
         'lat': 23.8103,
         'lon': 90.4125,
-        'tags': {
-          'name': 'Test Mosque',
-          'addr:full': 'Dhaka, Bangladesh',
-        },
+        'tags': {'name': 'Test Mosque', 'addr:full': 'Dhaka, Bangladesh'},
       };
       final userLat = 23.8100;
       final userLon = 90.4120;
@@ -194,47 +184,52 @@ void main() {
       expect(mosque.address, 'Dhaka, Bangladesh');
     });
 
-    test('Haversine formula should calculate zero distance for same location', () {
-      // Arrange
-      final json = {
-        'lat': 23.8100,
-        'lon': 90.4120,
-        'tags': {
-          'name': 'Test Mosque',
-        },
-      };
-      final userLat = 23.8100;
-      final userLon = 90.4120;
+    test(
+      'Haversine formula should calculate zero distance for same location',
+      () {
+        // Arrange
+        final json = {
+          'lat': 23.8100,
+          'lon': 90.4120,
+          'tags': {'name': 'Test Mosque'},
+        };
+        final userLat = 23.8100;
+        final userLon = 90.4120;
 
-      // Act
-      final mosque = Mosque.fromJson(json, userLat, userLon);
+        // Act
+        final mosque = Mosque.fromJson(json, userLat, userLon);
 
-      // Assert
-      expect(mosque.distanceInMeters, lessThan(1)); // Should be very close to 0
-    });
+        // Assert
+        expect(
+          mosque.distanceInMeters,
+          lessThan(1),
+        ); // Should be very close to 0
+      },
+    );
   });
 
   group('Distance Calculation Tests', () {
-    test('Distance between Dhaka and Chittagong should be approximately 200km', () {
-      // Arrange
-      final json = {
-        'lat': 22.3569, // Chittagong
-        'lon': 91.7832,
-        'tags': {
-          'name': 'Test Mosque',
-        },
-      };
-      final userLat = 23.8103; // Dhaka
-      final userLon = 90.4125;
+    test(
+      'Distance between Dhaka and Chittagong should be approximately 200km',
+      () {
+        // Arrange
+        final json = {
+          'lat': 22.3569, // Chittagong
+          'lon': 91.7832,
+          'tags': {'name': 'Test Mosque'},
+        };
+        final userLat = 23.8103; // Dhaka
+        final userLon = 90.4125;
 
-      // Act
-      final mosque = Mosque.fromJson(json, userLat, userLon);
-      final distanceKm = mosque.distanceInMeters / 1000;
+        // Act
+        final mosque = Mosque.fromJson(json, userLat, userLon);
+        final distanceKm = mosque.distanceInMeters / 1000;
 
-      // Assert
-      expect(distanceKm, greaterThan(150)); // Should be more than 150km
-      expect(distanceKm, lessThan(250)); // Should be less than 250km
-    });
+        // Assert
+        expect(distanceKm, greaterThan(150)); // Should be more than 150km
+        expect(distanceKm, lessThan(250)); // Should be less than 250km
+      },
+    );
 
     test('Distance should be symmetric', () {
       // Arrange
@@ -303,9 +298,7 @@ void main() {
       final json = {
         'lat': -33.8688, // Sydney, Australia
         'lon': 151.2093,
-        'tags': {
-          'name': 'Test Mosque',
-        },
+        'tags': {'name': 'Test Mosque'},
       };
       final userLat = 23.8103; // Dhaka, Bangladesh
       final userLon = 90.4125;

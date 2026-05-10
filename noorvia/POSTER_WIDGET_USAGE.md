@@ -8,7 +8,7 @@
 ### সহজ উদাহরণ (Basic Usage):
 
 ```dart
-import 'package:noorvia/widgets/poster_carousel_widget.dart';
+import 'package:muslim_view/widgets/poster_carousel_widget.dart';
 
 // আপনার যেকোনো screen এ এভাবে ব্যবহার করুন:
 const PosterCarouselWidget()
@@ -42,7 +42,7 @@ const PosterCarouselWidget(
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:noorvia/widgets/poster_carousel_widget.dart';
+import 'package:muslim_view/widgets/poster_carousel_widget.dart';
 
 class HomeScreen extends StatelessWidget {
   @override
@@ -111,7 +111,7 @@ lib/
 
 1. আপনার screen এ import করুন:
 ```dart
-import 'package:noorvia/widgets/poster_carousel_widget.dart';
+import 'package:muslim_view/widgets/poster_carousel_widget.dart';
 ```
 
 2. যেখানে দেখাতে চান সেখানে add করুন:

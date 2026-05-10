@@ -14,7 +14,8 @@ class PrayerAlarmSettingsPage extends StatefulWidget {
   const PrayerAlarmSettingsPage({super.key});
 
   @override
-  State<PrayerAlarmSettingsPage> createState() => _PrayerAlarmSettingsPageState();
+  State<PrayerAlarmSettingsPage> createState() =>
+      _PrayerAlarmSettingsPageState();
 }
 
 class _PrayerAlarmSettingsPageState extends State<PrayerAlarmSettingsPage> {
@@ -30,7 +31,7 @@ class _PrayerAlarmSettingsPageState extends State<PrayerAlarmSettingsPage> {
   Future<void> _scheduleAlarms() async {
     final prayerProvider = context.read<PrayerProvider>();
     final alarmProvider = context.read<PrayerAlarmProvider>();
-    
+
     if (prayerProvider.prayerTimes != null) {
       await alarmProvider.scheduleAlarms({
         'fajr': prayerProvider.prayerTimes!.fajr,
@@ -86,8 +87,11 @@ class _PrayerAlarmSettingsPageState extends State<PrayerAlarmSettingsPage> {
                   ],
                 ),
                 leading: IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                      color: Colors.white, size: 20),
+                  icon: const Icon(
+                    Icons.arrow_back_ios_new_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                   onPressed: () => Navigator.pop(context),
                 ),
               ),
@@ -118,8 +122,11 @@ class _PrayerAlarmSettingsPageState extends State<PrayerAlarmSettingsPage> {
                             Expanded(
                               child: Row(
                                 children: [
-                                  const Icon(Icons.location_on_rounded,
-                                      color: AppColors.primary, size: 18),
+                                  const Icon(
+                                    Icons.location_on_rounded,
+                                    color: AppColors.primary,
+                                    size: 18,
+                                  ),
                                   const SizedBox(width: 6),
                                   Flexible(
                                     child: Text(
@@ -141,8 +148,11 @@ class _PrayerAlarmSettingsPageState extends State<PrayerAlarmSettingsPage> {
                             Expanded(
                               child: Row(
                                 children: [
-                                  const Icon(Icons.calendar_today_rounded,
-                                      color: AppColors.primary, size: 18),
+                                  const Icon(
+                                    Icons.calendar_today_rounded,
+                                    color: AppColors.primary,
+                                    size: 18,
+                                  ),
                                   const SizedBox(width: 6),
                                   Flexible(
                                     child: Text(
@@ -184,7 +194,8 @@ class _PrayerAlarmSettingsPageState extends State<PrayerAlarmSettingsPage> {
                         icon: Icons.wb_twilight_rounded,
                         enabled: settings.fajrEnabled,
                         preAlarmMinutes: settings.fajrPreAlarm,
-                        onToggle: (val) => alarmProvider.togglePrayerAlarm('ফজর', val),
+                        onToggle: (val) =>
+                            alarmProvider.togglePrayerAlarm('ফজর', val),
                         onPreAlarmChanged: (val) =>
                             alarmProvider.updatePreAlarmMinutes('ফজর', val),
                         onSchedule: _scheduleAlarms,
@@ -198,7 +209,8 @@ class _PrayerAlarmSettingsPageState extends State<PrayerAlarmSettingsPage> {
                         icon: Icons.wb_sunny_rounded,
                         enabled: settings.dhuhrEnabled,
                         preAlarmMinutes: settings.dhuhrPreAlarm,
-                        onToggle: (val) => alarmProvider.togglePrayerAlarm('যোহর', val),
+                        onToggle: (val) =>
+                            alarmProvider.togglePrayerAlarm('যোহর', val),
                         onPreAlarmChanged: (val) =>
                             alarmProvider.updatePreAlarmMinutes('যোহর', val),
                         onSchedule: _scheduleAlarms,
@@ -212,7 +224,8 @@ class _PrayerAlarmSettingsPageState extends State<PrayerAlarmSettingsPage> {
                         icon: Icons.wb_cloudy_rounded,
                         enabled: settings.asrEnabled,
                         preAlarmMinutes: settings.asrPreAlarm,
-                        onToggle: (val) => alarmProvider.togglePrayerAlarm('আসর', val),
+                        onToggle: (val) =>
+                            alarmProvider.togglePrayerAlarm('আসর', val),
                         onPreAlarmChanged: (val) =>
                             alarmProvider.updatePreAlarmMinutes('আসর', val),
                         onSchedule: _scheduleAlarms,
@@ -226,7 +239,8 @@ class _PrayerAlarmSettingsPageState extends State<PrayerAlarmSettingsPage> {
                         icon: Icons.nights_stay_rounded,
                         enabled: settings.maghribEnabled,
                         preAlarmMinutes: settings.maghribPreAlarm,
-                        onToggle: (val) => alarmProvider.togglePrayerAlarm('মাগরিব', val),
+                        onToggle: (val) =>
+                            alarmProvider.togglePrayerAlarm('মাগরিব', val),
                         onPreAlarmChanged: (val) =>
                             alarmProvider.updatePreAlarmMinutes('মাগরিব', val),
                         onSchedule: _scheduleAlarms,
@@ -240,7 +254,8 @@ class _PrayerAlarmSettingsPageState extends State<PrayerAlarmSettingsPage> {
                         icon: Icons.dark_mode_rounded,
                         enabled: settings.ishaEnabled,
                         preAlarmMinutes: settings.ishaPreAlarm,
-                        onToggle: (val) => alarmProvider.togglePrayerAlarm('ইশা', val),
+                        onToggle: (val) =>
+                            alarmProvider.togglePrayerAlarm('ইশা', val),
                         onPreAlarmChanged: (val) =>
                             alarmProvider.updatePreAlarmMinutes('ইশা', val),
                         onSchedule: _scheduleAlarms,
@@ -298,10 +313,7 @@ class _PrayerAlarmSettingsPageState extends State<PrayerAlarmSettingsPage> {
               children: [
                 const Text(
                   'আযান নির্বাচন করুন',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close_rounded),
@@ -316,11 +328,16 @@ class _PrayerAlarmSettingsPageState extends State<PrayerAlarmSettingsPage> {
             ),
             const SizedBox(height: 16),
             Card(
-              elevation: provider.settings?.selectedAzanPath == 'assets/audio/azan.mp3' ? 4 : 1,
+              elevation:
+                  provider.settings?.selectedAzanPath == 'assets/audio/azan.mp3'
+                  ? 4
+                  : 1,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
                 side: BorderSide(
-                  color: provider.settings?.selectedAzanPath == 'assets/audio/azan.mp3'
+                  color:
+                      provider.settings?.selectedAzanPath ==
+                          'assets/audio/azan.mp3'
                       ? AppColors.primary
                       : Colors.transparent,
                   width: 2,
@@ -331,34 +348,44 @@ class _PrayerAlarmSettingsPageState extends State<PrayerAlarmSettingsPage> {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: provider.settings?.selectedAzanPath == 'assets/audio/azan.mp3'
+                    color:
+                        provider.settings?.selectedAzanPath ==
+                            'assets/audio/azan.mp3'
                         ? AppColors.primary
                         : AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
-                    provider.settings?.selectedAzanPath == 'assets/audio/azan.mp3'
+                    provider.settings?.selectedAzanPath ==
+                            'assets/audio/azan.mp3'
                         ? Icons.check_circle
                         : Icons.music_note_rounded,
-                    color: provider.settings?.selectedAzanPath == 'assets/audio/azan.mp3'
+                    color:
+                        provider.settings?.selectedAzanPath ==
+                            'assets/audio/azan.mp3'
                         ? Colors.white
                         : AppColors.primary,
                     size: 24,
                   ),
                 ),
                 title: const Text(
-                  'নূরভিয়া আযান (স্থানীয়)',
+                  'মুসলিম ভিউ আযান (স্থানীয়)',
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
                 subtitle: const Text(
                   'lib/core/utils/azan.mp3',
                   style: TextStyle(fontSize: 12, color: Colors.grey),
                 ),
-                trailing: provider.settings?.selectedAzanPath == 'assets/audio/azan.mp3'
+                trailing:
+                    provider.settings?.selectedAzanPath ==
+                        'assets/audio/azan.mp3'
                     ? const Icon(Icons.check_circle, color: AppColors.primary)
                     : null,
                 onTap: () {
-                  provider.selectAzan('assets/audio/azan.mp3', 'নূরভিয়া আযান (স্থানীয়)');
+                  provider.selectAzan(
+                    'assets/audio/azan.mp3',
+                    'মুসলিম ভিউ আযান (স্থানীয়)',
+                  );
                   Navigator.pop(context);
                 },
               ),
@@ -484,10 +511,7 @@ class _PrayerAlarmCard extends StatelessWidget {
                     ),
                     Text(
                       _formatTime(prayerTime),
-                      style: TextStyle(
-                        color: subColor,
-                        fontSize: 13,
-                      ),
+                      style: TextStyle(color: subColor, fontSize: 13),
                     ),
                   ],
                 ),
@@ -516,7 +540,10 @@ class _PrayerAlarmCard extends StatelessWidget {
                 ),
                 const Spacer(),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
@@ -554,8 +581,14 @@ class _PrayerAlarmCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('০ মিনিট', style: TextStyle(color: subColor, fontSize: 11)),
-                Text('৬০ মিনিট', style: TextStyle(color: subColor, fontSize: 11)),
+                Text(
+                  '০ মিনিট',
+                  style: TextStyle(color: subColor, fontSize: 11),
+                ),
+                Text(
+                  '৬০ মিনিট',
+                  style: TextStyle(color: subColor, fontSize: 11),
+                ),
               ],
             ),
           ],
@@ -626,8 +659,11 @@ class _AzanSelectionCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.music_note_rounded,
-                  color: AppColors.primary, size: 20),
+              const Icon(
+                Icons.music_note_rounded,
+                color: AppColors.primary,
+                size: 20,
+              ),
               const SizedBox(width: 8),
               Text(
                 'আযান নির্বাচন',
@@ -657,14 +693,14 @@ class _AzanSelectionCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       selectedAzan,
-                      style: TextStyle(
-                        color: textColor,
-                        fontSize: 14,
-                      ),
+                      style: TextStyle(color: textColor, fontSize: 14),
                     ),
                   ),
-                  const Icon(Icons.arrow_forward_ios_rounded,
-                      color: AppColors.primary, size: 16),
+                  const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    color: AppColors.primary,
+                    size: 16,
+                  ),
                 ],
               ),
             ),
@@ -716,10 +752,7 @@ class _VolumeControlCard extends StatelessWidget {
   final double volume;
   final Function(double) onChanged;
 
-  const _VolumeControlCard({
-    required this.volume,
-    required this.onChanged,
-  });
+  const _VolumeControlCard({required this.volume, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -746,8 +779,11 @@ class _VolumeControlCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.volume_up_rounded,
-                  color: AppColors.primary, size: 20),
+              const Icon(
+                Icons.volume_up_rounded,
+                color: AppColors.primary,
+                size: 20,
+              ),
               const SizedBox(width: 8),
               Text(
                 'ভলিউম',
@@ -788,10 +824,7 @@ class _VibrationToggleCard extends StatelessWidget {
   final bool enabled;
   final Function(bool) onToggle;
 
-  const _VibrationToggleCard({
-    required this.enabled,
-    required this.onToggle,
-  });
+  const _VibrationToggleCard({required this.enabled, required this.onToggle});
 
   @override
   Widget build(BuildContext context) {
@@ -815,8 +848,11 @@ class _VibrationToggleCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.vibration_rounded,
-              color: AppColors.primary, size: 20),
+          const Icon(
+            Icons.vibration_rounded,
+            color: AppColors.primary,
+            size: 20,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -832,10 +868,7 @@ class _VibrationToggleCard extends StatelessWidget {
                 ),
                 Text(
                   'আযানের সাথে ভাইব্রেশন চালু করুন',
-                  style: TextStyle(
-                    color: subColor,
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: subColor, fontSize: 12),
                 ),
               ],
             ),

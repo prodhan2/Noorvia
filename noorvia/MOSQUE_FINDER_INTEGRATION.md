@@ -19,7 +19,7 @@ All the necessary files have been created:
 In any screen where you want to add the mosque finder button, add this import:
 
 ```dart
-import 'package:noorvia/widgets/amar_mosjid_button.dart';
+import 'package:muslim_view/widgets/amar_mosjid_button.dart';
 ```
 
 ### Step 2: Add the Button
@@ -261,14 +261,14 @@ After integration, test these scenarios:
 
 **Solution**: Make sure you imported the widget:
 ```dart
-import 'package:noorvia/widgets/amar_mosjid_button.dart';
+import 'package:muslim_view/widgets/amar_mosjid_button.dart';
 ```
 
 ### Issue: "Cannot find NearbyMosquesScreen"
 
 **Solution**: Import the screen:
 ```dart
-import 'package:noorvia/screens/location/nearby_mosques_screen.dart';
+import 'package:muslim_view/screens/location/nearby_mosques_screen.dart';
 ```
 
 ### Issue: Location permission not working

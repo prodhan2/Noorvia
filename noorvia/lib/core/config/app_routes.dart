@@ -1,5 +1,5 @@
 // ============================================================
-//  app_routes.dart  —  Noorvia centralized route & menu config
+//  app_routes.dart  —  Muslim View centralized route & menu config
 //
 //  নতুন পেজ যোগ করতে মাত্র ৩টি কাজ:
 //    1. AppRoute enum-এ নাম যোগ করুন

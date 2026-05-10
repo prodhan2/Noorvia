@@ -63,14 +63,15 @@ class _MainShellState extends State<MainShell> {
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(appBarH),
-          child: _NoorviaAppBar(isDark: isDark, theme: theme, appBarHeight: appBarH),
+          child: _MuslimViewAppBar(
+            isDark: isDark,
+            theme: theme,
+            appBarHeight: appBarH,
+          ),
         ),
-        drawer: _NoorviaDrawer(isDark: isDark, theme: theme),
-      body: IndexedStack(
-          index: nav.currentIndex,
-          children: _pages,
-        ),
-        bottomNavigationBar: _NoorviaBottomNav(isDark: isDark),
+        drawer: _MuslimViewDrawer(isDark: isDark, theme: theme),
+        body: IndexedStack(index: nav.currentIndex, children: _pages),
+        bottomNavigationBar: _MuslimViewBottomNav(isDark: isDark),
       ),
     );
   }
@@ -79,12 +80,12 @@ class _MainShellState extends State<MainShell> {
 // ─────────────────────────────────────────────────────────────
 // AppBar
 // ─────────────────────────────────────────────────────────────
-class _NoorviaAppBar extends StatelessWidget implements PreferredSizeWidget {
+class _MuslimViewAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool isDark;
   final ThemeProvider theme;
   final double appBarHeight;
 
-  const _NoorviaAppBar({
+  const _MuslimViewAppBar({
     required this.isDark,
     required this.theme,
     required this.appBarHeight,
@@ -118,12 +119,7 @@ class _NoorviaAppBar extends StatelessWidget implements PreferredSizeWidget {
               ),
             ],
           ),
-          padding: EdgeInsets.only(
-            top: topPad,
-            left: 12,
-            right: 12,
-            bottom: 8,
-          ),
+          padding: EdgeInsets.only(top: topPad, left: 12, right: 12, bottom: 8),
           child: Row(
             children: [
               // ── Hamburger + Brand ────────────────────────────
@@ -144,8 +140,11 @@ class _NoorviaAppBar extends StatelessWidget implements PreferredSizeWidget {
                             width: 1.2,
                           ),
                         ),
-                        child: const Icon(Icons.menu,
-                            color: Colors.white, size: 20),
+                        child: const Icon(
+                          Icons.menu,
+                          color: Colors.white,
+                          size: 20,
+                        ),
                       ),
                       if (!isSmall) ...[
                         const SizedBox(width: 8),
@@ -154,7 +153,7 @@ class _NoorviaAppBar extends StatelessWidget implements PreferredSizeWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              'নূরভিয়া',
+                              'মুসলিম ভিউ',
                               style: settings.banglaFont.style(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w800,
@@ -162,7 +161,7 @@ class _NoorviaAppBar extends StatelessWidget implements PreferredSizeWidget {
                               ),
                             ),
                             const Text(
-                              'Noorvia',
+                              'Muslim View',
                               style: TextStyle(
                                 fontSize: 9,
                                 color: Colors.white70,
@@ -187,8 +186,10 @@ class _NoorviaAppBar extends StatelessWidget implements PreferredSizeWidget {
                   MaterialPageRoute(builder: (_) => const LocationScreen()),
                 ),
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(20),
@@ -205,13 +206,20 @@ class _NoorviaAppBar extends StatelessWidget implements PreferredSizeWidget {
                               width: 10,
                               height: 10,
                               child: CircularProgressIndicator(
-                                  strokeWidth: 1.5, color: Colors.white))
-                          : const Icon(Icons.location_on_outlined,
-                              color: Colors.white, size: 12),
+                                strokeWidth: 1.5,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(
+                              Icons.location_on_outlined,
+                              color: Colors.white,
+                              size: 12,
+                            ),
                       const SizedBox(width: 3),
                       ConstrainedBox(
-                        constraints:
-                            BoxConstraints(maxWidth: isSmall ? 60 : 80),
+                        constraints: BoxConstraints(
+                          maxWidth: isSmall ? 60 : 80,
+                        ),
                         child: Text(
                           prayer.cityDisplayName,
                           style: settings.banglaFont.style(
@@ -222,8 +230,11 @@ class _NoorviaAppBar extends StatelessWidget implements PreferredSizeWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const Icon(Icons.keyboard_arrow_down,
-                          color: Colors.white, size: 14),
+                      const Icon(
+                        Icons.keyboard_arrow_down,
+                        color: Colors.white,
+                        size: 14,
+                      ),
                     ],
                   ),
                 ),
@@ -235,8 +246,7 @@ class _NoorviaAppBar extends StatelessWidget implements PreferredSizeWidget {
               GestureDetector(
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(
-                      builder: (_) => const NotificationScreen()),
+                  MaterialPageRoute(builder: (_) => const NotificationScreen()),
                 ),
                 child: Stack(
                   clipBehavior: Clip.none,
@@ -252,42 +262,54 @@ class _NoorviaAppBar extends StatelessWidget implements PreferredSizeWidget {
                           width: 1.4,
                         ),
                       ),
-                      child: const Icon(Icons.notifications_outlined,
-                          size: 18, color: Colors.white),
+                      child: const Icon(
+                        Icons.notifications_outlined,
+                        size: 18,
+                        color: Colors.white,
+                      ),
                     ),
                     // Badge — real count from NotificationProvider
-                    Builder(builder: (ctx) {
-                      final count =
-                          ctx.watch<NotificationProvider>().notifications.length;
-                      if (count == 0) return const SizedBox.shrink();
-                      final display =
-                          count > 99 ? '৯৯+' : _toBanglaNum(count);
-                      return Positioned(
-                        top: -3,
-                        right: -3,
-                        child: Container(
-                          constraints: const BoxConstraints(
-                              minWidth: 17, minHeight: 17),
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 3),
-                          decoration: BoxDecoration(
-                            color: AppColors.notifRed,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                                color: Colors.white, width: 1.5),
-                          ),
-                          child: Center(
-                            child: Text(
-                              display,
-                              style: const TextStyle(
+                    Builder(
+                      builder: (ctx) {
+                        final count = ctx
+                            .watch<NotificationProvider>()
+                            .notifications
+                            .length;
+                        if (count == 0) return const SizedBox.shrink();
+                        final display = count > 99
+                            ? '৯৯+'
+                            : _toBanglaNum(count);
+                        return Positioned(
+                          top: -3,
+                          right: -3,
+                          child: Container(
+                            constraints: const BoxConstraints(
+                              minWidth: 17,
+                              minHeight: 17,
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 3),
+                            decoration: BoxDecoration(
+                              color: AppColors.notifRed,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                display,
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 8,
-                                  fontWeight: FontWeight.bold),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      );
-                    }),
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -310,8 +332,11 @@ class _NoorviaAppBar extends StatelessWidget implements PreferredSizeWidget {
                       width: 1.4,
                     ),
                   ),
-                  child: const Icon(Icons.settings_outlined,
-                      color: Colors.white, size: 18),
+                  child: const Icon(
+                    Icons.settings_outlined,
+                    color: Colors.white,
+                    size: 18,
+                  ),
                 ),
               ),
             ],
@@ -323,11 +348,7 @@ class _NoorviaAppBar extends StatelessWidget implements PreferredSizeWidget {
           height: 2,
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                Color(0xFFFF4444),
-                Color(0xFFFF8C8C),
-                Color(0xFFFF4444),
-              ],
+              colors: [Color(0xFFFF4444), Color(0xFFFF8C8C), Color(0xFFFF4444)],
             ),
           ),
         ),
@@ -339,11 +360,11 @@ class _NoorviaAppBar extends StatelessWidget implements PreferredSizeWidget {
 // ─────────────────────────────────────────────────────────────
 // Drawer  — AppRoutes.drawer থেকে auto-build হয়
 // ─────────────────────────────────────────────────────────────
-class _NoorviaDrawer extends StatelessWidget {
+class _MuslimViewDrawer extends StatelessWidget {
   final bool isDark;
   final ThemeProvider theme;
 
-  const _NoorviaDrawer({required this.isDark, required this.theme});
+  const _MuslimViewDrawer({required this.isDark, required this.theme});
 
   @override
   Widget build(BuildContext context) {
@@ -379,7 +400,7 @@ class _NoorviaDrawer extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'নূরভিয়া',
+                            'মুসলিম ভিউ',
                             style: settings.banglaFont.style(
                               fontSize: 24,
                               fontWeight: FontWeight.w700,
@@ -387,7 +408,7 @@ class _NoorviaDrawer extends StatelessWidget {
                             ),
                           ),
                           const Text(
-                            'Noorvia',
+                            'Muslim View',
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.white70,
@@ -402,7 +423,9 @@ class _NoorviaDrawer extends StatelessWidget {
                   Text(
                     'ইসলামিক জীবনযাপনের সঙ্গী',
                     style: settings.banglaFont.style(
-                        fontSize: 13, color: Colors.white70),
+                      fontSize: 13,
+                      color: Colors.white70,
+                    ),
                   ),
                 ],
               ),
@@ -415,8 +438,8 @@ class _NoorviaDrawer extends StatelessWidget {
                 children: [
                   // Main nav items
                   ...AppRoutes.drawer.map((cfg) {
-                    final isActive = context.watch<NavProvider>().current ==
-                        cfg.route;
+                    final isActive =
+                        context.watch<NavProvider>().current == cfg.route;
                     return _DrawerItem(
                       icon: cfg.effectiveDrawerIcon,
                       label: cfg.label,
@@ -505,13 +528,17 @@ class _NoorviaDrawer extends StatelessWidget {
                           ? 'অটো মোড (চালু)'
                           : (theme.isDark ? 'দিনের মোড' : 'রাতের মোড'),
                       style: settings.banglaFont.style(
-                          color: textColor, fontSize: 15),
+                        color: textColor,
+                        fontSize: 15,
+                      ),
                     ),
                     subtitle: theme.autoMode
                         ? Text(
                             'সময় অনুযায়ী স্বয়ংক্রিয়',
                             style: settings.banglaFont.style(
-                                color: AppColors.primary, fontSize: 11),
+                              color: AppColors.primary,
+                              fontSize: 11,
+                            ),
                           )
                         : null,
                     trailing: Row(
@@ -523,7 +550,9 @@ class _NoorviaDrawer extends StatelessWidget {
                             onTap: () => theme.enableAutoMode(),
                             child: Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: AppColors.primary.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
@@ -557,7 +586,9 @@ class _NoorviaDrawer extends StatelessWidget {
               child: Text(
                 'সংস্করণ ১.০.০',
                 style: settings.banglaFont.style(
-                    color: Colors.grey, fontSize: 12),
+                  color: Colors.grey,
+                  fontSize: 12,
+                ),
               ),
             ),
           ],
@@ -570,10 +601,10 @@ class _NoorviaDrawer extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────
 // Bottom Nav  — AppRoutes.navbar থেকে auto-build হয়
 // ─────────────────────────────────────────────────────────────
-class _NoorviaBottomNav extends StatelessWidget {
+class _MuslimViewBottomNav extends StatelessWidget {
   final bool isDark;
 
-  const _NoorviaBottomNav({required this.isDark});
+  const _MuslimViewBottomNav({required this.isDark});
 
   @override
   Widget build(BuildContext context) {
@@ -633,7 +664,9 @@ class _NoorviaBottomNav extends StatelessWidget {
                         duration: const Duration(milliseconds: 220),
                         padding: isSelected
                             ? const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 5)
+                                horizontal: 14,
+                                vertical: 5,
+                              )
                             : EdgeInsets.zero,
                         decoration: BoxDecoration(
                           gradient: isSelected ? AppColors.gradient : null,
@@ -642,11 +675,12 @@ class _NoorviaBottomNav extends StatelessWidget {
                           boxShadow: isSelected
                               ? [
                                   BoxShadow(
-                                    color: AppColors.primary
-                                        .withValues(alpha: 0.30),
+                                    color: AppColors.primary.withValues(
+                                      alpha: 0.30,
+                                    ),
                                     blurRadius: 8,
                                     offset: const Offset(0, 3),
-                                  )
+                                  ),
                                 ]
                               : null,
                         ),
@@ -655,8 +689,8 @@ class _NoorviaBottomNav extends StatelessWidget {
                           color: isSelected
                               ? Colors.white
                               : (isDark
-                                  ? AppColors.darkSubText
-                                  : AppColors.lightSubText),
+                                    ? AppColors.darkSubText
+                                    : AppColors.lightSubText),
                           size: 22,
                         ),
                       ),
@@ -671,8 +705,8 @@ class _NoorviaBottomNav extends StatelessWidget {
                           color: isSelected
                               ? AppColors.primary
                               : (isDark
-                                  ? AppColors.darkSubText
-                                  : AppColors.lightSubText),
+                                    ? AppColors.darkSubText
+                                    : AppColors.lightSubText),
                         ),
                       ),
                     ],
@@ -722,7 +756,9 @@ class _DrawerItem extends StatelessWidget {
     return ListTile(
       leading: Icon(
         icon,
-        color: isActive ? AppColors.primary : AppColors.primary.withValues(alpha: 0.7),
+        color: isActive
+            ? AppColors.primary
+            : AppColors.primary.withValues(alpha: 0.7),
         size: 22,
       ),
       title: Text(
@@ -792,7 +828,7 @@ class _ExitDialog extends StatelessWidget {
                   const Text('🕌', style: TextStyle(fontSize: 40)),
                   const SizedBox(height: 8),
                   Text(
-                    'নূরভিয়া',
+                    'মুসলিম ভিউ',
                     style: settings.banglaFont.style(
                       fontSize: 20,
                       fontWeight: FontWeight.w800,
@@ -819,7 +855,7 @@ class _ExitDialog extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'আপনি কি সত্যিই নূরভিয়া বন্ধ করতে চান?\nআল্লাহ আপনার সাথে থাকুন। 🤲',
+                    'আপনি কি সত্যিই মুসলিম ভিউ বন্ধ করতে চান?\nআল্লাহ আপনার সাথে থাকুন। 🤲',
                     style: settings.banglaFont.style(
                       fontSize: 13,
                       color: subColor,

@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Noorvia is a Flutter-based Islamic app with a Bengali UI, offering features such as prayer times, Ramadan calendar, Quran reading, Qibla direction, Asmaul Husna, Tasbih counter, and more. The app currently uses an emerald-green color palette (`AppColors.primary`, `_kEmerald`, `_kGreen1`, `_QColors.teal`, etc.) defined across multiple files.
+Muslim View is a Flutter-based Islamic app with a Bengali UI, offering features such as prayer times, Ramadan calendar, Quran reading, Qibla direction, Asmaul Husna, Tasbih counter, and more. The app currently uses an emerald-green color palette (`AppColors.primary`, `_kEmerald`, `_kGreen1`, `_QColors.teal`, etc.) defined across multiple files.
 
 This feature replaces the entire app's color theme with a premium purple-to-blue gradient (`#6A11CB` → `#2575FC`) applied selectively to key surfaces — top headers, hero sections, active prayer highlights, and important banners — while keeping the overall background light and minimal. Content cards remain white with soft shadows and rounded corners, creating a calm, spiritual, and modern Islamic app aesthetic.
 

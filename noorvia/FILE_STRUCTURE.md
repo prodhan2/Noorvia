@@ -9,7 +9,7 @@ This document shows all files created for the "আমার মসজিদ" (Am
 ## 📂 Project Structure
 
 ```
-noorvia/
+muslim_view/
 │
 ├── 📄 Documentation Files (Root Directory)
 │   ├── MOSQUE_FINDER_GUIDE.md          ← Complete technical guide
@@ -246,28 +246,28 @@ http: ^1.2.2             # API calls to OpenStreetMap
 
 ### For Using the Button
 ```dart
-import 'package:noorvia/widgets/amar_mosjid_button.dart';
+import 'package:muslim_view/widgets/amar_mosjid_button.dart';
 ```
 
 ### For Direct Navigation
 ```dart
-import 'package:noorvia/screens/location/nearby_mosques_screen.dart';
+import 'package:muslim_view/screens/location/nearby_mosques_screen.dart';
 ```
 
 ### For Demo/Testing
 ```dart
-import 'package:noorvia/screens/location/mosque_finder_demo.dart';
+import 'package:muslim_view/screens/location/mosque_finder_demo.dart';
 ```
 
 ### For Examples
 ```dart
-import 'package:noorvia/screens/location/mosque_finder_example.dart';
+import 'package:muslim_view/screens/location/mosque_finder_example.dart';
 ```
 
 ### For Custom Implementation
 ```dart
-import 'package:noorvia/core/models/mosque.dart';
-import 'package:noorvia/core/services/mosque_service.dart';
+import 'package:muslim_view/core/models/mosque.dart';
+import 'package:muslim_view/core/services/mosque_service.dart';
 ```
 
 ---
@@ -374,7 +374,7 @@ NearbyMosquesScreen
 
 ### To Integrate
 1. Open your target screen
-2. Import: `import 'package:noorvia/widgets/amar_mosjid_button.dart';`
+2. Import: `import 'package:muslim_view/widgets/amar_mosjid_button.dart';`
 3. Add: `AmarMosjidButton()`
 4. Done!
 

@@ -6,7 +6,7 @@
 
 // Local azan asset path
 const String kLocalAzanPath = 'audio/azan.mp3';
-const String kLocalAzanName = 'নূরভিয়া আযান';
+const String kLocalAzanName = 'মুসলিম ভিউ আযান';
 
 class PrayerAlarmSettings {
   // Individual prayer alarm enabled/disabled
@@ -34,7 +34,7 @@ class PrayerAlarmSettings {
   bool vibrationEnabled;
 
   PrayerAlarmSettings({
-    this.fajrEnabled = false,   // default OFF — user must enable
+    this.fajrEnabled = false, // default OFF — user must enable
     this.dhuhrEnabled = false,
     this.asrEnabled = false,
     this.maghribEnabled = false,
@@ -52,21 +52,21 @@ class PrayerAlarmSettings {
 
   // Convert to JSON for storage
   Map<String, dynamic> toJson() => {
-        'fajrEnabled': fajrEnabled,
-        'dhuhrEnabled': dhuhrEnabled,
-        'asrEnabled': asrEnabled,
-        'maghribEnabled': maghribEnabled,
-        'ishaEnabled': ishaEnabled,
-        'fajrPreAlarm': fajrPreAlarm,
-        'dhuhrPreAlarm': dhuhrPreAlarm,
-        'asrPreAlarm': asrPreAlarm,
-        'maghribPreAlarm': maghribPreAlarm,
-        'ishaPreAlarm': ishaPreAlarm,
-        'selectedAzanPath': selectedAzanPath,
-        'selectedAzanName': selectedAzanName,
-        'volume': volume,
-        'vibrationEnabled': vibrationEnabled,
-      };
+    'fajrEnabled': fajrEnabled,
+    'dhuhrEnabled': dhuhrEnabled,
+    'asrEnabled': asrEnabled,
+    'maghribEnabled': maghribEnabled,
+    'ishaEnabled': ishaEnabled,
+    'fajrPreAlarm': fajrPreAlarm,
+    'dhuhrPreAlarm': dhuhrPreAlarm,
+    'asrPreAlarm': asrPreAlarm,
+    'maghribPreAlarm': maghribPreAlarm,
+    'ishaPreAlarm': ishaPreAlarm,
+    'selectedAzanPath': selectedAzanPath,
+    'selectedAzanName': selectedAzanName,
+    'volume': volume,
+    'vibrationEnabled': vibrationEnabled,
+  };
 
   // Create from JSON
   factory PrayerAlarmSettings.fromJson(Map<String, dynamic> json) {
@@ -190,4 +190,3 @@ class PrayerAlarmSettings {
 // ============================================================
 // Online Azan List - removed (using local asset only)
 // ============================================================
-

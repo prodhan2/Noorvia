@@ -4,7 +4,7 @@
 
 ### Step 1: Import
 ```dart
-import 'package:noorvia/widgets/amar_mosjid_button.dart';
+import 'package:muslim_view/widgets/amar_mosjid_button.dart';
 ```
 
 ### Step 2: Add Button
@@ -41,7 +41,7 @@ GridView(
 
 ### Navigation Drawer
 ```dart
-import 'package:noorvia/screens/location/nearby_mosques_screen.dart';
+import 'package:muslim_view/screens/location/nearby_mosques_screen.dart';
 
 ListTile(
   leading: Icon(Icons.mosque),
@@ -59,7 +59,7 @@ ListTile(
 
 ### Run Demo Screen
 ```dart
-import 'package:noorvia/screens/location/mosque_finder_demo.dart';
+import 'package:muslim_view/screens/location/mosque_finder_demo.dart';
 
 Navigator.push(
   context,

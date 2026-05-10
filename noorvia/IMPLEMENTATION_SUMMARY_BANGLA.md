@@ -149,7 +149,7 @@
 │                                 │
 │ [▶️ আযান শুনুন] [✖️ বন্ধ করুন]│
 │                                 │
-│ নূরভিয়া - ইসলামিক অ্যাপ       │
+│ মুসলিম ভিউ - ইসলামিক অ্যাপ       │
 └─────────────────────────────────┘
 ```
 
@@ -217,11 +217,11 @@ flutter run
 - ইন্টারনেট কানেকশন চেক করুন
 
 **নোটিফিকেশন আসছে না?**
-- Settings > Apps > Noorvia > Notifications
+- Settings > Apps > Muslim View > Notifications
 - Allow notifications চালু করুন
 
 **অ্যালার্ম কাজ করছে না?**
-- Settings > Apps > Noorvia > Battery
+- Settings > Apps > Muslim View > Battery
 - "Unrestricted" সিলেক্ট করুন
 
 ---

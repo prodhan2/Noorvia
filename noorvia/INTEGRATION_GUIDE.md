@@ -70,7 +70,7 @@ Drawer(
 import 'screens/IslamicFeatures/prayer_times_navigation.dart';
 
 AppBar(
-  title: Text('নূরভিয়া'),
+  title: Text('মুসলিম ভিউ'),
   actions: [
     PrayerTimesIconButton(),
     PrayerAlarmIconButton(),

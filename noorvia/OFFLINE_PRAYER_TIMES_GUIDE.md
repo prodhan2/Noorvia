@@ -45,7 +45,7 @@ dependencies:
 ### Basic Usage:
 
 ```dart
-import 'package:noorvia/widgets/offline_prayer_times_widget.dart';
+import 'package:muslim_view/widgets/offline_prayer_times_widget.dart';
 
 // In your widget:
 OfflinePrayerTimesWidget(
@@ -58,7 +58,7 @@ OfflinePrayerTimesWidget(
 ### Get Prayer Times Programmatically:
 
 ```dart
-import 'package:noorvia/services/adhan_service.dart';
+import 'package:muslim_view/services/adhan_service.dart';
 
 // Get prayer times in Bengali
 final prayerTimes = AdhanService.getPrayerTimesBengali(
@@ -277,7 +277,7 @@ OfflinePrayerTimesWidget(
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:noorvia/widgets/offline_prayer_times_widget.dart';
+import 'package:muslim_view/widgets/offline_prayer_times_widget.dart';
 
 class HomeScreen extends StatelessWidget {
   @override

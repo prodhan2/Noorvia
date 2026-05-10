@@ -92,7 +92,7 @@
 ### 1. Add the Button (2 lines of code)
 
 ```dart
-import 'package:noorvia/widgets/amar_mosjid_button.dart';
+import 'package:muslim_view/widgets/amar_mosjid_button.dart';
 
 // In your widget:
 AmarMosjidButton()
@@ -105,7 +105,7 @@ That's it! The feature is ready to use.
 ### 3. Test with Demo
 
 ```dart
-import 'package:noorvia/screens/location/mosque_finder_demo.dart';
+import 'package:muslim_view/screens/location/mosque_finder_demo.dart';
 
 Navigator.push(
   context,
@@ -171,7 +171,7 @@ Add to `ios/Runner/Info.plist`:
 ### Option 1: Use the Button Widget (Recommended)
 
 ```dart
-import 'package:noorvia/widgets/amar_mosjid_button.dart';
+import 'package:muslim_view/widgets/amar_mosjid_button.dart';
 
 // Full-width card button
 AmarMosjidButton()
@@ -183,7 +183,7 @@ AmarMosjidButton(isCompact: true)
 ### Option 2: Direct Navigation
 
 ```dart
-import 'package:noorvia/screens/location/nearby_mosques_screen.dart';
+import 'package:muslim_view/screens/location/nearby_mosques_screen.dart';
 
 Navigator.push(
   context,
@@ -196,8 +196,8 @@ Navigator.push(
 ### Option 3: Custom Implementation
 
 ```dart
-import 'package:noorvia/core/services/mosque_service.dart';
-import 'package:noorvia/core/models/mosque.dart';
+import 'package:muslim_view/core/services/mosque_service.dart';
+import 'package:muslim_view/core/models/mosque.dart';
 
 final service = MosqueService();
 final mosques = await service.getNearbyMosques(radiusInMeters: 5000);
@@ -375,7 +375,7 @@ return await Geolocator.getCurrentPosition(
 ### Run Demo Screen
 
 ```dart
-import 'package:noorvia/screens/location/mosque_finder_demo.dart';
+import 'package:muslim_view/screens/location/mosque_finder_demo.dart';
 
 // Test all features
 Navigator.push(
@@ -512,7 +512,7 @@ flutter test
 
 ## 📄 License
 
-This project is part of the Noorvia app. Use it freely in your projects.
+This project is part of the Muslim View app. Use it freely in your projects.
 
 ---
 
@@ -536,9 +536,9 @@ This project is part of the Noorvia app. Use it freely in your projects.
 
 ### Contact
 
-- **Email**: support@noorvia.com
-- **Website**: https://noorvia.com
-- **GitHub**: https://github.com/noorvia
+- **Email**: support@muslimview.com
+- **Website**: https://muslimview.com
+- **GitHub**: https://github.com/muslim-view
 
 ---
 

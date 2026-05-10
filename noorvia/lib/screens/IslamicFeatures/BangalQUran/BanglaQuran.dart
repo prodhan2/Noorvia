@@ -83,7 +83,7 @@ Future<bool> _fetchAndCacheSurahs(SharedPreferences prefs) async {
   }
 }
 
-// ─── QuranApp (standalone entry — not used inside Noorvia shell) ─
+// ─── QuranApp (standalone entry — not used inside Muslim View shell) ─
 class QuranApp extends StatelessWidget {
   const QuranApp({super.key});
   @override

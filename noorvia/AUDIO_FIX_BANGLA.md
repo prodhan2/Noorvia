@@ -53,7 +53,7 @@ flutter run
 2. `azan1.mp3` ফাইল সেখানে কপি করুন
 
 ```
-noorvia/
+muslim_view/
   ├── assets/
   │   └── audio/
   │       └── azan1.mp3  ← এখানে রাখুন

@@ -31,10 +31,10 @@ class IslamicDashboardExample extends StatelessWidget {
         children: [
           // ── নামাজের সময় কার্ড ──
           PrayerTimesCard(),
-          
+
           // ── আযান সেটিংস কার্ড ──
           PrayerAlarmCard(),
-          
+
           // আপনার অন্যান্য কার্ড...
           _buildDummyCard('কুরআন', Icons.book_rounded),
           _buildDummyCard('হাদিস', Icons.menu_book_rounded),
@@ -79,11 +79,11 @@ class IslamicFeaturesListExample extends StatelessWidget {
           // ── নামাজের সময় কার্ড ──
           PrayerTimesCard(),
           const SizedBox(height: 16),
-          
+
           // ── আযান সেটিংস কার্ড ──
           PrayerAlarmCard(),
           const SizedBox(height: 16),
-          
+
           // আপনার অন্যান্য items...
           _buildListItem('কুরআন', Icons.book_rounded),
           _buildListItem('হাদিস', Icons.menu_book_rounded),
@@ -128,7 +128,7 @@ class DrawerExample extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Text(
-                  'নূরভিয়া',
+                  'মুসলিম ভিউ',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 24,
@@ -143,15 +143,15 @@ class DrawerExample extends StatelessWidget {
               ],
             ),
           ),
-          
+
           // ── নামাজের সময় ──
           PrayerTimesListTile(),
-          
+
           // ── আযান সেটিংস ──
           PrayerAlarmListTile(),
-          
+
           const Divider(),
-          
+
           // আপনার অন্যান্য menu items...
           ListTile(
             leading: const Icon(Icons.book_rounded),
@@ -196,7 +196,7 @@ class CustomButtonExample extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            
+
             // ── আযান সেটিংস বাটন ──
             ElevatedButton.icon(
               onPressed: () => navigateToPrayerAlarmSettings(context),

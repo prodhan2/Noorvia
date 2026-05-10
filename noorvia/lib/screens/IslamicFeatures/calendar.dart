@@ -12,7 +12,7 @@ import '../../core/theme/gradient_helper.dart';
 import '../../core/providers/theme_provider.dart';
 
 // ═══════════════════════════════════════════════════════════════
-//  Prayer Times Calendar  —  Noorvia Islamic App
+//  Prayer Times Calendar  —  Muslim View Islamic App
 //  API: https://api.aladhan.com/v1/calendarByCity
 // ═══════════════════════════════════════════════════════════════
 

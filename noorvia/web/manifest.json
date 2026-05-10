@@ -1,11 +1,11 @@
 {
-    "name": "noorvia",
-    "short_name": "noorvia",
+    "name": "Muslim View",
+    "short_name": "Muslim View",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Muslim View - Islamic App in Bangla.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

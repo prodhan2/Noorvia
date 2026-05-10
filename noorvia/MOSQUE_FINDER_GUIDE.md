@@ -376,7 +376,7 @@ To improve mosque data:
 
 ## 📝 License
 
-This code is part of the Noorvia app. Use it freely in your projects.
+This code is part of the Muslim View app. Use it freely in your projects.
 
 ## 🙏 Credits
 

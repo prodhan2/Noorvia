@@ -135,7 +135,7 @@ Desktop অ্যাপে CORS সমস্যা কম হয়।
 
 ### ধাপ ২: প্রজেক্টে রাখুন
 ```
-noorvia/
+muslim_view/
   └── assets/
       └── audio/
           └── azan1.mp3  ← এখানে রাখুন

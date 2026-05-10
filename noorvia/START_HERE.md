@@ -21,7 +21,7 @@ A **complete, production-ready Flutter feature** to find nearby mosques with:
 
 ### 1. Import
 ```dart
-import 'package:noorvia/widgets/amar_mosjid_button.dart';
+import 'package:muslim_view/widgets/amar_mosjid_button.dart';
 ```
 
 ### 2. Add
@@ -117,7 +117,7 @@ test/
 Run the demo to see it in action:
 
 ```dart
-import 'package:noorvia/screens/location/mosque_finder_demo.dart';
+import 'package:muslim_view/screens/location/mosque_finder_demo.dart';
 
 Navigator.push(
   context,
@@ -129,7 +129,7 @@ Navigator.push(
 Add to your app:
 
 ```dart
-import 'package:noorvia/widgets/amar_mosjid_button.dart';
+import 'package:muslim_view/widgets/amar_mosjid_button.dart';
 
 // In your screen:
 AmarMosjidButton()
@@ -305,7 +305,7 @@ ElevatedButton(
 **Solution**: Files are in `lib/` folder. Check [`FILE_STRUCTURE.md`](FILE_STRUCTURE.md)
 
 ### Problem: Import errors
-**Solution**: Make sure package name is correct: `package:noorvia/...`
+**Solution**: Make sure package name is correct: `package:muslim_view/...`
 
 ### Problem: No mosques found
 **Solution**: Increase search radius or check internet connection

@@ -72,7 +72,7 @@ The **আমার মসজিদ (Amar Mosjid)** feature has been successfully
 Run the demo screen to see the feature in action:
 
 ```dart
-import 'package:noorvia/screens/location/mosque_finder_demo.dart';
+import 'package:muslim_view/screens/location/mosque_finder_demo.dart';
 
 Navigator.push(
   context,
@@ -85,7 +85,7 @@ Navigator.push(
 Add the button to your desired screen:
 
 ```dart
-import 'package:noorvia/widgets/amar_mosjid_button.dart';
+import 'package:muslim_view/widgets/amar_mosjid_button.dart';
 
 // In your widget:
 AmarMosjidButton()
@@ -550,7 +550,7 @@ You now have a fully functional, production-ready mosque finder feature with:
 **Last Updated**: May 3, 2026  
 **Version**: 1.0.0  
 **Author**: Kiro AI Assistant  
-**For**: Noorvia Islamic App
+**For**: Muslim View Islamic App
 
 ---
 

@@ -38,7 +38,7 @@ void main() async {
     await PrayerAlarmService().initialize();
     // Schedule daily morning (8:00) & night (21:00) notifications
     unawaited(ScheduledNotificationService.init());
-    
+
     // Initialize location permissions at app startup (once only)
     unawaited(LocationPermissionService().initializePermissions());
   }
@@ -53,14 +53,14 @@ void main() async {
       statusBarIconBrightness: Brightness.dark,
     ),
   );
-  runApp(const NoorviaApp());
+  runApp(const MuslimViewApp());
 }
 
 // Global navigator key — used to access root Overlay from anywhere
 final GlobalKey<NavigatorState> _navKey = GlobalKey<NavigatorState>();
 
-class NoorviaApp extends StatelessWidget {
-  const NoorviaApp({super.key});
+class MuslimViewApp extends StatelessWidget {
+  const MuslimViewApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -81,10 +81,16 @@ class NoorviaApp extends StatelessWidget {
             child: _GlobalShakeDetector(
               child: MaterialApp(
                 navigatorKey: _navKey,
-                title: 'নূরভিয়া',
+                title: 'মুসলিম ভিউ',
                 debugShowCheckedModeBanner: false,
-                theme: AppTheme.buildLight(settings.banglaFont, settings.accent),
-                darkTheme: AppTheme.buildDark(settings.banglaFont, settings.accent),
+                theme: AppTheme.buildLight(
+                  settings.banglaFont,
+                  settings.accent,
+                ),
+                darkTheme: AppTheme.buildDark(
+                  settings.banglaFont,
+                  settings.accent,
+                ),
                 themeMode: themeProvider.themeMode,
                 home: const SplashScreen(),
                 builder: (context, child) {
@@ -132,10 +138,12 @@ class _GlobalShakeDetectorState extends State<_GlobalShakeDetector>
 
   void _startShake() {
     _shakeDetector?.dispose();
-    _shakeDetector = ShakeDetectorService(onShake: () async {
-      final provider = context.read<NotificationProvider>();
-      await provider.showRandomLocalNotification();
-    });
+    _shakeDetector = ShakeDetectorService(
+      onShake: () async {
+        final provider = context.read<NotificationProvider>();
+        await provider.showRandomLocalNotification();
+      },
+    );
     _shakeDetector!.start();
   }
 

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:noorvia/screens/iqc/iqc_home_page.dart';
+import 'package:muslim_view/screens/iqc/iqc_home_page.dart';
 import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';

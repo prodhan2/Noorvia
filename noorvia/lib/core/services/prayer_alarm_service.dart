@@ -39,11 +39,11 @@ class PrayerAlarmService {
   PrayerAlarmSettings? _settings;
 
   // Notification IDs for each prayer
-  static const int _fajrId    = 100;
-  static const int _dhuhrId   = 101;
-  static const int _asrId     = 102;
+  static const int _fajrId = 100;
+  static const int _dhuhrId = 101;
+  static const int _asrId = 102;
   static const int _maghribId = 103;
-  static const int _ishaId    = 104;
+  static const int _ishaId = 104;
 
   // ── Initialize service ────────────────────────────────────
   Future<void> initialize() async {
@@ -54,8 +54,9 @@ class PrayerAlarmService {
     tz.setLocalLocation(tz.getLocation('Asia/Dhaka'));
 
     // Initialize notifications
-    const androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
@@ -63,10 +64,7 @@ class PrayerAlarmService {
     );
 
     await _notifications.initialize(
-      const InitializationSettings(
-        android: androidSettings,
-        iOS: iosSettings,
-      ),
+      const InitializationSettings(android: androidSettings, iOS: iosSettings),
       onDidReceiveNotificationResponse: _onNotificationTapped,
       onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
     );
@@ -85,7 +83,8 @@ class PrayerAlarmService {
 
     await _notifications
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(channel);
 
     // Request permissions
@@ -99,16 +98,20 @@ class PrayerAlarmService {
 
   // ── Request permissions ───────────────────────────────────
   Future<void> _requestPermissions() async {
-    final android = _notifications.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
+    final android = _notifications
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
 
     if (android != null) {
       await android.requestNotificationsPermission();
       await android.requestExactAlarmsPermission();
     }
 
-    final ios = _notifications.resolvePlatformSpecificImplementation<
-        IOSFlutterLocalNotificationsPlugin>();
+    final ios = _notifications
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >();
     if (ios != null) {
       await ios.requestPermissions(alert: true, badge: true, sound: true);
     }
@@ -116,8 +119,10 @@ class PrayerAlarmService {
 
   // ── Check if permissions are granted ──────────────────────
   Future<bool> arePermissionsGranted() async {
-    final android = _notifications.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
+    final android = _notifications
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     if (android != null) {
       return (await android.areNotificationsEnabled()) ?? false;
     }
@@ -156,7 +161,9 @@ class PrayerAlarmService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(
-          'prayer_alarm_settings', jsonEncode(_settings!.toJson()));
+        'prayer_alarm_settings',
+        jsonEncode(_settings!.toJson()),
+      );
     } catch (_) {}
   }
 
@@ -180,24 +187,44 @@ class PrayerAlarmService {
     await cancelAllAlarms();
 
     if (_settings!.fajrEnabled && prayerTimes.containsKey('fajr')) {
-      await _scheduleAlarm('ফজর', prayerTimes['fajr']!,
-          _settings!.fajrPreAlarm, _fajrId);
+      await _scheduleAlarm(
+        'ফজর',
+        prayerTimes['fajr']!,
+        _settings!.fajrPreAlarm,
+        _fajrId,
+      );
     }
     if (_settings!.dhuhrEnabled && prayerTimes.containsKey('dhuhr')) {
-      await _scheduleAlarm('যোহর', prayerTimes['dhuhr']!,
-          _settings!.dhuhrPreAlarm, _dhuhrId);
+      await _scheduleAlarm(
+        'যোহর',
+        prayerTimes['dhuhr']!,
+        _settings!.dhuhrPreAlarm,
+        _dhuhrId,
+      );
     }
     if (_settings!.asrEnabled && prayerTimes.containsKey('asr')) {
-      await _scheduleAlarm('আসর', prayerTimes['asr']!,
-          _settings!.asrPreAlarm, _asrId);
+      await _scheduleAlarm(
+        'আসর',
+        prayerTimes['asr']!,
+        _settings!.asrPreAlarm,
+        _asrId,
+      );
     }
     if (_settings!.maghribEnabled && prayerTimes.containsKey('maghrib')) {
-      await _scheduleAlarm('মাগরিব', prayerTimes['maghrib']!,
-          _settings!.maghribPreAlarm, _maghribId);
+      await _scheduleAlarm(
+        'মাগরিব',
+        prayerTimes['maghrib']!,
+        _settings!.maghribPreAlarm,
+        _maghribId,
+      );
     }
     if (_settings!.ishaEnabled && prayerTimes.containsKey('isha')) {
-      await _scheduleAlarm('ইশা', prayerTimes['isha']!,
-          _settings!.ishaPreAlarm, _ishaId);
+      await _scheduleAlarm(
+        'ইশা',
+        prayerTimes['isha']!,
+        _settings!.ishaPreAlarm,
+        _ishaId,
+      );
     }
   }
 
@@ -212,12 +239,17 @@ class PrayerAlarmService {
       final parts = prayerTime.split(':');
       if (parts.length != 2) return;
 
-      final hour   = int.parse(parts[0]);
+      final hour = int.parse(parts[0]);
       final minute = int.parse(parts[1]);
 
       final now = DateTime.now();
-      var alarmTime = DateTime(now.year, now.month, now.day, hour, minute)
-          .subtract(Duration(minutes: preAlarmMinutes));
+      var alarmTime = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        hour,
+        minute,
+      ).subtract(Duration(minutes: preAlarmMinutes));
 
       // If already passed today → schedule for tomorrow
       if (alarmTime.isBefore(now)) {
@@ -233,8 +265,9 @@ class PrayerAlarmService {
         alarmTime.minute,
       );
 
-      final actualPrayerTime =
-          alarmTime.add(Duration(minutes: preAlarmMinutes));
+      final actualPrayerTime = alarmTime.add(
+        Duration(minutes: preAlarmMinutes),
+      );
       final prayerTimeStr =
           '${actualPrayerTime.hour.toString().padLeft(2, '0')}:'
           '${actualPrayerTime.minute.toString().padLeft(2, '0')}';
@@ -258,8 +291,9 @@ class PrayerAlarmService {
             fullScreenIntent: true,
             category: AndroidNotificationCategory.alarm,
             icon: '@mipmap/ic_launcher',
-            largeIcon:
-                const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
+            largeIcon: const DrawableResourceAndroidBitmap(
+              '@mipmap/ic_launcher',
+            ),
             visibility: NotificationVisibility.public,
             ongoing: false,
             autoCancel: false,
@@ -268,7 +302,7 @@ class PrayerAlarmService {
                   ? '$preAlarmMinutes মিনিট পরে $prayerName নামাজের সময় হবে। প্রস্তুতি নিন।'
                   : '$prayerName নামাজের সময় হয়েছে। এখনই নামাজ পড়ুন।',
               contentTitle: '🕌 $prayerName নামাজ',
-              summaryText: 'নূরভিয়া - ইসলামিক অ্যাপ',
+              summaryText: 'মুসলিম ভিউ - ইসলামিক অ্যাপ',
             ),
             actions: [
               const AndroidNotificationAction(
@@ -346,7 +380,9 @@ class PrayerAlarmService {
 
     // Web platform does not support local asset audio via audioplayers
     if (kIsWeb) {
-      debugPrint('⚠️ Azan audio is not supported on web platform. Use Android/iOS app.');
+      debugPrint(
+        '⚠️ Azan audio is not supported on web platform. Use Android/iOS app.',
+      );
       return;
     }
 

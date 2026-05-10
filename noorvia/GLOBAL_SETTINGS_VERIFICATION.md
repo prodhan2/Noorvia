@@ -1,4 +1,4 @@
-# ✅ Global Settings Verification — নূরভিয়া অ্যাপ
+# ✅ Global Settings Verification — মুসলিম ভিউ অ্যাপ
 
 ## 📋 Overview
 

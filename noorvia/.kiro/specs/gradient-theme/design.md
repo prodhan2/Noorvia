@@ -2,7 +2,7 @@
 
 ## Overview
 
-Replace the Noorvia app's emerald-green palette with a premium purple-to-blue gradient (`#6A11CB` → `#2575FC`) applied selectively to key surfaces — AppBars, hero sections, active prayer highlights, and important banners — while keeping the overall background light and minimal. Content cards remain white with soft shadows and rounded corners, creating a calm, spiritual, and modern Islamic app aesthetic.
+Replace the Muslim View app's emerald-green palette with a premium purple-to-blue gradient (`#6A11CB` → `#2575FC`) applied selectively to key surfaces — AppBars, hero sections, active prayer highlights, and important banners — while keeping the overall background light and minimal. Content cards remain white with soft shadows and rounded corners, creating a calm, spiritual, and modern Islamic app aesthetic.
 
 The implementation is split into three layers:
 

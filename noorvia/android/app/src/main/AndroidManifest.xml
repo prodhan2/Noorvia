@@ -22,7 +22,7 @@
     <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="false" />
     <uses-feature android:name="android.hardware.sensor.gyroscope" android:required="false" />
     <application
-        android:label="noorvia"
+        android:label="মুসলিম ভিউ"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

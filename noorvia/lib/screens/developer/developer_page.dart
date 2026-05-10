@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 //  developer_page.dart  —  Developer Team Page
 //  Data source: GitHub raw JSON (remote fetch + cache)
 //  Features: Offline support, background refresh, modern UI
@@ -29,10 +29,8 @@ class _University {
 
   const _University({required this.name, this.logo});
 
-  factory _University.fromJson(Map<String, dynamic> j) => _University(
-        name: j['name'] as String,
-        logo: j['logo'] as String?,
-      );
+  factory _University.fromJson(Map<String, dynamic> j) =>
+      _University(name: j['name'] as String, logo: j['logo'] as String?);
 }
 
 class _SocialLink {
@@ -41,10 +39,8 @@ class _SocialLink {
 
   const _SocialLink({required this.url, required this.icon});
 
-  factory _SocialLink.fromJson(Map<String, dynamic> j) => _SocialLink(
-        url: j['url'] as String,
-        icon: j['icon'] as String,
-      );
+  factory _SocialLink.fromJson(Map<String, dynamic> j) =>
+      _SocialLink(url: j['url'] as String, icon: j['icon'] as String);
 }
 
 class _Socials {
@@ -59,10 +55,10 @@ class _Socials {
   });
 
   factory _Socials.fromJson(Map<String, dynamic> j) => _Socials(
-        facebook: _SocialLink.fromJson(j['facebook'] as Map<String, dynamic>),
-        telegram: _SocialLink.fromJson(j['telegram'] as Map<String, dynamic>),
-        whatsapp: _SocialLink.fromJson(j['whatsapp'] as Map<String, dynamic>),
-      );
+    facebook: _SocialLink.fromJson(j['facebook'] as Map<String, dynamic>),
+    telegram: _SocialLink.fromJson(j['telegram'] as Map<String, dynamic>),
+    whatsapp: _SocialLink.fromJson(j['whatsapp'] as Map<String, dynamic>),
+  );
 }
 
 class _DevStats {
@@ -81,12 +77,12 @@ class _DevStats {
   });
 
   factory _DevStats.fromJson(Map<String, dynamic> j) => _DevStats(
-        projects: j['projects'] as int,
-        rating: (j['rating'] as num).toDouble(),
-        ratingCount: j['ratingCount'] as int,
-        experience: j['experience'] as String,
-        downloads: j['downloads'] as String,
-      );
+    projects: j['projects'] as int,
+    rating: (j['rating'] as num).toDouble(),
+    ratingCount: j['ratingCount'] as int,
+    experience: j['experience'] as String,
+    downloads: j['downloads'] as String,
+  );
 }
 
 class _Developer {
@@ -127,23 +123,23 @@ class _Developer {
   });
 
   factory _Developer.fromJson(Map<String, dynamic> j) => _Developer(
-        id: j['id'] as int,
-        name: j['name'] as String,
-        role: j['role'] as String,
-        location: j['location'] as String,
-        email: j['email'] as String,
-        phone: j['phone'] as String,
-        github: j['github'] as String,
-        website: j['website'] as String,
-        avatar: j['avatar'] as String?,
-        isOnline: j['isOnline'] as bool,
-        profileUrl: j['profileUrl'] as String,
-        university: _University.fromJson(j['university'] as Map<String, dynamic>),
-        socials: _Socials.fromJson(j['socials'] as Map<String, dynamic>),
-        stats: _DevStats.fromJson(j['stats'] as Map<String, dynamic>),
-        skills: List<String>.from(j['skills'] as List),
-        bio: j['bio'] as String,
-      );
+    id: j['id'] as int,
+    name: j['name'] as String,
+    role: j['role'] as String,
+    location: j['location'] as String,
+    email: j['email'] as String,
+    phone: j['phone'] as String,
+    github: j['github'] as String,
+    website: j['website'] as String,
+    avatar: j['avatar'] as String?,
+    isOnline: j['isOnline'] as bool,
+    profileUrl: j['profileUrl'] as String,
+    university: _University.fromJson(j['university'] as Map<String, dynamic>),
+    socials: _Socials.fromJson(j['socials'] as Map<String, dynamic>),
+    stats: _DevStats.fromJson(j['stats'] as Map<String, dynamic>),
+    skills: List<String>.from(j['skills'] as List),
+    bio: j['bio'] as String,
+  );
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -270,43 +266,45 @@ class _DeveloperPageState extends State<DeveloperPage> {
       body: _loading && _devs.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : _error != null && _devs.isEmpty
-              ? _ErrorView(onRetry: () {
-                  setState(() {
-                    _loading = true;
-                    _error = null;
-                  });
-                  _loadData();
-                })
-              : ListView(
-                  padding: EdgeInsets.zero,
-                  physics: const BouncingScrollPhysics(),
-                  children: [
-                    // Header Section
-                    _HeaderSection(isDark: isDark, text: text, sub: sub),
-                    
-                    // Developer Cards
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-                      child: Column(
-                        children: List.generate(
-                          _devs.length,
-                          (i) => Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: _ModernDevCard(
-                              dev: _devs[i],
-                              accent: _accentFor(i),
-                              isDark: isDark,
-                              text: text,
-                              sub: sub,
-                              onLaunch: _launch,
-                              index: i,
-                            ),
-                          ),
+          ? _ErrorView(
+              onRetry: () {
+                setState(() {
+                  _loading = true;
+                  _error = null;
+                });
+                _loadData();
+              },
+            )
+          : ListView(
+              padding: EdgeInsets.zero,
+              physics: const BouncingScrollPhysics(),
+              children: [
+                // Header Section
+                _HeaderSection(isDark: isDark, text: text, sub: sub),
+
+                // Developer Cards
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+                  child: Column(
+                    children: List.generate(
+                      _devs.length,
+                      (i) => Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: _ModernDevCard(
+                          dev: _devs[i],
+                          accent: _accentFor(i),
+                          isDark: isDark,
+                          text: text,
+                          sub: sub,
+                          onLaunch: _launch,
+                          index: i,
                         ),
                       ),
                     ),
-                  ],
+                  ),
                 ),
+              ],
+            ),
     );
   }
 
@@ -328,7 +326,11 @@ class _DeveloperPageState extends State<DeveloperPage> {
               gradient: AppColors.gradient,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.groups_rounded, size: 18, color: Colors.white),
+            child: const Icon(
+              Icons.groups_rounded,
+              size: 18,
+              color: Colors.white,
+            ),
           ),
           const SizedBox(width: 10),
           Text(
@@ -409,7 +411,7 @@ class _HeaderSection extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'নূরভিয়া',
+                    'মুসলিম ভিউ',
                     style: GoogleFonts.hindSiliguri(
                       fontSize: 22,
                       fontWeight: FontWeight.w800,
@@ -417,7 +419,7 @@ class _HeaderSection extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'Noorvia',
+                    'Muslim View',
                     style: GoogleFonts.poppins(
                       fontSize: 11,
                       color: Colors.white.withValues(alpha: 0.85),
@@ -583,7 +585,11 @@ class _ModernDevCard extends StatelessWidget {
                         ),
                         child: dev.avatar != null
                             ? ClipOval(
-                                child: Image.network(dev.avatar!, fit: BoxFit.cover))
+                                child: Image.network(
+                                  dev.avatar!,
+                                  fit: BoxFit.cover,
+                                ),
+                              )
                             : Icon(
                                 dev.id == 1
                                     ? Icons.person_rounded
@@ -635,7 +641,10 @@ class _ModernDevCard extends StatelessWidget {
                   ),
                   // Menu
                   IconButton(
-                    icon: const Icon(Icons.more_vert_rounded, color: Colors.white),
+                    icon: const Icon(
+                      Icons.more_vert_rounded,
+                      color: Colors.white,
+                    ),
                     onPressed: () => _showMenu(context),
                   ),
                 ],
@@ -654,7 +663,8 @@ class _ModernDevCard extends StatelessWidget {
                     value: dev.location,
                     sub: sub,
                     onTap: () => onLaunch(
-                        'https://www.google.com/maps/search/${Uri.encodeComponent(dev.location)}'),
+                      'https://www.google.com/maps/search/${Uri.encodeComponent(dev.location)}',
+                    ),
                   ),
                   _ClickableInfoLine(
                     icon: Icons.email_outlined,
@@ -692,7 +702,11 @@ class _ModernDevCard extends StatelessWidget {
                           color: accent.withValues(alpha: 0.10),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Icon(Icons.school_rounded, size: 16, color: accent),
+                        child: Icon(
+                          Icons.school_rounded,
+                          size: 16,
+                          color: accent,
+                        ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -755,9 +769,7 @@ class _ModernDevCard extends StatelessWidget {
                         ],
                       ),
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: accent.withValues(alpha: 0.15),
-                      ),
+                      border: Border.all(color: accent.withValues(alpha: 0.15)),
                     ),
                     child: Row(
                       children: [
@@ -842,8 +854,11 @@ class _ModernDevCard extends StatelessWidget {
                       Expanded(
                         child: OutlinedButton.icon(
                           onPressed: () => onLaunch(dev.profileUrl),
-                          icon: Icon(Icons.person_outline_rounded,
-                              size: 16, color: accent),
+                          icon: Icon(
+                            Icons.person_outline_rounded,
+                            size: 16,
+                            color: accent,
+                          ),
                           label: Text(
                             'Profile',
                             style: GoogleFonts.poppins(
@@ -854,7 +869,9 @@ class _ModernDevCard extends StatelessWidget {
                           ),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 12),
-                            side: BorderSide(color: accent.withValues(alpha: 0.5)),
+                            side: BorderSide(
+                              color: accent.withValues(alpha: 0.5),
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -880,8 +897,11 @@ class _ModernDevCard extends StatelessWidget {
                           ),
                           child: ElevatedButton.icon(
                             onPressed: () => onLaunch('mailto:${dev.email}'),
-                            icon: const Icon(Icons.email_outlined,
-                                size: 16, color: Colors.white),
+                            icon: const Icon(
+                              Icons.email_outlined,
+                              size: 16,
+                              color: Colors.white,
+                            ),
                             label: Text(
                               'Contact',
                               style: GoogleFonts.poppins(
@@ -937,32 +957,41 @@ class _ModernDevCard extends StatelessWidget {
               const SizedBox(height: 16),
               ListTile(
                 leading: Icon(Icons.share_outlined, color: accent),
-                title: Text('Share Profile',
-                    style: GoogleFonts.poppins(fontSize: 14)),
+                title: Text(
+                  'Share Profile',
+                  style: GoogleFonts.poppins(fontSize: 14),
+                ),
                 onTap: () => Navigator.pop(context),
               ),
               ListTile(
                 leading: Icon(Icons.copy_outlined, color: accent),
-                title: Text('Copy Email',
-                    style: GoogleFonts.poppins(fontSize: 14)),
+                title: Text(
+                  'Copy Email',
+                  style: GoogleFonts.poppins(fontSize: 14),
+                ),
                 onTap: () {
                   Clipboard.setData(ClipboardData(text: dev.email));
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Email copied!',
-                          style: GoogleFonts.poppins()),
+                      content: Text(
+                        'Email copied!',
+                        style: GoogleFonts.poppins(),
+                      ),
                       behavior: SnackBarBehavior.floating,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                   );
                 },
               ),
               ListTile(
                 leading: Icon(Icons.open_in_browser_outlined, color: accent),
-                title: Text('Open GitHub',
-                    style: GoogleFonts.poppins(fontSize: 14)),
+                title: Text(
+                  'Open GitHub',
+                  style: GoogleFonts.poppins(fontSize: 14),
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   onLaunch('https://${dev.github}');
@@ -970,8 +999,10 @@ class _ModernDevCard extends StatelessWidget {
               ),
               ListTile(
                 leading: Icon(Icons.facebook_rounded, color: accent),
-                title: Text('Open Facebook',
-                    style: GoogleFonts.poppins(fontSize: 14)),
+                title: Text(
+                  'Open Facebook',
+                  style: GoogleFonts.poppins(fontSize: 14),
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   onLaunch(dev.socials.facebook.url);
@@ -979,8 +1010,10 @@ class _ModernDevCard extends StatelessWidget {
               ),
               ListTile(
                 leading: Icon(Icons.telegram_rounded, color: accent),
-                title: Text('Open Telegram',
-                    style: GoogleFonts.poppins(fontSize: 14)),
+                title: Text(
+                  'Open Telegram',
+                  style: GoogleFonts.poppins(fontSize: 14),
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   onLaunch(dev.socials.telegram.url);
@@ -988,8 +1021,10 @@ class _ModernDevCard extends StatelessWidget {
               ),
               ListTile(
                 leading: Icon(Icons.phone_rounded, color: accent),
-                title: Text('Open WhatsApp',
-                    style: GoogleFonts.poppins(fontSize: 14)),
+                title: Text(
+                  'Open WhatsApp',
+                  style: GoogleFonts.poppins(fontSize: 14),
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   onLaunch(dev.socials.whatsapp.url);
@@ -1075,7 +1110,11 @@ class _ClickableInfoLine extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              Icon(Icons.open_in_new_rounded, size: 12, color: sub.withValues(alpha: 0.5)),
+              Icon(
+                Icons.open_in_new_rounded,
+                size: 12,
+                color: sub.withValues(alpha: 0.5),
+              ),
             ],
           ),
         ),
@@ -1088,8 +1127,7 @@ class _InfoLine extends StatelessWidget {
   final IconData icon;
   final String value;
   final Color sub;
-  const _InfoLine(
-      {required this.icon, required this.value, required this.sub});
+  const _InfoLine({required this.icon, required this.value, required this.sub});
 
   @override
   Widget build(BuildContext context) {
@@ -1178,8 +1216,11 @@ class _StatDivider extends StatelessWidget {
 class _SkillsRow extends StatelessWidget {
   final List<String> skills;
   final Color accent, sub;
-  const _SkillsRow(
-      {required this.skills, required this.accent, required this.sub});
+  const _SkillsRow({
+    required this.skills,
+    required this.accent,
+    required this.sub,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1193,8 +1234,7 @@ class _SkillsRow extends StatelessWidget {
       runSpacing: 6,
       children: [
         ...visible.map((s) => _SkillChip(label: s, accent: accent)),
-        if (extra > 0)
-          _SkillChip(label: '+$extra', accent: sub, isExtra: true),
+        if (extra > 0) _SkillChip(label: '+$extra', accent: sub, isExtra: true),
       ],
     );
   }
@@ -1204,8 +1244,11 @@ class _SkillChip extends StatelessWidget {
   final String label;
   final Color accent;
   final bool isExtra;
-  const _SkillChip(
-      {required this.label, required this.accent, this.isExtra = false});
+  const _SkillChip({
+    required this.label,
+    required this.accent,
+    this.isExtra = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1247,8 +1290,11 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.wifi_off_rounded,
-                size: 64, color: Colors.grey.withValues(alpha: 0.5)),
+            Icon(
+              Icons.wifi_off_rounded,
+              size: 64,
+              color: Colors.grey.withValues(alpha: 0.5),
+            ),
             const SizedBox(height: 16),
             Text(
               'ডেটা লোড হয়নি',
@@ -1262,22 +1308,29 @@ class _ErrorView extends StatelessWidget {
             Text(
               'ইন্টারনেট সংযোগ চেক করুন এবং আবার চেষ্টা করুন।',
               style: GoogleFonts.hindSiliguri(
-                  fontSize: 13, color: AppColors.lightSubText),
+                fontSize: 13,
+                color: AppColors.lightSubText,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh_rounded),
-              label: Text('আবার চেষ্টা করুন',
-                  style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.w600)),
+              label: Text(
+                'আবার চেষ্টা করুন',
+                style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.w600),
+              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ],

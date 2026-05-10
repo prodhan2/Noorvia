@@ -11,7 +11,7 @@ All major navigation screens and UI components have been updated to use **global
 ### 1. **lib/screens/main_shell.dart** ✅
 **Changes:**
 - Added `SettingsProvider` import
-- Updated AppBar brand text ("নূরভিয়া") to use `settings.banglaFont.style()`
+- Updated AppBar brand text ("মুসলিম ভিউ") to use `settings.banglaFont.style()`
 - Updated location text to use global font
 - Updated Drawer header to use global font
 - Updated Drawer items (`_DrawerItem`) to use global font

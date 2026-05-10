@@ -182,7 +182,7 @@ lib/
 │                                 │
 │ [▶️ আযান শুনুন] [✖️ বন্ধ করুন]│
 │                                 │
-│ নূরভিয়া - ইসলামিক অ্যাপ       │
+│ মুসলিম ভিউ - ইসলামিক অ্যাপ       │
 └─────────────────────────────────┘
 ```
 
@@ -391,13 +391,13 @@ flutter run
 - ভলিউম চেক করুন
 
 **নোটিফিকেশন আসছে না?**
-- Settings > Apps > Noorvia > Notifications
+- Settings > Apps > Muslim View > Notifications
 - Allow notifications চালু করুন
 
 **অ্যালার্ম কাজ করছে না?**
-- Settings > Apps > Noorvia > Battery
+- Settings > Apps > Muslim View > Battery
 - "Unrestricted" সিলেক্ট করুন
-- Settings > Apps > Noorvia > Alarms & reminders
+- Settings > Apps > Muslim View > Alarms & reminders
 - Allow alarms চালু করুন
 
 **আযান লোড হচ্ছে না?**

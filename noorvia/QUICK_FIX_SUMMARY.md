@@ -59,7 +59,7 @@ flutter run --release
 1. **Location Permission দিতে হবে** (মসজিদ ফাইন্ডারের জন্য)
 2. **Notification Permission দিতে হবে** (আযান অ্যালার্মের জন্য)
 3. **Exact Alarm Permission দিতে হবে** (Android 12+)
-4. **Battery Optimization বন্ধ করতে হবে** (Settings > Apps > Noorvia > Battery > Unrestricted)
+4. **Battery Optimization বন্ধ করতে হবে** (Settings > Apps > Muslim View > Battery > Unrestricted)
 
 ## 📚 বিস্তারিত ডকুমেন্টেশন
 

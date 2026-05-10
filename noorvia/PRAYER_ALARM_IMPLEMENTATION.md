@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the complete implementation of the Prayer Alarm System for the Noorvia Islamic app. The system allows users to set customizable alarms for each prayer time with pre-alarm notifications and custom Azan audio.
+This document describes the complete implementation of the Prayer Alarm System for the Muslim View Islamic app. The system allows users to set customizable alarms for each prayer time with pre-alarm notifications and custom Azan audio.
 
 ## Features Implemented
 
@@ -398,7 +398,7 @@ For issues or questions:
 
 ## License
 
-This implementation is part of the Noorvia Islamic app.
+This implementation is part of the Muslim View Islamic app.
 
 ---
 

@@ -61,7 +61,7 @@
 ### Basic Usage (Home Screen):
 
 ```dart
-import 'package:noorvia/widgets/poster_carousel_widget.dart';
+import 'package:muslim_view/widgets/poster_carousel_widget.dart';
 
 // In your widget:
 const PosterCarouselWidget(
@@ -192,7 +192,7 @@ static const String apiUrl = 'YOUR_NEW_API_URL';
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:noorvia/widgets/poster_carousel_widget.dart';
+import 'package:muslim_view/widgets/poster_carousel_widget.dart';
 
 class HomeScreen extends StatelessWidget {
   @override

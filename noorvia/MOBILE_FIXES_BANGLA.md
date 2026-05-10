@@ -67,7 +67,7 @@
    - লোকেশন পারমিশন রিকোয়েস্ট আসলে "Allow" দিন
    - যদি "Deny" করে থাকেন, তাহলে:
      - এরর মেসেজে "সেটিংস" বাটনে ক্লিক করুন
-     - অথবা: Settings > Apps > Noorvia > Permissions > Location > Allow
+     - অথবা: Settings > Apps > Muslim View > Permissions > Location > Allow
 
 2. **লোকেশন সার্ভিস চালু করুন:**
    - Settings > Location > Turn ON
@@ -76,15 +76,15 @@
 
 1. **নোটিফিকেশন পারমিশন:**
    - প্রথমবার অ্যাপ খুললে notification permission দিন
-   - Settings > Apps > Noorvia > Notifications > Allow all
+   - Settings > Apps > Muslim View > Notifications > Allow all
 
 2. **Exact Alarm পারমিশন (Android 12+):**
-   - Settings > Apps > Noorvia > Alarms & reminders > Allow
+   - Settings > Apps > Muslim View > Alarms & reminders > Allow
    - এটি না দিলে অ্যালার্ম সঠিক সময়ে বাজবে না
 
 3. **Battery Optimization বন্ধ করুন:**
-   - Settings > Apps > Noorvia > Battery > Unrestricted
-   - অথবা: Settings > Battery > Battery optimization > Noorvia > Don't optimize
+   - Settings > Apps > Muslim View > Battery > Unrestricted
+   - অথবা: Settings > Battery > Battery optimization > Muslim View > Don't optimize
    - এটি না করলে ব্যাকগ্রাউন্ডে অ্যালার্ম বন্ধ হয়ে যেতে পারে
 
 4. **আযান অ্যালার্ম সেট করুন:**
@@ -155,7 +155,7 @@ for (var alarm in pending) {
 
 ### সমস্যা: Lock screen এ notification দেখা যাচ্ছে না
 **সমাধান:**
-1. Settings > Apps > Noorvia > Notifications > Lock screen > Show
+1. Settings > Apps > Muslim View > Notifications > Lock screen > Show
 2. Settings > Lock screen > Notifications > Show all notification content
 
 ## পরবর্তী আপডেট (Future Improvements)

@@ -62,7 +62,7 @@ A complete, production-ready Flutter feature to find nearby mosques with the fol
 Add this to your app to test immediately:
 
 ```dart
-import 'package:noorvia/screens/location/mosque_finder_demo.dart';
+import 'package:muslim_view/screens/location/mosque_finder_demo.dart';
 
 // Navigate to demo
 Navigator.push(
@@ -74,7 +74,7 @@ Navigator.push(
 ### Option 2: Add Button to Your Screen
 
 ```dart
-import 'package:noorvia/widgets/amar_mosjid_button.dart';
+import 'package:muslim_view/widgets/amar_mosjid_button.dart';
 
 // In your widget build method:
 AmarMosjidButton()  // Full button
@@ -85,7 +85,7 @@ AmarMosjidButton(isCompact: true)  // Compact button
 ### Option 3: Direct Navigation
 
 ```dart
-import 'package:noorvia/screens/location/nearby_mosques_screen.dart';
+import 'package:muslim_view/screens/location/nearby_mosques_screen.dart';
 
 // Navigate directly
 Navigator.push(

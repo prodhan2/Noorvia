@@ -1,8 +1,8 @@
-# ⚙️ নূরভিয়া — Global Settings System
+# ⚙️ মুসলিম ভিউ — Global Settings System
 
 ## 🎯 Overview
 
-নূরভিয়া অ্যাপে **সব settings globally apply হয়** — font, size, color, theme সব কিছু পুরো অ্যাপে একসাথে change হয়।
+মুসলিম ভিউ অ্যাপে **সব settings globally apply হয়** — font, size, color, theme সব কিছু পুরো অ্যাপে একসাথে change হয়।
 
 ---
 

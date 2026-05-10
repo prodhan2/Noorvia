@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.noorvia" "\0"
-            VALUE "FileDescription", "noorvia" "\0"
+            VALUE "CompanyName", "Muslim View" "\0"
+            VALUE "FileDescription", "Muslim View" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "noorvia" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.noorvia. All rights reserved." "\0"
-            VALUE "OriginalFilename", "noorvia.exe" "\0"
-            VALUE "ProductName", "noorvia" "\0"
+            VALUE "InternalName", "Muslim View" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 Muslim View. All rights reserved." "\0"
+            VALUE "OriginalFilename", "muslim_view.exe" "\0"
+            VALUE "ProductName", "Muslim View" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

@@ -45,10 +45,17 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               child: Column(
                 children: [
-                  const Text('🕌', style: TextStyle(fontSize: 48)),
+                  ClipOval(
+                    child: Image.asset(
+                      'assets/muslim view app logo .png',
+                      width: 64,
+                      height: 64,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
                   const SizedBox(height: 12),
                   Text(
-                    'নূরভিয়া',
+                    'মুসলিম ভিউ',
                     style: GoogleFonts.hindSiliguri(
                       fontSize: 32,
                       fontWeight: FontWeight.w800,
@@ -76,7 +83,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                        color: Colors.black.withOpacity(0.05), blurRadius: 8),
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 8,
+                    ),
                   ],
                 ),
                 child: Row(
@@ -87,7 +96,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           decoration: BoxDecoration(
-                            color: _isLogin ? AppColors.primary : Colors.transparent,
+                            color: _isLogin
+                                ? AppColors.primary
+                                : Colors.transparent,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
@@ -108,7 +119,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           decoration: BoxDecoration(
-                            color: !_isLogin ? AppColors.primary : Colors.transparent,
+                            color: !_isLogin
+                                ? AppColors.primary
+                                : Colors.transparent,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
@@ -263,7 +276,9 @@ class _LoginScreenState extends State<LoginScreen> {
           suffixIcon: isPassword
               ? IconButton(
                   icon: Icon(
-                    obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                    obscure
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
                     color: Colors.grey,
                     size: 20,
                   ),

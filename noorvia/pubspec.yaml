@@ -1,5 +1,5 @@
-name: noorvia
-description: "Noorvia - Islamic App in Bangla"
+name: muslim_view
+description: "Muslim View - Islamic App in Bangla"
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -56,3 +56,4 @@ flutter:
     - assets/icons/
     - assets/data/
     - assets/audio/
+    - assets/muslim view app logo .png

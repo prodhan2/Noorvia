@@ -2,7 +2,7 @@
 
 ## 📖 Overview
 
-A comprehensive prayer alarm system for the Noorvia Islamic app with the following features:
+A comprehensive prayer alarm system for the Muslim View Islamic app with the following features:
 
 - ✅ **Prayer Time Tracking** - Real-time prayer times based on location
 - ✅ **Individual Alarm Settings** - Customize each prayer independently
@@ -261,7 +261,7 @@ Potential features to add:
 
 ## 📄 License
 
-This implementation is part of the Noorvia Islamic app.
+This implementation is part of the Muslim View Islamic app.
 
 ## 👨‍💻 Author
 

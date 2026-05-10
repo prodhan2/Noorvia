@@ -176,7 +176,7 @@ flutter run --release
 ### মসজিদ ফাইন্ডার ব্যবহার করতে:
 
 1. **Location Permission:**
-   - Settings > Apps > Noorvia > Permissions > Location > Allow
+   - Settings > Apps > Muslim View > Permissions > Location > Allow
    
 2. **Location Services:**
    - Settings > Location > Turn ON
@@ -187,16 +187,16 @@ flutter run --release
 ### আযান অ্যালার্ম ব্যবহার করতে:
 
 1. **Notification Permission:**
-   - Settings > Apps > Noorvia > Notifications > Allow all
+   - Settings > Apps > Muslim View > Notifications > Allow all
 
 2. **Exact Alarm Permission (Android 12+):**
-   - Settings > Apps > Noorvia > Alarms & reminders > Allow
+   - Settings > Apps > Muslim View > Alarms & reminders > Allow
 
 3. **Battery Optimization:**
-   - Settings > Apps > Noorvia > Battery > Unrestricted
+   - Settings > Apps > Muslim View > Battery > Unrestricted
 
 4. **Do Not Disturb:**
-   - Settings > Sound > Do Not Disturb > Allow Noorvia
+   - Settings > Sound > Do Not Disturb > Allow Muslim View
 
 ## 🚀 Deployment Ready
 
