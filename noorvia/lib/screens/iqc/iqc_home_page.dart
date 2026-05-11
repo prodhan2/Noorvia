@@ -18,15 +18,12 @@ class IQCHomePage extends StatefulWidget {
 
 class _IQCHomePageState extends State<IQCHomePage> {
   static const _apiUrl =
-      'https://raw.githubusercontent.com/prodhan2/App_Backend_Data/main/MyApi/islamic_Quiz/iqc_info.json';
-  static const _quizUrl = 'https://www.iqcbd.org/';
-  static const _facebookUrl = 'https://www.facebook.com/share/1EqEi66QYH/';
-  static const _telegramUrl = 'https://t.me/+51a05LB7CUYxZTZl';
+      'https://opensheet.elk.sh/1mlI40NRiEqTypQ6y3tpaTLP2wvDa_8lZrrV_y8mJY9Q/1';
 
   final PageController _bannerController = PageController(viewportFraction: .9);
   Timer? _bannerTimer;
 
-  IQCInfo _info = IQCInfo.fallback();
+  IQCInfo _info = IQCInfo.empty();
   bool _isLoading = true;
   bool _hasLoadError = false;
   int _bannerIndex = 0;
@@ -60,20 +57,20 @@ class _IQCHomePageState extends State<IQCHomePage> {
       }
 
       final json = jsonDecode(utf8.decode(response.bodyBytes));
-      if (json is! Map<String, dynamic>) {
+      if (json is! List) {
         throw const FormatException('Invalid IQC API response');
       }
 
       if (!mounted) return;
       setState(() {
-        _info = IQCInfo.fromJson(json);
+        _info = IQCInfo.fromSheetRows(json);
         _isLoading = false;
       });
       _startBannerTimer();
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _info = IQCInfo.fallback();
+        _info = IQCInfo.empty();
         _isLoading = false;
         _hasLoadError = true;
       });
@@ -97,13 +94,15 @@ class _IQCHomePageState extends State<IQCHomePage> {
   }
 
   Future<void> _openExternal(String url) async {
+    if (url.isEmpty) return;
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
 
-  void _openQuizWebView([String url = _quizUrl]) {
+  void _openQuizWebView(String url) {
+    if (url.isEmpty) return;
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -125,6 +124,17 @@ class _IQCHomePageState extends State<IQCHomePage> {
           style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.w700),
         ),
         centerTitle: true,
+        actions: [
+          if (_info.notices.isNotEmpty)
+            IconButton(
+              tooltip: 'Notice',
+              onPressed: _showNoticeDialog,
+              icon: Badge(
+                label: Text('${_info.notices.length}'),
+                child: const Icon(Icons.notifications_active_outlined),
+              ),
+            ),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: _fetchIQCInfo,
@@ -146,7 +156,7 @@ class _IQCHomePageState extends State<IQCHomePage> {
                     const SizedBox(height: 18),
                     _aboutSection(),
                     const SizedBox(height: 18),
-                    _activitiesSection(),
+                    _activitiesSection(_info.activities),
                     const SizedBox(height: 18),
                     _quizSection(_info.quizzes),
                     const SizedBox(height: 18),
@@ -155,6 +165,58 @@ class _IQCHomePageState extends State<IQCHomePage> {
                 ),
               ),
       ),
+    );
+  }
+
+  void _showNoticeDialog() {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.notifications_active_outlined,
+                      color: Color(0xFF0B4D3A),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'নোটিশ',
+                        style: GoogleFonts.hindSiliguri(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF0B4D3A),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: _info.notices.map(_noticeItem).toList(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -195,7 +257,7 @@ class _IQCHomePageState extends State<IQCHomePage> {
           ),
           const SizedBox(height: 20),
           ElevatedButton.icon(
-            onPressed: () => _openQuizWebView(),
+            onPressed: () => _openQuizWebView(_info.quizUrl),
             icon: const Icon(Icons.quiz_outlined),
             label: Text(
               'Participate Quiz',
@@ -230,6 +292,28 @@ class _IQCHomePageState extends State<IQCHomePage> {
         style: GoogleFonts.hindSiliguri(
           color: const Color(0xFF795008),
           fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  Widget _noticeItem(IQCNotice notice) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFAE8),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFE9D783)),
+      ),
+      child: Text(
+        notice.title,
+        style: GoogleFonts.hindSiliguri(
+          fontSize: 14,
+          height: 1.55,
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFF4F4307),
         ),
       ),
     );
@@ -404,21 +488,28 @@ class _IQCHomePageState extends State<IQCHomePage> {
     );
   }
 
-  Widget _activitiesSection() {
+  Widget _activitiesSection(List<String> activities) {
     return _sectionCard(
       title: 'কার্যক্রম',
       icon: Icons.checklist_rtl,
-      child: const Column(
-        children: [
-          _ActivityRow(icon: Icons.event_note, text: '৬১টি সাপ্তাহিক কুইজ'),
-          _ActivityRow(icon: Icons.emoji_events, text: '৩০টি মেগা কুইজ'),
-          _ActivityRow(
-            icon: Icons.nightlight_round,
-            text: '৫টি রমাদান প্রজেক্ট',
-          ),
-        ],
+      child: Column(
+        children: activities.asMap().entries.map((entry) {
+          return _ActivityRow(
+            icon: _activityIcon(entry.key),
+            text: entry.value,
+          );
+        }).toList(),
       ),
     );
+  }
+
+  IconData _activityIcon(int index) {
+    return switch (index) {
+      0 => Icons.event_note,
+      1 => Icons.emoji_events,
+      2 => Icons.nightlight_round,
+      _ => Icons.check_circle_outline,
+    };
   }
 
   Widget _quizSection(List<IQCQuiz> quizzes) {
@@ -506,10 +597,12 @@ class _IQCHomePageState extends State<IQCHomePage> {
       child: Row(
         children: [
           Expanded(
-            child: _socialButton('Facebook', Icons.facebook, _facebookUrl),
+            child: _socialButton('Facebook', Icons.facebook, _info.facebookUrl),
           ),
           const SizedBox(width: 10),
-          Expanded(child: _socialButton('Telegram', Icons.send, _telegramUrl)),
+          Expanded(
+            child: _socialButton('Telegram', Icons.send, _info.telegramUrl),
+          ),
         ],
       ),
     );
@@ -608,70 +701,155 @@ class _ActivityRow extends StatelessWidget {
 class IQCInfo {
   final List<IQCBanner> banners;
   final List<IQCQuiz> quizzes;
+  final List<IQCNotice> notices;
   final IQCStats stats;
+  final List<String> activities;
+  final String quizUrl;
+  final String facebookUrl;
+  final String telegramUrl;
 
   const IQCInfo({
     required this.banners,
     required this.quizzes,
+    required this.notices,
     required this.stats,
+    required this.activities,
+    required this.quizUrl,
+    required this.facebookUrl,
+    required this.telegramUrl,
   });
 
-  factory IQCInfo.fromJson(Map<String, dynamic> json) {
+  factory IQCInfo.fromSheetRows(List<dynamic> rows) {
+    final banners = <IQCBanner>[];
+    final quizzes = <IQCQuiz>[];
+    final notices = <IQCNotice>[];
+    final statsValues = <String, dynamic>{};
+    final activities = <String>[];
+
+    var section = _SheetSection.banners;
+    var quizUrl = '';
+    var facebookUrl = '';
+    var telegramUrl = '';
+
+    for (final row in rows.whereType<Map>()) {
+      final item = Map<String, dynamic>.from(row);
+      final id = _asString(item['id'], '');
+      final title = _asString(item['title'], '');
+
+      if (_isBlankRow(item)) continue;
+
+      if (id == 'IQC Stats Data') {
+        section = _SheetSection.stats;
+        continue;
+      }
+      if (id == 'IQC Activities') {
+        section = _SheetSection.activities;
+        continue;
+      }
+      if (id == 'notice id') {
+        section = _SheetSection.notices;
+        continue;
+      }
+      if (id == 'id' && title == 'title') {
+        section = _SheetSection.quizzes;
+        continue;
+      }
+
+      switch (id) {
+        case 'quizUrl':
+          quizUrl = _asString(item['title'], '');
+          continue;
+        case 'facebookUrl':
+          facebookUrl = _asString(item['title'], '');
+          continue;
+        case 'telegramUrl':
+          telegramUrl = _asString(item['title'], '');
+          continue;
+      }
+
+      switch (section) {
+        case _SheetSection.banners:
+          if (_hasMediaRow(item)) {
+            banners.add(IQCBanner.fromJson(item));
+          }
+          break;
+        case _SheetSection.stats:
+          if (id != 'metric') {
+            statsValues[id] = title;
+          }
+          break;
+        case _SheetSection.activities:
+          if (id != 'activity_text') {
+            activities.add(id);
+          }
+          break;
+        case _SheetSection.quizzes:
+          if (_hasMediaRow(item)) {
+            quizzes.add(IQCQuiz.fromJson(item));
+          }
+          break;
+        case _SheetSection.notices:
+          if (title.isNotEmpty) {
+            notices.add(IQCNotice.fromJson(item));
+          }
+          break;
+      }
+    }
+
     return IQCInfo(
-      banners: _list(
-        json['banners'],
-      ).map((item) => IQCBanner.fromJson(item)).toList(),
-      quizzes: _list(
-        json['quizzes'],
-      ).map((item) => IQCQuiz.fromJson(item)).toList(),
-      stats: IQCStats.fromJson(_map(json['stats'])),
+      banners: banners,
+      quizzes: quizzes,
+      notices: notices,
+      stats: IQCStats.fromJson(statsValues),
+      activities: activities,
+      quizUrl: quizUrl,
+      facebookUrl: facebookUrl,
+      telegramUrl: telegramUrl,
     );
   }
 
-  factory IQCInfo.fallback() {
+  factory IQCInfo.empty() {
     return const IQCInfo(
-      banners: [
-        IQCBanner(
-          id: 1,
-          title: 'Mega Quiz #29',
-          description: 'বিশেষ মেগা কুইজ প্রতিযোগিতা',
-          imageUrl:
-              'https://i.ibb.co.com/1fDKn2pQ/546920346-1741846050078387-6395574068466367809-n.jpg',
-          link: _IQCHomePageState._facebookUrl,
-        ),
-      ],
-      quizzes: [
-        IQCQuiz(
-          id: 1,
-          title: 'সাপ্তাহিক কুইজ #61',
-          description: 'ইসলাম সম্পর্কিত ২০টি প্রশ্ন',
-          imageUrl:
-              'https://raw.githubusercontent.com/prodhan2/App_Backend_Data/main/MyApi/islamic_Quiz/quiz.webp',
-          quizLink: _IQCHomePageState._quizUrl,
-          type: 'weekly',
-          date: '2024-01-15',
-        ),
-      ],
+      banners: [],
+      quizzes: [],
+      notices: [],
       stats: IQCStats(
-        totalWeeklyQuizzes: 61,
-        totalMegaQuizzes: 30,
-        totalRamadanProjects: 5,
-        totalParticipants: 15000,
+        totalWeeklyQuizzes: 0,
+        totalMegaQuizzes: 0,
+        totalRamadanProjects: 0,
+        totalParticipants: 0,
       ),
+      activities: [],
+      quizUrl: '',
+      facebookUrl: '',
+      telegramUrl: '',
     );
   }
 
-  static List<Map<String, dynamic>> _list(dynamic value) {
-    if (value is! List) return const [];
-    return value
-        .whereType<Map>()
-        .map((item) => Map<String, dynamic>.from(item))
-        .toList();
+  static bool _isBlankRow(Map<String, dynamic> item) {
+    return item.values.every((value) => _asString(value, '').isEmpty);
   }
 
-  static Map<String, dynamic> _map(dynamic value) {
-    if (value is! Map) return const {};
-    return Map<String, dynamic>.from(value);
+  static bool _hasMediaRow(Map<String, dynamic> item) {
+    return _asString(item['id'], '').isNotEmpty &&
+        _asString(item['title'], '').isNotEmpty &&
+        _asString(item['imageUrl'], '').isNotEmpty;
+  }
+}
+
+enum _SheetSection { banners, stats, activities, quizzes, notices }
+
+class IQCNotice {
+  final int id;
+  final String title;
+
+  const IQCNotice({required this.id, required this.title});
+
+  factory IQCNotice.fromJson(Map<String, dynamic> json) {
+    return IQCNotice(
+      id: _asInt(json['id']),
+      title: _asString(json['title'], ''),
+    );
   }
 }
 
@@ -693,10 +871,10 @@ class IQCBanner {
   factory IQCBanner.fromJson(Map<String, dynamic> json) {
     return IQCBanner(
       id: _asInt(json['id']),
-      title: _asString(json['title'], 'IQC Banner'),
+      title: _asString(json['title'], ''),
       description: _asString(json['description'], ''),
       imageUrl: _asString(json['imageUrl'], ''),
-      link: _asString(json['link'], _IQCHomePageState._quizUrl),
+      link: _asString(json['link'], ''),
     );
   }
 }
@@ -723,12 +901,12 @@ class IQCQuiz {
   factory IQCQuiz.fromJson(Map<String, dynamic> json) {
     return IQCQuiz(
       id: _asInt(json['id']),
-      title: _asString(json['title'], 'ইসলামিক কুইজ'),
+      title: _asString(json['title'], ''),
       description: _asString(json['description'], ''),
       imageUrl: _asString(json['imageUrl'], ''),
-      quizLink: _asString(json['quizLink'], _IQCHomePageState._quizUrl),
+      quizLink: _asString(json['quizLink'] ?? json['link'], ''),
       type: _asString(json['type'], ''),
-      date: _asString(json['date'], ''),
+      date: _asString(json['date'] ?? json['undefined'], ''),
     );
   }
 }
@@ -746,20 +924,32 @@ class IQCStats {
     required this.totalParticipants,
   });
 
-  factory IQCStats.fromJson(Map<String, dynamic> json) {
+  factory IQCStats.fromJson(Map<String, dynamic> json, {IQCStats? fallback}) {
     return IQCStats(
-      totalWeeklyQuizzes: _asInt(json['totalWeeklyQuizzes']),
-      totalMegaQuizzes: _asInt(json['totalMegaQuizzes']),
-      totalRamadanProjects: _asInt(json['totalRamadanProjects']),
-      totalParticipants: _asInt(json['totalParticipants']),
+      totalWeeklyQuizzes: _asInt(
+        json['totalWeeklyQuizzes'],
+        fallback?.totalWeeklyQuizzes ?? 0,
+      ),
+      totalMegaQuizzes: _asInt(
+        json['totalMegaQuizzes'],
+        fallback?.totalMegaQuizzes ?? 0,
+      ),
+      totalRamadanProjects: _asInt(
+        json['totalRamadanProjects'],
+        fallback?.totalRamadanProjects ?? 0,
+      ),
+      totalParticipants: _asInt(
+        json['totalParticipants'],
+        fallback?.totalParticipants ?? 0,
+      ),
     );
   }
 }
 
-int _asInt(dynamic value) {
+int _asInt(dynamic value, [int fallback = 0]) {
   if (value is int) return value;
   if (value is num) return value.toInt();
-  return int.tryParse(value?.toString() ?? '') ?? 0;
+  return int.tryParse(value?.toString() ?? '') ?? fallback;
 }
 
 String _asString(dynamic value, String fallback) {
