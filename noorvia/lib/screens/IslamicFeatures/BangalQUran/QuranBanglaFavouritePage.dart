@@ -9,8 +9,8 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/theme_provider.dart';
 
-const _kPrimary      = AppColors.primary;
-const _kPrimaryDark  = AppColors.primaryDark;
+const _kPrimary = AppColors.primary;
+const _kPrimaryDark = AppColors.primaryDark;
 const _kPrimaryLight = AppColors.primaryLight;
 
 // ═══════════════════════════════════════════════════════════════
@@ -126,8 +126,8 @@ class _FavoritesPageState extends State<FavoritesPage>
   }
 
   String _bn(dynamic n) {
-    const e = ['0','1','2','3','4','5','6','7','8','9'];
-    const b = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+    const e = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    const b = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
     var s = n.toString();
     for (int i = 0; i < e.length; i++) s = s.replaceAll(e[i], b[i]);
     return s;
@@ -149,8 +149,11 @@ class _FavoritesPageState extends State<FavoritesPage>
             pinned: true,
             backgroundColor: _kPrimary,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new,
-                  color: Colors.white, size: 20),
+              icon: const Icon(
+                Icons.arrow_back_ios_new,
+                color: Colors.white,
+                size: 20,
+              ),
               onPressed: () => Navigator.pop(context),
             ),
             flexibleSpace: FlexibleSpaceBar(
@@ -169,11 +172,14 @@ class _FavoritesPageState extends State<FavoritesPage>
                       const SizedBox(height: 40),
                       const Text('❤️', style: TextStyle(fontSize: 28)),
                       const SizedBox(height: 4),
-                      Text('পছন্দের তালিকা',
-                          style: GoogleFonts.hindSiliguri(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white)),
+                      Text(
+                        'পছন্দের তালিকা',
+                        style: GoogleFonts.hindSiliguri(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -190,7 +196,9 @@ class _FavoritesPageState extends State<FavoritesPage>
                   indicatorColor: Colors.white,
                   indicatorWeight: 3,
                   labelStyle: GoogleFonts.hindSiliguri(
-                      fontWeight: FontWeight.w700, fontSize: 14),
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                  ),
                   tabs: const [
                     Tab(text: 'পছন্দের সূরা'),
                     Tab(text: 'পছন্দের আয়াত'),
@@ -201,14 +209,10 @@ class _FavoritesPageState extends State<FavoritesPage>
           ),
         ],
         body: loading
-            ? const Center(
-                child: CircularProgressIndicator(color: _kPrimary))
+            ? const Center(child: CircularProgressIndicator(color: _kPrimary))
             : TabBarView(
                 controller: _tab,
-                children: [
-                  _buildSurahTab(),
-                  _buildVerseTab(),
-                ],
+                children: [_buildSurahTab(), _buildVerseTab()],
               ),
       ),
     );
@@ -227,7 +231,8 @@ class _FavoritesPageState extends State<FavoritesPage>
       builder: (ctx, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
           return const Center(
-              child: CircularProgressIndicator(color: _kPrimary));
+            child: CircularProgressIndicator(color: _kPrimary),
+          );
         }
         if (snap.hasError || snap.data == null || snap.data!.isEmpty) {
           return _emptyState('সূরা লোড হয়নি', '⚠️', isDark);
@@ -248,7 +253,8 @@ class _FavoritesPageState extends State<FavoritesPage>
               onTap: () => Navigator.push(
                 ctx,
                 MaterialPageRoute(
-                    builder: (_) => SurahDetailPage(surahInfo: s)),
+                  builder: (_) => SurahDetailPage(surahInfo: s),
+                ),
               ).then((_) => _loadFavs()),
               onRemove: () => _removeSurah(sid),
             );
@@ -283,7 +289,8 @@ class _FavoritesPageState extends State<FavoritesPage>
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: const Center(
-                    child: LinearProgressIndicator(color: _kPrimary)),
+                  child: LinearProgressIndicator(color: _kPrimary),
+                ),
               );
             }
             if (snap.data == null) {
@@ -309,8 +316,8 @@ class _FavoritesPageState extends State<FavoritesPage>
               onTap: () => Navigator.push(
                 ctx,
                 MaterialPageRoute(
-                    builder: (_) =>
-                        SurahDetailPage(surahInfo: v['surahInfo'])),
+                  builder: (_) => SurahDetailPage(surahInfo: v['surahInfo']),
+                ),
               ).then((_) => _loadFavs()),
             );
           },
@@ -326,10 +333,13 @@ class _FavoritesPageState extends State<FavoritesPage>
         children: [
           Text(emoji, style: const TextStyle(fontSize: 48)),
           const SizedBox(height: 12),
-          Text(msg,
-              style: GoogleFonts.hindSiliguri(
-                  color: isDark ? AppColors.darkSubText : Colors.grey,
-                  fontSize: 16)),
+          Text(
+            msg,
+            style: GoogleFonts.hindSiliguri(
+              color: isDark ? AppColors.darkSubText : Colors.grey,
+              fontSize: 16,
+            ),
+          ),
         ],
       ),
     );
@@ -368,7 +378,9 @@ class _FavSurahTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04), blurRadius: 6)
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 6,
+            ),
           ],
         ),
         child: Row(
@@ -381,11 +393,14 @@ class _FavSurahTile extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: Center(
-                child: Text(bnNumber,
-                    style: GoogleFonts.hindSiliguri(
-                        color: _kPrimary,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 14)),
+                child: Text(
+                  bnNumber,
+                  style: GoogleFonts.hindSiliguri(
+                    color: _kPrimary,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                  ),
+                ),
               ),
             ),
             const SizedBox(width: 12),
@@ -396,16 +411,18 @@ class _FavSurahTile extends StatelessWidget {
                   Text(
                     surah['translation'] ?? surah['name'] ?? '',
                     style: GoogleFonts.hindSiliguri(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
-                        color: textColor),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                      color: textColor,
+                    ),
                   ),
                   Text(
                     surah['transliteration'] ?? '',
                     style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        color: isDark ? AppColors.darkSubText : Colors.grey,
-                        fontStyle: FontStyle.italic),
+                      fontSize: 12,
+                      color: isDark ? AppColors.darkSubText : Colors.grey,
+                      fontStyle: FontStyle.italic,
+                    ),
                   ),
                 ],
               ),
@@ -413,16 +430,20 @@ class _FavSurahTile extends StatelessWidget {
             Text(
               surah['name'] ?? '',
               style: const TextStyle(
-                  fontSize: 20,
-                  color: _kPrimary,
-                  fontFamily: 'serif',
-                  fontWeight: FontWeight.bold),
+                fontSize: 20,
+                color: _kPrimary,
+                fontFamily: 'NooreHuda',
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(width: 8),
             GestureDetector(
               onTap: onRemove,
-              child: const Icon(Icons.delete_outline,
-                  color: Colors.redAccent, size: 20),
+              child: const Icon(
+                Icons.delete_outline,
+                color: Colors.redAccent,
+                size: 20,
+              ),
             ),
           ],
         ),
@@ -465,7 +486,9 @@ class _FavVerseTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04), blurRadius: 6)
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 6,
+            ),
           ],
         ),
         child: Column(
@@ -474,16 +497,22 @@ class _FavVerseTile extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: Text(title,
-                      style: GoogleFonts.hindSiliguri(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
-                          color: textColor)),
+                  child: Text(
+                    title,
+                    style: GoogleFonts.hindSiliguri(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      color: textColor,
+                    ),
+                  ),
                 ),
                 GestureDetector(
                   onTap: onRemove,
-                  child: const Icon(Icons.delete_outline,
-                      color: Colors.redAccent, size: 20),
+                  child: const Icon(
+                    Icons.delete_outline,
+                    color: Colors.redAccent,
+                    size: 20,
+                  ),
                 ),
               ],
             ),
@@ -494,10 +523,11 @@ class _FavVerseTile extends StatelessWidget {
                 textAlign: TextAlign.right,
                 textDirection: TextDirection.rtl,
                 style: const TextStyle(
-                    fontSize: 18,
-                    color: _kPrimary,
-                    fontFamily: 'serif',
-                    height: 1.8),
+                  fontSize: 18,
+                  color: _kPrimary,
+                  fontFamily: 'NooreHuda',
+                  height: 1.8,
+                ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -507,9 +537,10 @@ class _FavVerseTile extends StatelessWidget {
               Text(
                 subtitle,
                 style: GoogleFonts.hindSiliguri(
-                    fontSize: 13,
-                    color: isDark ? AppColors.darkSubText : Colors.grey[700],
-                    height: 1.5),
+                  fontSize: 13,
+                  color: isDark ? AppColors.darkSubText : Colors.grey[700],
+                  height: 1.5,
+                ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),

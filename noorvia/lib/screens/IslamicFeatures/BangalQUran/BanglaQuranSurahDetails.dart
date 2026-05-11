@@ -10,8 +10,8 @@ import '../../../core/providers/theme_provider.dart';
 import '../../../core/providers/audio_provider.dart';
 import '../../../widgets/shimmer.dart';
 
-const _kPrimary      = AppColors.primary;
-const _kPrimaryDark  = AppColors.primaryDark;
+const _kPrimary = AppColors.primary;
+const _kPrimaryDark = AppColors.primaryDark;
 const _kPrimaryLight = AppColors.primaryLight;
 const _kGold = Color(0xFFFFB300);
 
@@ -200,12 +200,14 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
   }
 
   void _snack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg, style: GoogleFonts.hindSiliguri()),
-      backgroundColor: _kPrimary,
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg, style: GoogleFonts.hindSiliguri()),
+        backgroundColor: _kPrimary,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
   }
 
   String _fmt(Duration d) {
@@ -219,7 +221,8 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
       isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (_) => ChangeNotifierProvider.value(
         value: audio,
         child: _SettingsSheet(
@@ -234,17 +237,20 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
   }
 
   Widget _pill(String text) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(text,
-            style: GoogleFonts.hindSiliguri(
-                fontSize: 12,
-                color: Colors.white,
-                fontWeight: FontWeight.w600)),
-      );
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+    decoration: BoxDecoration(
+      color: Colors.white.withValues(alpha: 0.2),
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Text(
+      text,
+      style: GoogleFonts.hindSiliguri(
+        fontSize: 12,
+        color: Colors.white,
+        fontWeight: FontWeight.w600,
+      ),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -270,8 +276,11 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
             automaticallyImplyLeading: false,
 
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new,
-                  color: Colors.white, size: 20),
+              icon: const Icon(
+                Icons.arrow_back_ios_new,
+                color: Colors.white,
+                size: 20,
+              ),
               onPressed: () => Navigator.pop(context),
             ),
 
@@ -286,8 +295,11 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
 
             actions: [
               IconButton(
-                icon: const Icon(Icons.settings_outlined,
-                    color: Colors.white, size: 20),
+                icon: const Icon(
+                  Icons.settings_outlined,
+                  color: Colors.white,
+                  size: 20,
+                ),
                 onPressed: () => _showSettings(audio),
               ),
             ],
@@ -296,70 +308,76 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
         body: isLoading
             ? VerseCardShimmer(isDark: false)
             : surahData == null
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.wifi_off, size: 48, color: Colors.grey),
-                        const SizedBox(height: 12),
-                        Text('ডেটা লোড হয়নি',
-                            style: GoogleFonts.hindSiliguri(
-                                color: Colors.grey, fontSize: 16)),
-                        const SizedBox(height: 12),
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() => isLoading = true);
-                            _loadDetail();
-                          },
-                          style: ElevatedButton.styleFrom(
-                              backgroundColor: _kPrimary),
-                          child: Text('আবার চেষ্টা করুন',
-                              style: GoogleFonts.hindSiliguri(
-                                  color: Colors.white)),
-                        ),
-                      ],
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.wifi_off, size: 48, color: Colors.grey),
+                    const SizedBox(height: 12),
+                    Text(
+                      'ডেটা লোড হয়নি',
+                      style: GoogleFonts.hindSiliguri(
+                        color: Colors.grey,
+                        fontSize: 16,
+                      ),
                     ),
-                  )
-                : _PinchFontScaler(
-                    audio: audio,
-                    child: ListView.builder(
-                    controller: _scroll,
-                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 100),
-                    itemCount: (surahData!['verses'] as List).length,
-                    itemBuilder: (ctx, i) {
-                      final verse = (surahData!['verses'] as List)[i];
-                      final vid = verse['id'] as int;
-                      final key = '$_surahId-$vid';
-                      final isFav = favVerseKeys.contains(key);
-                      final isActive = audio.isThisVerseActive(_surahId, vid);
-                      final isPlaying = audio.isThisVersePlaying(_surahId, vid);
-
-                      return _VerseCard(
-                        verse: verse,
-                        verseId: vid,
-                        isFav: isFav,
-                        isActive: isActive,
-                        isPlaying: isPlaying,
-                        arabicSize: audio.arabicSize,
-                        showTranslit: audio.showTranslit,
-                        showTranslation: audio.showTranslation,
-                        duration: isActive ? audio.duration : null,
-                        position: isActive ? audio.position : null,
-                        isDark: isDark,
-                        onPlay: () => audio.playVerse(
-                          surahId: _surahId,
-                          verseId: vid,
-                          surahNameStr: _surahName,
-                          verseTextStr: verse['text'] ?? '',
-                        ),
-                        onFav: () => _toggleFav(vid),
-                        onSeek: (v) =>
-                            audio.seek(Duration(milliseconds: v.toInt())),
-                        formatDuration: _fmt,
-                      );
-                    },
-                  ),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: () {
+                        setState(() => isLoading = true);
+                        _loadDetail();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _kPrimary,
+                      ),
+                      child: Text(
+                        'আবার চেষ্টা করুন',
+                        style: GoogleFonts.hindSiliguri(color: Colors.white),
+                      ),
+                    ),
+                  ],
                 ),
+              )
+            : _PinchFontScaler(
+                audio: audio,
+                child: ListView.builder(
+                  controller: _scroll,
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 100),
+                  itemCount: (surahData!['verses'] as List).length,
+                  itemBuilder: (ctx, i) {
+                    final verse = (surahData!['verses'] as List)[i];
+                    final vid = verse['id'] as int;
+                    final key = '$_surahId-$vid';
+                    final isFav = favVerseKeys.contains(key);
+                    final isActive = audio.isThisVerseActive(_surahId, vid);
+                    final isPlaying = audio.isThisVersePlaying(_surahId, vid);
+
+                    return _VerseCard(
+                      verse: verse,
+                      verseId: vid,
+                      isFav: isFav,
+                      isActive: isActive,
+                      isPlaying: isPlaying,
+                      arabicSize: audio.arabicSize,
+                      showTranslit: audio.showTranslit,
+                      showTranslation: audio.showTranslation,
+                      duration: isActive ? audio.duration : null,
+                      position: isActive ? audio.position : null,
+                      isDark: isDark,
+                      onPlay: () => audio.playVerse(
+                        surahId: _surahId,
+                        verseId: vid,
+                        surahNameStr: _surahName,
+                        verseTextStr: verse['text'] ?? '',
+                      ),
+                      onFav: () => _toggleFav(vid),
+                      onSeek: (v) =>
+                          audio.seek(Duration(milliseconds: v.toInt())),
+                      formatDuration: _fmt,
+                    );
+                  },
+                ),
+              ),
       ),
     );
   }
@@ -383,7 +401,11 @@ class _SettingsSheet extends StatelessWidget {
 
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
-          20, 16, 20, MediaQuery.of(context).viewInsets.bottom + 32),
+        20,
+        16,
+        20,
+        MediaQuery.of(context).viewInsets.bottom + 32,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -393,32 +415,55 @@ class _SettingsSheet extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2)),
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
           ),
           const SizedBox(height: 16),
-          Text('সেটিংস',
-              style: GoogleFonts.hindSiliguri(
-                  fontSize: 18, fontWeight: FontWeight.w700)),
+          Text(
+            'সেটিংস',
+            style: GoogleFonts.hindSiliguri(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
           const SizedBox(height: 12),
 
-          _sw('উচ্চারণ দেখান', audio.showTranslit,
-              (v) => audio.showTranslit = v, audio),
-          _sw('বাংলা অনুবাদ দেখান', audio.showTranslation,
-              (v) => audio.showTranslation = v, audio),
-          _sw('অটো প্লে (পরের আয়াত)', audio.autoPlay,
-              (v) => audio.autoPlay = v, audio),
+          _sw(
+            'উচ্চারণ দেখান',
+            audio.showTranslit,
+            (v) => audio.showTranslit = v,
+            audio,
+          ),
+          _sw(
+            'বাংলা অনুবাদ দেখান',
+            audio.showTranslation,
+            (v) => audio.showTranslation = v,
+            audio,
+          ),
+          _sw(
+            'অটো প্লে (পরের আয়াত)',
+            audio.autoPlay,
+            (v) => audio.autoPlay = v,
+            audio,
+          ),
           if (!kIsWeb)
-            _sw('অডিও ক্যাশ করুন', audio.useCached,
-                (v) => audio.useCached = v, audio),
+            _sw(
+              'অডিও ক্যাশ করুন',
+              audio.useCached,
+              (v) => audio.useCached = v,
+              audio,
+            ),
 
           const SizedBox(height: 12),
           // Font size
           Row(
             children: [
-              Text('আরবি ফন্ট সাইজ',
-                  style: GoogleFonts.hindSiliguri(fontSize: 14)),
+              Text(
+                'আরবি ফন্ট সাইজ',
+                style: GoogleFonts.hindSiliguri(fontSize: 14),
+              ),
               const Spacer(),
               IconButton(
                 icon: const Icon(Icons.remove_circle_outline, color: _kPrimary),
@@ -427,8 +472,10 @@ class _SettingsSheet extends StatelessWidget {
                   audio.notifyListeners();
                 },
               ),
-              Text('${audio.arabicSize.toInt()}',
-                  style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.w700)),
+              Text(
+                '${audio.arabicSize.toInt()}',
+                style: GoogleFonts.hindSiliguri(fontWeight: FontWeight.w700),
+              ),
               IconButton(
                 icon: const Icon(Icons.add_circle_outline, color: _kPrimary),
                 onPressed: () {
@@ -440,24 +487,30 @@ class _SettingsSheet extends StatelessWidget {
           ),
 
           const SizedBox(height: 8),
-          Text('ক্বারী নির্বাচন করুন',
-              style: GoogleFonts.hindSiliguri(fontSize: 14)),
+          Text(
+            'ক্বারী নির্বাচন করুন',
+            style: GoogleFonts.hindSiliguri(fontSize: 14),
+          ),
           const SizedBox(height: 4),
-          ...reciters.map((r) => RadioListTile<String>(
-                value: r['id']!,
-                groupValue: audio.reciter,
-                activeColor: _kPrimary,
-                title: Text(r['name']!,
-                    style: GoogleFonts.hindSiliguri(fontSize: 13)),
-                onChanged: (v) {
-                  if (v != null) {
-                    audio.reciter = v;
-                    audio.notifyListeners();
-                  }
-                },
-                dense: true,
-                contentPadding: EdgeInsets.zero,
-              )),
+          ...reciters.map(
+            (r) => RadioListTile<String>(
+              value: r['id']!,
+              groupValue: audio.reciter,
+              activeColor: _kPrimary,
+              title: Text(
+                r['name']!,
+                style: GoogleFonts.hindSiliguri(fontSize: 13),
+              ),
+              onChanged: (v) {
+                if (v != null) {
+                  audio.reciter = v;
+                  audio.notifyListeners();
+                }
+              },
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+            ),
+          ),
 
           const SizedBox(height: 12),
           SizedBox(
@@ -467,14 +520,18 @@ class _SettingsSheet extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: _kPrimary,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
-              child: Text('সেভ করুন',
-                  style: GoogleFonts.hindSiliguri(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 15)),
+              child: Text(
+                'সেভ করুন',
+                style: GoogleFonts.hindSiliguri(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                ),
+              ),
             ),
           ),
         ],
@@ -482,8 +539,12 @@ class _SettingsSheet extends StatelessWidget {
     );
   }
 
-  Widget _sw(String label, bool val, Function(bool) setter,
-      AudioProvider audio) {
+  Widget _sw(
+    String label,
+    bool val,
+    Function(bool) setter,
+    AudioProvider audio,
+  ) {
     return SwitchListTile(
       title: Text(label, style: GoogleFonts.hindSiliguri(fontSize: 14)),
       value: val,
@@ -529,8 +590,8 @@ class _VerseCard extends StatelessWidget {
   });
 
   String _bn(int n) {
-    const e = ['0','1','2','3','4','5','6','7','8','9'];
-    const b = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+    const e = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    const b = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
     var s = n.toString();
     for (int i = 0; i < e.length; i++) s = s.replaceAll(e[i], b[i]);
     return s;
@@ -546,9 +607,10 @@ class _VerseCard extends StatelessWidget {
         border: isActive ? Border.all(color: _kPrimary, width: 1.5) : null,
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2))
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
       child: Column(
@@ -570,13 +632,18 @@ class _VerseCard extends StatelessWidget {
                   width: 32,
                   height: 32,
                   decoration: const BoxDecoration(
-                      color: _kPrimary, shape: BoxShape.circle),
+                    color: _kPrimary,
+                    shape: BoxShape.circle,
+                  ),
                   child: Center(
-                    child: Text(_bn(verseId),
-                        style: GoogleFonts.hindSiliguri(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700)),
+                    child: Text(
+                      _bn(verseId),
+                      style: GoogleFonts.hindSiliguri(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -619,10 +686,11 @@ class _VerseCard extends StatelessWidget {
               textAlign: TextAlign.right,
               textDirection: TextDirection.rtl,
               style: TextStyle(
-                  fontSize: arabicSize,
-                  height: 2.0,
-                  color: isDark ? AppColors.darkText : const Color(0xFF1A1A2E),
-                  fontFamily: 'serif'),
+                fontSize: arabicSize,
+                height: 2.0,
+                color: isDark ? AppColors.darkText : const Color(0xFF1A1A2E),
+                fontFamily: 'NooreHuda',
+              ),
             ),
           ),
 
@@ -637,23 +705,24 @@ class _VerseCard extends StatelessWidget {
               child: Text(
                 verse['transliteration'] ?? '',
                 style: GoogleFonts.poppins(
-                    fontSize: 13,
-                    color: _kPrimary,
-                    fontStyle: FontStyle.italic,
-                    height: 1.6),
+                  fontSize: 13,
+                  color: _kPrimary,
+                  fontStyle: FontStyle.italic,
+                  height: 1.6,
+                ),
               ),
             ),
 
           if (showTranslation && (verse['translation'] ?? '').isNotEmpty)
             Padding(
-              padding:
-                  EdgeInsets.fromLTRB(16, showTranslit ? 4 : 10, 16, 14),
+              padding: EdgeInsets.fromLTRB(16, showTranslit ? 4 : 10, 16, 14),
               child: Text(
                 verse['translation'] ?? '',
                 style: GoogleFonts.hindSiliguri(
-                    fontSize: 14,
-                    color: isDark ? AppColors.darkSubText : Colors.grey[700],
-                    height: 1.7),
+                  fontSize: 14,
+                  color: isDark ? AppColors.darkSubText : Colors.grey[700],
+                  height: 1.7,
+                ),
               ),
             ),
 
@@ -669,13 +738,13 @@ class _VerseCard extends StatelessWidget {
                       inactiveTrackColor: _kPrimary.withValues(alpha: 0.2),
                       thumbColor: _kPrimary,
                       overlayColor: _kPrimary.withValues(alpha: 0.1),
-                      thumbShape:
-                          const RoundSliderThumbShape(enabledThumbRadius: 6),
+                      thumbShape: const RoundSliderThumbShape(
+                        enabledThumbRadius: 6,
+                      ),
                       trackHeight: 3,
                     ),
                     child: Slider(
-                      value: (position ?? Duration.zero)
-                          .inMilliseconds
+                      value: (position ?? Duration.zero).inMilliseconds
                           .toDouble()
                           .clamp(0, duration!.inMilliseconds.toDouble()),
                       max: duration!.inMilliseconds.toDouble(),
@@ -687,12 +756,20 @@ class _VerseCard extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(formatDuration(position ?? Duration.zero),
-                            style: GoogleFonts.poppins(
-                                fontSize: 11, color: Colors.grey)),
-                        Text(formatDuration(duration!),
-                            style: GoogleFonts.poppins(
-                                fontSize: 11, color: Colors.grey)),
+                        Text(
+                          formatDuration(position ?? Duration.zero),
+                          style: GoogleFonts.poppins(
+                            fontSize: 11,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        Text(
+                          formatDuration(duration!),
+                          style: GoogleFonts.poppins(
+                            fontSize: 11,
+                            color: Colors.grey,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -763,7 +840,7 @@ class _CollapsedTitle extends StatelessWidget {
           style: const TextStyle(
             fontSize: 15,
             color: Colors.white,
-            fontFamily: 'serif',
+            fontFamily: 'NooreHuda',
             fontWeight: FontWeight.bold,
           ),
         ),

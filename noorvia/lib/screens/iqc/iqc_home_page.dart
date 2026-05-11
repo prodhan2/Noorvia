@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/theme/app_theme.dart';
 import '../common/web_view_page.dart';
 
 class IQCHomePage extends StatefulWidget {
@@ -27,6 +28,20 @@ class _IQCHomePageState extends State<IQCHomePage> {
   bool _isLoading = true;
   bool _hasLoadError = false;
   int _bannerIndex = 0;
+
+  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
+  Color get _bgColor => _isDark ? AppColors.darkBg : const Color(0xFFF4F7F2);
+  Color get _cardColor => _isDark ? AppColors.darkCard : Colors.white;
+  Color get _textColor =>
+      _isDark ? AppColors.darkText : const Color(0xFF1A1A1A);
+  Color get _subTextColor => _isDark ? AppColors.darkSubText : Colors.black54;
+  Color get _primaryColor =>
+      _isDark ? const Color(0xFF4DCAA0) : const Color(0xFF0B4D3A);
+  Color get _softPrimaryColor => _isDark
+      ? const Color(0xFF4DCAA0).withValues(alpha: .14)
+      : const Color(0xFFE8F5EE);
+  Color get _borderColor =>
+      _isDark ? Colors.white.withValues(alpha: .10) : const Color(0xFFD8E7DE);
 
   @override
   void initState() {
@@ -114,7 +129,7 @@ class _IQCHomePageState extends State<IQCHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7F2),
+      backgroundColor: _bgColor,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: const Color(0xFF0B4D3A),
@@ -138,9 +153,9 @@ class _IQCHomePageState extends State<IQCHomePage> {
       ),
       body: RefreshIndicator(
         onRefresh: _fetchIQCInfo,
-        color: const Color(0xFF0B4D3A),
+        color: _primaryColor,
         child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
+            ? Center(child: CircularProgressIndicator(color: _primaryColor))
             : SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.only(bottom: 24),
@@ -173,7 +188,7 @@ class _IQCHomePageState extends State<IQCHomePage> {
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: _cardColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
       ),
@@ -189,7 +204,7 @@ class _IQCHomePageState extends State<IQCHomePage> {
                   children: [
                     const Icon(
                       Icons.notifications_active_outlined,
-                      color: Color(0xFF0B4D3A),
+                      color: Color(0xFF4DCAA0),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -198,7 +213,7 @@ class _IQCHomePageState extends State<IQCHomePage> {
                         style: GoogleFonts.hindSiliguri(
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
-                          color: const Color(0xFF0B4D3A),
+                          color: _primaryColor,
                         ),
                       ),
                     ),
@@ -283,14 +298,16 @@ class _IQCHomePageState extends State<IQCHomePage> {
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF7E8),
+        color: _isDark ? const Color(0xFF2B2416) : const Color(0xFFFFF7E8),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFF1D09A)),
+        border: Border.all(
+          color: _isDark ? const Color(0xFF6D5625) : const Color(0xFFF1D09A),
+        ),
       ),
       child: Text(
         'লাইভ তথ্য লোড করা যায়নি, সংরক্ষিত তথ্য দেখানো হচ্ছে।',
         style: GoogleFonts.hindSiliguri(
-          color: const Color(0xFF795008),
+          color: _isDark ? const Color(0xFFFFD77A) : const Color(0xFF795008),
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -303,9 +320,11 @@ class _IQCHomePageState extends State<IQCHomePage> {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFAE8),
+        color: _isDark ? const Color(0xFF2B2616) : const Color(0xFFFFFAE8),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE9D783)),
+        border: Border.all(
+          color: _isDark ? const Color(0xFF756629) : const Color(0xFFE9D783),
+        ),
       ),
       child: Text(
         notice.title,
@@ -313,7 +332,7 @@ class _IQCHomePageState extends State<IQCHomePage> {
           fontSize: 14,
           height: 1.55,
           fontWeight: FontWeight.w600,
-          color: const Color(0xFF4F4307),
+          color: _isDark ? const Color(0xFFFFE28A) : const Color(0xFF4F4307),
         ),
       ),
     );
@@ -345,11 +364,17 @@ class _IQCHomePageState extends State<IQCHomePage> {
                       imageUrl: banner.imageUrl,
                       fit: BoxFit.cover,
                       placeholder: (_, __) => Container(
-                        color: const Color(0xFFE3EFE8),
-                        child: const Center(child: CircularProgressIndicator()),
+                        color: _isDark
+                            ? Colors.white.withValues(alpha: .08)
+                            : const Color(0xFFE3EFE8),
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            color: _primaryColor,
+                          ),
+                        ),
                       ),
                       errorWidget: (_, __, ___) => Container(
-                        color: const Color(0xFF0B4D3A),
+                        color: _primaryColor,
                         child: const Icon(
                           Icons.image_not_supported_outlined,
                           color: Colors.white,
@@ -436,15 +461,15 @@ class _IQCHomePageState extends State<IQCHomePage> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _cardColor,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFD8E7DE)),
+        border: Border.all(color: _borderColor),
       ),
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: const Color(0xFFE8F5EE),
-            child: Icon(icon, color: const Color(0xFF0B4D3A)),
+            backgroundColor: _softPrimaryColor,
+            child: Icon(icon, color: _primaryColor),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -457,7 +482,7 @@ class _IQCHomePageState extends State<IQCHomePage> {
                   style: GoogleFonts.hindSiliguri(
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFF0B4D3A),
+                    color: _primaryColor,
                   ),
                 ),
                 Text(
@@ -466,7 +491,7 @@ class _IQCHomePageState extends State<IQCHomePage> {
                   overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.hindSiliguri(
                     fontSize: 13,
-                    color: Colors.black54,
+                    color: _subTextColor,
                   ),
                 ),
               ],
@@ -483,7 +508,11 @@ class _IQCHomePageState extends State<IQCHomePage> {
       icon: Icons.volunteer_activism_outlined,
       child: Text(
         'Islamic Quiz Contest (IQC) বর্তমান প্রজন্মের কাছে ইসলাম পৌঁছানোর একটি অরাজনৈতিক ক্ষুদ্র প্রয়াস। কুইজ, সচেতনতা ও শিক্ষামূলক কার্যক্রমের মাধ্যমে সহজভাবে ইসলামি জ্ঞান ছড়িয়ে দেওয়ার চেষ্টা করা হয়।',
-        style: GoogleFonts.hindSiliguri(fontSize: 15, height: 1.6),
+        style: GoogleFonts.hindSiliguri(
+          fontSize: 15,
+          height: 1.6,
+          color: _textColor,
+        ),
       ),
     );
   }
@@ -519,7 +548,7 @@ class _IQCHomePageState extends State<IQCHomePage> {
       child: quizzes.isEmpty
           ? Text(
               'নতুন কুইজের তথ্য শীঘ্রই যুক্ত হবে।',
-              style: GoogleFonts.hindSiliguri(color: Colors.black54),
+              style: GoogleFonts.hindSiliguri(color: _subTextColor),
             )
           : Column(
               children: quizzes.map((quiz) {
@@ -527,9 +556,11 @@ class _IQCHomePageState extends State<IQCHomePage> {
                   margin: const EdgeInsets.only(bottom: 12),
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF8FBF7),
+                    color: _isDark
+                        ? Colors.white.withValues(alpha: .04)
+                        : const Color(0xFFF8FBF7),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFD8E7DE)),
+                    border: Border.all(color: _borderColor),
                   ),
                   child: Row(
                     children: [
@@ -543,11 +574,8 @@ class _IQCHomePageState extends State<IQCHomePage> {
                           errorWidget: (_, __, ___) => Container(
                             width: 58,
                             height: 58,
-                            color: const Color(0xFFE8F5EE),
-                            child: const Icon(
-                              Icons.menu_book,
-                              color: Color(0xFF0B4D3A),
-                            ),
+                            color: _softPrimaryColor,
+                            child: Icon(Icons.menu_book, color: _primaryColor),
                           ),
                         ),
                       ),
@@ -563,6 +591,7 @@ class _IQCHomePageState extends State<IQCHomePage> {
                               style: GoogleFonts.hindSiliguri(
                                 fontWeight: FontWeight.w800,
                                 fontSize: 15,
+                                color: _textColor,
                               ),
                             ),
                             Text(
@@ -570,7 +599,7 @@ class _IQCHomePageState extends State<IQCHomePage> {
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: GoogleFonts.hindSiliguri(
-                                color: Colors.black54,
+                                color: _subTextColor,
                                 fontSize: 13,
                               ),
                             ),
@@ -580,7 +609,11 @@ class _IQCHomePageState extends State<IQCHomePage> {
                       IconButton(
                         tooltip: 'Open quiz',
                         onPressed: () => _openQuizWebView(quiz.quizLink),
-                        icon: const Icon(Icons.arrow_forward_ios, size: 18),
+                        icon: Icon(
+                          Icons.arrow_forward_ios,
+                          size: 18,
+                          color: _primaryColor,
+                        ),
                       ),
                     ],
                   ),
@@ -614,8 +647,8 @@ class _IQCHomePageState extends State<IQCHomePage> {
       icon: Icon(icon),
       label: Text(text, overflow: TextOverflow.ellipsis),
       style: OutlinedButton.styleFrom(
-        foregroundColor: const Color(0xFF0B4D3A),
-        side: const BorderSide(color: Color(0xFF0B4D3A)),
+        foregroundColor: _primaryColor,
+        side: BorderSide(color: _primaryColor),
         padding: const EdgeInsets.symmetric(vertical: 13),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
@@ -632,11 +665,12 @@ class _IQCHomePageState extends State<IQCHomePage> {
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _cardColor,
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: _borderColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: .05),
+            color: Colors.black.withValues(alpha: _isDark ? .22 : .05),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -647,7 +681,7 @@ class _IQCHomePageState extends State<IQCHomePage> {
         children: [
           Row(
             children: [
-              Icon(icon, color: const Color(0xFF0B4D3A)),
+              Icon(icon, color: _primaryColor),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -655,7 +689,7 @@ class _IQCHomePageState extends State<IQCHomePage> {
                   style: GoogleFonts.hindSiliguri(
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFF0B4D3A),
+                    color: _primaryColor,
                   ),
                 ),
               ),
@@ -677,11 +711,17 @@ class _ActivityRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark
+        ? const Color(0xFF4DCAA0)
+        : const Color(0xFF0B4D3A);
+    final textColor = isDark ? AppColors.darkText : const Color(0xFF1A1A1A);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
         children: [
-          Icon(icon, color: const Color(0xFF0B4D3A), size: 22),
+          Icon(icon, color: primaryColor, size: 22),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -689,6 +729,7 @@ class _ActivityRow extends StatelessWidget {
               style: GoogleFonts.hindSiliguri(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
+                color: textColor,
               ),
             ),
           ),

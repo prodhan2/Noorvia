@@ -4,8 +4,8 @@ import '../providers/settings_provider.dart';
 class AppColors {
   // ── Gradient tokens ───────────────────────────────────────
   static const Color gradientStart = Color(0xFF6C3CE1);
-  static const Color gradientMid   = Color(0xFF4A6FE3);
-  static const Color gradientEnd   = Color(0xFF4A90D9);
+  static const Color gradientMid = Color(0xFF4A6FE3);
+  static const Color gradientEnd = Color(0xFF4A90D9);
 
   static LinearGradient get gradient => const LinearGradient(
     colors: [gradientStart, gradientMid, gradientEnd],
@@ -26,32 +26,32 @@ class AppColors {
   );
 
   // ── Accent colors ─────────────────────────────────────────
-  static const Color primary      = Color(0xFF6C3CE1);
+  static const Color primary = Color(0xFF6C3CE1);
   static const Color primaryLight = Color(0xFF9B6FF5);
-  static const Color primaryDark  = Color(0xFF4A2BAD);
-  static const Color accent       = Color(0xFF4A90D9);
+  static const Color primaryDark = Color(0xFF4A2BAD);
+  static const Color accent = Color(0xFF4A90D9);
 
   // ── Section colors ────────────────────────────────────────
-  static const Color ilomColor    = Color(0xFF5B3CC4);
-  static const Color amolColor    = Color(0xFF2563EB);
-  static const Color sebaColor    = Color(0xFF0891B2);
+  static const Color ilomColor = Color(0xFF5B3CC4);
+  static const Color amolColor = Color(0xFF2563EB);
+  static const Color sebaColor = Color(0xFF0891B2);
   static const Color bibidhoColor = Color(0xFF7C3AED);
 
   // ── Light theme ───────────────────────────────────────────
-  static const Color lightBg      = Color(0xFFF5F4FF);
-  static const Color lightCard    = Color(0xFFFFFFFF);
-  static const Color lightText    = Color(0xFF1A1A2E);
+  static const Color lightBg = Color(0xFFF5F4FF);
+  static const Color lightCard = Color(0xFFFFFFFF);
+  static const Color lightText = Color(0xFF1A1A2E);
   static const Color lightSubText = Color(0xFF6B7280);
 
   // ── Dark theme ────────────────────────────────────────────
-  static const Color darkBg       = Color(0xFF0F0E1A);
-  static const Color darkCard     = Color(0xFF1C1B2E);
-  static const Color darkText     = Color(0xFFEEEEFF);
-  static const Color darkSubText  = Color(0xFF9CA3AF);
+  static const Color darkBg = Color(0xFF0F0E1A);
+  static const Color darkCard = Color(0xFF1C1B2E);
+  static const Color darkText = Color(0xFFEEEEFF);
+  static const Color darkSubText = Color(0xFF9CA3AF);
 
   // ── Misc ──────────────────────────────────────────────────
-  static const Color notifRed     = Color(0xFFEF4444);
-  static const Color gold         = Color(0xFFF59E0B);
+  static const Color notifRed = Color(0xFFEF4444);
+  static const Color gold = Color(0xFFF59E0B);
 
   static LinearGradient get cardGradient => const LinearGradient(
     colors: [Color(0xFF7B4FE8), Color(0xFF5B8DEF)],
@@ -67,6 +67,13 @@ class AppColors {
 }
 
 class AppTheme {
+  static const List<String> fontFallbacks = [
+    'NooreHuda',
+    'NooreHera',
+    'Noto Naskh Arabic',
+    'Noto Sans Bengali',
+  ];
+
   static ThemeData lightTheme = _buildLight(
     BanglaFont.hindSiliguri,
     kAccentOptions.first,
@@ -87,6 +94,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
+      fontFamilyFallback: fontFallbacks,
       primaryColor: accent.primary,
       scaffoldBackgroundColor: AppColors.lightBg,
       colorScheme: ColorScheme.light(
@@ -94,10 +102,13 @@ class AppTheme {
         secondary: accent.light,
         surface: AppColors.lightCard,
       ),
-      textTheme: font.textTheme().apply(
-        bodyColor: AppColors.lightText,
-        displayColor: AppColors.lightText,
-      ),
+      textTheme: font
+          .textTheme()
+          .apply(
+            bodyColor: AppColors.lightText,
+            displayColor: AppColors.lightText,
+          )
+          ._withFontFallbacks(),
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.lightBg,
         elevation: 0,
@@ -122,6 +133,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
+      fontFamilyFallback: fontFallbacks,
       primaryColor: accent.primary,
       scaffoldBackgroundColor: AppColors.darkBg,
       colorScheme: ColorScheme.dark(
@@ -129,10 +141,13 @@ class AppTheme {
         secondary: accent.light,
         surface: AppColors.darkCard,
       ),
-      textTheme: font.textTheme().apply(
-        bodyColor: AppColors.darkText,
-        displayColor: AppColors.darkText,
-      ),
+      textTheme: font
+          .textTheme()
+          .apply(
+            bodyColor: AppColors.darkText,
+            displayColor: AppColors.darkText,
+          )
+          ._withFontFallbacks(),
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.darkBg,
         elevation: 0,
@@ -150,6 +165,32 @@ class AppTheme {
         type: BottomNavigationBarType.fixed,
         elevation: 8,
       ),
+    );
+  }
+}
+
+extension _TextThemeFontFallbacks on TextTheme {
+  TextTheme _withFontFallbacks() {
+    TextStyle? withFallback(TextStyle? style) {
+      return style?.copyWith(fontFamilyFallback: AppTheme.fontFallbacks);
+    }
+
+    return copyWith(
+      displayLarge: withFallback(displayLarge),
+      displayMedium: withFallback(displayMedium),
+      displaySmall: withFallback(displaySmall),
+      headlineLarge: withFallback(headlineLarge),
+      headlineMedium: withFallback(headlineMedium),
+      headlineSmall: withFallback(headlineSmall),
+      titleLarge: withFallback(titleLarge),
+      titleMedium: withFallback(titleMedium),
+      titleSmall: withFallback(titleSmall),
+      bodyLarge: withFallback(bodyLarge),
+      bodyMedium: withFallback(bodyMedium),
+      bodySmall: withFallback(bodySmall),
+      labelLarge: withFallback(labelLarge),
+      labelMedium: withFallback(labelMedium),
+      labelSmall: withFallback(labelSmall),
     );
   }
 }

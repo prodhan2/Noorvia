@@ -137,7 +137,10 @@ class _DowaScreenState extends State<DowaScreen> {
             _loading = false;
           });
         } else {
-          setState(() { _loading = false; _offline = true; });
+          setState(() {
+            _loading = false;
+            _offline = true;
+          });
         }
       }
     } catch (e) {
@@ -147,7 +150,10 @@ class _DowaScreenState extends State<DowaScreen> {
           _loading = false;
         });
       } else {
-        setState(() { _loading = false; _offline = true; });
+        setState(() {
+          _loading = false;
+          _offline = true;
+        });
       }
     }
   }
@@ -164,7 +170,10 @@ class _DowaScreenState extends State<DowaScreen> {
         _offline = fromCache;
       });
     } catch (_) {
-      if (!fromCache) setState(() { _loading = false; });
+      if (!fromCache)
+        setState(() {
+          _loading = false;
+        });
     }
   }
 
@@ -211,7 +220,7 @@ class _DowaScreenState extends State<DowaScreen> {
                     style: TextStyle(
                       fontSize: 22,
                       color: Colors.white,
-                      fontFamily: 'serif',
+                      fontFamily: 'NooreHuda',
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -271,62 +280,62 @@ class _DowaScreenState extends State<DowaScreen> {
           Expanded(
             child: _loading
                 ? const Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.primary,
-                    ),
+                    child: CircularProgressIndicator(color: AppColors.primary),
                   )
                 : _error != null
-                    ? _ErrorWidget(
-                        message: _error!,
-                        onRetry: _fetchDuas,
-                      )
-                    : Column(
-                        children: [
-                          if (_offline)
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 6),
-                              color: Colors.orange.withValues(alpha: 0.15),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.wifi_off_rounded,
-                                      size: 14, color: Colors.orange),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    'অফলাইন মোড — সংরক্ষিত ডেটা দেখাচ্ছে',
-                                    style: GoogleFonts.hindSiliguri(
-                                        fontSize: 11, color: Colors.orange),
-                                  ),
-                                ],
+                ? _ErrorWidget(message: _error!, onRetry: _fetchDuas)
+                : Column(
+                    children: [
+                      if (_offline)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 6,
+                          ),
+                          color: Colors.orange.withValues(alpha: 0.15),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.wifi_off_rounded,
+                                size: 14,
+                                color: Colors.orange,
                               ),
-                            ),
-                          Expanded(
-                            child: ListView.builder(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 16),
-                              itemCount: _categories.length,
-                              itemBuilder: (context, index) {
-                                final cat = _categories[index];
-                                return _CategoryCard(
-                                  category: cat,
-                                  cardColor: cardColor,
-                                  textColor: textColor,
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            DuaListPage(category: cat),
-                                      ),
-                                    );
-                                  },
+                              const SizedBox(width: 6),
+                              Text(
+                                'অফলাইন মোড — সংরক্ষিত ডেটা দেখাচ্ছে',
+                                style: GoogleFonts.hindSiliguri(
+                                  fontSize: 11,
+                                  color: Colors.orange,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      Expanded(
+                        child: ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          itemCount: _categories.length,
+                          itemBuilder: (context, index) {
+                            final cat = _categories[index];
+                            return _CategoryCard(
+                              category: cat,
+                              cardColor: cardColor,
+                              textColor: textColor,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => DuaListPage(category: cat),
+                                  ),
                                 );
                               },
-                            ),
-                          ),
-                        ],
+                            );
+                          },
+                        ),
                       ),
+                    ],
+                  ),
           ),
         ],
       ),
@@ -357,10 +366,7 @@ class _CategoryCard extends StatelessWidget {
         color: cardColor,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 6,
-          ),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6),
         ],
       ),
       child: ListTile(
@@ -373,10 +379,7 @@ class _CategoryCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(10),
           ),
           child: Center(
-            child: Text(
-              category.emoji,
-              style: const TextStyle(fontSize: 22),
-            ),
+            child: Text(category.emoji, style: const TextStyle(fontSize: 22)),
           ),
         ),
         title: Text(
@@ -389,10 +392,7 @@ class _CategoryCard extends StatelessWidget {
         ),
         subtitle: Text(
           '${category.count}টি দু\'আ',
-          style: GoogleFonts.hindSiliguri(
-            color: Colors.grey,
-            fontSize: 12,
-          ),
+          style: GoogleFonts.hindSiliguri(color: Colors.grey, fontSize: 12),
         ),
         trailing: const Icon(
           Icons.arrow_forward_ios,
@@ -424,10 +424,7 @@ class _ErrorWidget extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               message,
-              style: GoogleFonts.hindSiliguri(
-                fontSize: 15,
-                color: Colors.grey,
-              ),
+              style: GoogleFonts.hindSiliguri(fontSize: 15, color: Colors.grey),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),

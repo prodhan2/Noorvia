@@ -7,11 +7,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme/app_theme.dart';
 
 // ── Theme colors ──────────────────────────────────────────────
-const _kPrimary      = AppColors.primary;
-const _kPrimaryDark  = AppColors.primaryDark;
+const _kPrimary = AppColors.primary;
+const _kPrimaryDark = AppColors.primaryDark;
 const _kPrimaryLight = AppColors.primaryLight;
-const _kGold         = Color(0xFFFFB300);
-const _kBg           = Color(0xFFF5F4FF); // light purple tint bg
+const _kGold = Color(0xFFFFB300);
+const _kBg = Color(0xFFF5F4FF); // light purple tint bg
 
 const _kApiUrl =
     'https://raw.githubusercontent.com/prodhan2/App_Backend_Data/main/MyApi/namaz_shikkha.json';
@@ -33,11 +33,11 @@ class NamazItem {
   });
 
   factory NamazItem.fromJson(Map<String, dynamic> j) => NamazItem(
-        title: j['title'] ?? '',
-        arabic: j['arabic'] ?? '',
-        pronunciation: j['pronunciation'] ?? '',
-        translation: j['translation'] ?? '',
-      );
+    title: j['title'] ?? '',
+    arabic: j['arabic'] ?? '',
+    pronunciation: j['pronunciation'] ?? '',
+    translation: j['translation'] ?? '',
+  );
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -134,11 +134,13 @@ class _ChapterListPageState extends State<ChapterListPage> {
       _filtered = q.isEmpty
           ? List.from(_all)
           : _all
-              .where((e) =>
-                  e.title.toLowerCase().contains(q) ||
-                  e.pronunciation.toLowerCase().contains(q) ||
-                  e.translation.toLowerCase().contains(q))
-              .toList();
+                .where(
+                  (e) =>
+                      e.title.toLowerCase().contains(q) ||
+                      e.pronunciation.toLowerCase().contains(q) ||
+                      e.translation.toLowerCase().contains(q),
+                )
+                .toList();
     });
   }
 
@@ -154,8 +156,7 @@ class _ChapterListPageState extends State<ChapterListPage> {
         body: Column(
           children: [
             // Offline banner
-            if (_offline)
-              _OfflineBanner(),
+            if (_offline) _OfflineBanner(),
 
             // Search bar
             _SearchBar(
@@ -180,7 +181,9 @@ class _ChapterListPageState extends State<ChapterListPage> {
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: _kPrimary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(20),
@@ -202,24 +205,24 @@ class _ChapterListPageState extends State<ChapterListPage> {
             Expanded(
               child: _loading
                   ? const Center(
-                      child: CircularProgressIndicator(color: _kPrimary))
+                      child: CircularProgressIndicator(color: _kPrimary),
+                    )
                   : _filtered.isEmpty
-                      ? _EmptyState()
-                      : RefreshIndicator(
-                          color: _kPrimary,
-                          onRefresh: () => _load(forceRefresh: true),
-                          child: ListView.builder(
-                            padding:
-                                const EdgeInsets.fromLTRB(12, 0, 12, 100),
-                            itemCount: _filtered.length,
-                            itemBuilder: (ctx, i) => _NamazCard(
-                              item: _filtered[i],
-                              index: _all.indexOf(_filtered[i]),
-                              isDark: isDark,
-                              onTap: () => _openDetail(ctx, _filtered[i]),
-                            ),
-                          ),
+                  ? _EmptyState()
+                  : RefreshIndicator(
+                      color: _kPrimary,
+                      onRefresh: () => _load(forceRefresh: true),
+                      child: ListView.builder(
+                        padding: const EdgeInsets.fromLTRB(12, 0, 12, 100),
+                        itemCount: _filtered.length,
+                        itemBuilder: (ctx, i) => _NamazCard(
+                          item: _filtered[i],
+                          index: _all.indexOf(_filtered[i]),
+                          isDark: isDark,
+                          onTap: () => _openDetail(ctx, _filtered[i]),
                         ),
+                      ),
+                    ),
             ),
           ],
         ),
@@ -230,9 +233,7 @@ class _ChapterListPageState extends State<ChapterListPage> {
   void _openDetail(BuildContext ctx, NamazItem item) {
     Navigator.push(
       ctx,
-      MaterialPageRoute(
-        builder: (_) => NamazDetailPage(item: item),
-      ),
+      MaterialPageRoute(builder: (_) => NamazDetailPage(item: item)),
     );
   }
 
@@ -243,8 +244,11 @@ class _ChapterListPageState extends State<ChapterListPage> {
       backgroundColor: _kPrimary,
       leading: Navigator.canPop(context)
           ? IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new,
-                  color: Colors.white, size: 20),
+              icon: const Icon(
+                Icons.arrow_back_ios_new,
+                color: Colors.white,
+                size: 20,
+              ),
               onPressed: () => Navigator.pop(context),
             )
           : null,
@@ -283,7 +287,9 @@ class _ChapterListPageState extends State<ChapterListPage> {
                 Text(
                   'নিয়ত, দু\'আ ও সূরা সমূহ',
                   style: GoogleFonts.hindSiliguri(
-                      fontSize: 12, color: Colors.white70),
+                    fontSize: 12,
+                    color: Colors.white70,
+                  ),
                 ),
               ],
             ),
@@ -315,8 +321,10 @@ class _NamazDetailPageState extends State<NamazDetailPage> {
         '${widget.item.title}\n\n${widget.item.arabic}\n\n${widget.item.pronunciation}\n\n${widget.item.translation}';
     Clipboard.setData(ClipboardData(text: text));
     setState(() => _copied = true);
-    Future.delayed(const Duration(seconds: 2),
-        () => mounted ? setState(() => _copied = false) : null);
+    Future.delayed(
+      const Duration(seconds: 2),
+      () => mounted ? setState(() => _copied = false) : null,
+    );
   }
 
   @override
@@ -336,8 +344,11 @@ class _NamazDetailPageState extends State<NamazDetailPage> {
             pinned: true,
             backgroundColor: _kPrimary,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new,
-                  color: Colors.white, size: 20),
+              icon: const Icon(
+                Icons.arrow_back_ios_new,
+                color: Colors.white,
+                size: 20,
+              ),
               onPressed: () => Navigator.pop(context),
             ),
             title: Text(
@@ -372,7 +383,9 @@ class _NamazDetailPageState extends State<NamazDetailPage> {
                   Center(
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 6),
+                        horizontal: 16,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
                           colors: [_kPrimaryDark, _kPrimaryLight],
@@ -408,7 +421,7 @@ class _NamazDetailPageState extends State<NamazDetailPage> {
                         fontSize: 26,
                         height: 2.2,
                         color: textColor,
-                        fontFamily: 'serif',
+                        fontFamily: 'NooreHuda',
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -423,14 +436,16 @@ class _NamazDetailPageState extends State<NamazDetailPage> {
                         label: 'উচ্চারণ',
                         active: _showPronunciation,
                         onTap: () => setState(
-                            () => _showPronunciation = !_showPronunciation),
+                          () => _showPronunciation = !_showPronunciation,
+                        ),
                       ),
                       const SizedBox(width: 8),
                       _ToggleChip(
                         label: 'অনুবাদ',
                         active: _showTranslation,
                         onTap: () => setState(
-                            () => _showTranslation = !_showTranslation),
+                          () => _showTranslation = !_showTranslation,
+                        ),
                       ),
                     ],
                   ),
@@ -438,7 +453,8 @@ class _NamazDetailPageState extends State<NamazDetailPage> {
                   const SizedBox(height: 12),
 
                   // Pronunciation card
-                  if (_showPronunciation && widget.item.pronunciation.isNotEmpty)
+                  if (_showPronunciation &&
+                      widget.item.pronunciation.isNotEmpty)
                     _DetailCard(
                       isDark: isDark,
                       cardBg: cardBg,
@@ -457,7 +473,8 @@ class _NamazDetailPageState extends State<NamazDetailPage> {
                       ),
                     ),
 
-                  if (_showPronunciation && widget.item.pronunciation.isNotEmpty)
+                  if (_showPronunciation &&
+                      widget.item.pronunciation.isNotEmpty)
                     const SizedBox(height: 12),
 
                   // Translation card
@@ -485,10 +502,7 @@ class _NamazDetailPageState extends State<NamazDetailPage> {
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       onPressed: _copy,
-                      icon: Icon(
-                        _copied ? Icons.check : Icons.copy,
-                        size: 18,
-                      ),
+                      icon: Icon(_copied ? Icons.check : Icons.copy, size: 18),
                       label: Text(
                         _copied ? 'কপি হয়েছে!' : 'সম্পূর্ণ কপি করুন',
                         style: GoogleFonts.hindSiliguri(
@@ -497,8 +511,7 @@ class _NamazDetailPageState extends State<NamazDetailPage> {
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            _copied ? AppColors.accent : _kPrimary,
+                        backgroundColor: _copied ? AppColors.accent : _kPrimary,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
@@ -613,7 +626,7 @@ class _NamazCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 15,
                           color: _kPrimary,
-                          fontFamily: 'serif',
+                          fontFamily: 'NooreHuda',
                           height: 1.8,
                         ),
                       ),
@@ -638,8 +651,11 @@ class _NamazCard extends StatelessWidget {
 
               // Arrow
               const SizedBox(width: 8),
-              Icon(Icons.arrow_forward_ios_rounded,
-                  size: 14, color: _kPrimary.withValues(alpha: 0.5)),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 14,
+                color: _kPrimary.withValues(alpha: 0.5),
+              ),
             ],
           ),
         ),
@@ -684,17 +700,18 @@ class _SearchBar extends StatelessWidget {
           controller: controller,
           onChanged: onChanged,
           style: GoogleFonts.hindSiliguri(
-              color: isDark ? Colors.white : const Color(0xFF1A1A1A)),
+            color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+          ),
           decoration: InputDecoration(
             hintText: 'নিয়ত বা দু\'আ খুঁজুন...',
             hintStyle: GoogleFonts.hindSiliguri(
-                color: Colors.grey, fontSize: 13),
-            prefixIcon:
-                const Icon(Icons.search, color: _kPrimary, size: 20),
+              color: Colors.grey,
+              fontSize: 13,
+            ),
+            prefixIcon: const Icon(Icons.search, color: _kPrimary, size: 20),
             suffixIcon: controller.text.isNotEmpty
                 ? IconButton(
-                    icon: const Icon(Icons.clear,
-                        color: Colors.grey, size: 18),
+                    icon: const Icon(Icons.clear, color: Colors.grey, size: 18),
                     onPressed: onClear,
                   )
                 : null,
@@ -744,12 +761,12 @@ class _DetailCard extends StatelessWidget {
         children: [
           // Label header
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               color: labelColor.withValues(alpha: 0.08),
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(16)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(16),
+              ),
             ),
             child: Row(
               children: [
@@ -794,26 +811,19 @@ class _ToggleChip extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          color: active
-              ? _kPrimary
-              : _kPrimary.withValues(alpha: 0.08),
+          color: active ? _kPrimary : _kPrimary.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: active
-                ? _kPrimary
-                : _kPrimary.withValues(alpha: 0.3),
+            color: active ? _kPrimary : _kPrimary.withValues(alpha: 0.3),
           ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              active
-                  ? Icons.visibility
-                  : Icons.visibility_off_outlined,
+              active ? Icons.visibility : Icons.visibility_off_outlined,
               size: 14,
               color: active ? Colors.white : _kPrimary,
             ),
@@ -847,7 +857,9 @@ class _OfflineBanner extends StatelessWidget {
           Text(
             'অফলাইন মোড — ক্যাশ ডেটা ব্যবহার হচ্ছে',
             style: GoogleFonts.hindSiliguri(
-                fontSize: 12, color: Colors.orange.shade800),
+              fontSize: 12,
+              color: Colors.orange.shade800,
+            ),
           ),
         ],
       ),
@@ -866,8 +878,7 @@ class _EmptyState extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             'কোনো বিষয় পাওয়া যায়নি',
-            style: GoogleFonts.hindSiliguri(
-                color: Colors.grey, fontSize: 16),
+            style: GoogleFonts.hindSiliguri(color: Colors.grey, fontSize: 16),
           ),
         ],
       ),

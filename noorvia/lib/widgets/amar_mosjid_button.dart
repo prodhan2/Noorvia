@@ -5,11 +5,8 @@ import '../screens/location/nearby_mosques_screen.dart';
 /// Can be placed anywhere in your app (home screen, drawer, etc.)
 class AmarMosjidButton extends StatelessWidget {
   final bool isCompact;
-  
-  const AmarMosjidButton({
-    super.key,
-    this.isCompact = false,
-  });
+
+  const AmarMosjidButton({super.key, this.isCompact = false});
 
   @override
   Widget build(BuildContext context) {
@@ -53,11 +50,7 @@ class AmarMosjidButton extends StatelessWidget {
                   color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
-                  Icons.mosque,
-                  color: Colors.white,
-                  size: 32,
-                ),
+                child: const Icon(Icons.mosque, color: Colors.white, size: 32),
               ),
               const SizedBox(width: 16),
               const Expanded(
@@ -67,7 +60,7 @@ class AmarMosjidButton extends StatelessWidget {
                     Text(
                       'আমার মসজিদ',
                       style: TextStyle(
-                        fontFamily: 'Kalpurush',
+                        fontFamily: null,
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -77,7 +70,7 @@ class AmarMosjidButton extends StatelessWidget {
                     Text(
                       'আশেপাশের মসজিদ খুঁজুন',
                       style: TextStyle(
-                        fontFamily: 'Kalpurush',
+                        fontFamily: null,
                         fontSize: 14,
                         color: Colors.white70,
                       ),
@@ -102,15 +95,10 @@ class AmarMosjidButton extends StatelessWidget {
     return ElevatedButton.icon(
       onPressed: () => _navigateToMosques(context),
       icon: const Icon(Icons.mosque),
-      label: const Text(
-        'আমার মসজিদ',
-        style: TextStyle(fontFamily: 'Kalpurush'),
-      ),
+      label: const Text('আমার মসজিদ', style: TextStyle(fontFamily: null)),
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -118,9 +106,7 @@ class AmarMosjidButton extends StatelessWidget {
   void _navigateToMosques(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const NearbyMosquesScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const NearbyMosquesScreen()),
     );
   }
 }

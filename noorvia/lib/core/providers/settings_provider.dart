@@ -4,6 +4,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
 import '../services/custom_font_loader.dart';
 
+const List<String> _fontFallbacks = [
+  'NooreHuda',
+  'NooreHera',
+  'Noto Naskh Arabic',
+  'Noto Sans Bengali',
+];
+
 // ═══════════════════════════════════════════════════════════════
 // BanglaFont — supported Bangla fonts
 // ═══════════════════════════════════════════════════════════════
@@ -18,21 +25,31 @@ enum BanglaFont {
 extension BanglaFontExt on BanglaFont {
   String get displayName {
     switch (this) {
-      case BanglaFont.hindSiliguri:       return 'Hind Siliguri';
-      case BanglaFont.baloo2:             return 'Baloo 2';
-      case BanglaFont.notoSansBengali:    return 'Noto Sans Bengali';
-      case BanglaFont.galada:             return 'Galada';
-      case BanglaFont.tiroDevanagariHindi:return 'Tiro Devanagari';
+      case BanglaFont.hindSiliguri:
+        return 'Hind Siliguri';
+      case BanglaFont.baloo2:
+        return 'Baloo 2';
+      case BanglaFont.notoSansBengali:
+        return 'Noto Sans Bengali';
+      case BanglaFont.galada:
+        return 'Galada';
+      case BanglaFont.tiroDevanagariHindi:
+        return 'Tiro Devanagari';
     }
   }
 
   String get key {
     switch (this) {
-      case BanglaFont.hindSiliguri:       return 'hindSiliguri';
-      case BanglaFont.baloo2:             return 'baloo2';
-      case BanglaFont.notoSansBengali:    return 'notoSansBengali';
-      case BanglaFont.galada:             return 'galada';
-      case BanglaFont.tiroDevanagariHindi:return 'tiroDevanagari';
+      case BanglaFont.hindSiliguri:
+        return 'hindSiliguri';
+      case BanglaFont.baloo2:
+        return 'baloo2';
+      case BanglaFont.notoSansBengali:
+        return 'notoSansBengali';
+      case BanglaFont.galada:
+        return 'galada';
+      case BanglaFont.tiroDevanagariHindi:
+        return 'tiroDevanagari';
     }
   }
 
@@ -46,29 +63,49 @@ extension BanglaFontExt on BanglaFont {
     switch (this) {
       case BanglaFont.hindSiliguri:
         return GoogleFonts.hindSiliguri(
-            fontSize: fontSize, fontWeight: fontWeight, color: color);
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          color: color,
+        ).copyWith(fontFamilyFallback: _fontFallbacks);
       case BanglaFont.baloo2:
         return GoogleFonts.baloo2(
-            fontSize: fontSize, fontWeight: fontWeight, color: color);
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          color: color,
+        ).copyWith(fontFamilyFallback: _fontFallbacks);
       case BanglaFont.notoSansBengali:
         return GoogleFonts.notoSansBengali(
-            fontSize: fontSize, fontWeight: fontWeight, color: color);
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          color: color,
+        ).copyWith(fontFamilyFallback: _fontFallbacks);
       case BanglaFont.galada:
         return GoogleFonts.galada(
-            fontSize: fontSize, fontWeight: fontWeight, color: color);
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          color: color,
+        ).copyWith(fontFamilyFallback: _fontFallbacks);
       case BanglaFont.tiroDevanagariHindi:
         return GoogleFonts.tiroDevanagariHindi(
-            fontSize: fontSize, fontWeight: fontWeight, color: color);
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          color: color,
+        ).copyWith(fontFamilyFallback: _fontFallbacks);
     }
   }
 
   TextTheme textTheme() {
     switch (this) {
-      case BanglaFont.hindSiliguri:       return GoogleFonts.hindSiliguriTextTheme();
-      case BanglaFont.baloo2:             return GoogleFonts.baloo2TextTheme();
-      case BanglaFont.notoSansBengali:    return GoogleFonts.notoSansBengaliTextTheme();
-      case BanglaFont.galada:             return GoogleFonts.galadaTextTheme();
-      case BanglaFont.tiroDevanagariHindi:return GoogleFonts.tiroDevanagariHindiTextTheme();
+      case BanglaFont.hindSiliguri:
+        return GoogleFonts.hindSiliguriTextTheme();
+      case BanglaFont.baloo2:
+        return GoogleFonts.baloo2TextTheme();
+      case BanglaFont.notoSansBengali:
+        return GoogleFonts.notoSansBengaliTextTheme();
+      case BanglaFont.galada:
+        return GoogleFonts.galadaTextTheme();
+      case BanglaFont.tiroDevanagariHindi:
+        return GoogleFonts.tiroDevanagariHindiTextTheme();
     }
   }
 }
@@ -77,6 +114,8 @@ extension BanglaFontExt on BanglaFont {
 // ArabicFont — supported Arabic / Quran fonts
 // ═══════════════════════════════════════════════════════════════
 enum ArabicFont {
+  nooreHuda,
+  nooreHera,
   amiri,
   scheherazadeNew,
   notoNaskhArabic,
@@ -87,21 +126,39 @@ enum ArabicFont {
 extension ArabicFontExt on ArabicFont {
   String get displayName {
     switch (this) {
-      case ArabicFont.amiri:             return 'Amiri';
-      case ArabicFont.scheherazadeNew:   return 'Scheherazade New';
-      case ArabicFont.notoNaskhArabic:   return 'Noto Naskh Arabic';
-      case ArabicFont.lateef:            return 'Lateef';
-      case ArabicFont.reem:              return 'Reem Kufi';
+      case ArabicFont.nooreHuda:
+        return 'Noore Huda';
+      case ArabicFont.nooreHera:
+        return 'Noore Hera';
+      case ArabicFont.amiri:
+        return 'Amiri';
+      case ArabicFont.scheherazadeNew:
+        return 'Scheherazade New';
+      case ArabicFont.notoNaskhArabic:
+        return 'Noto Naskh Arabic';
+      case ArabicFont.lateef:
+        return 'Lateef';
+      case ArabicFont.reem:
+        return 'Reem Kufi';
     }
   }
 
   String get key {
     switch (this) {
-      case ArabicFont.amiri:             return 'amiri';
-      case ArabicFont.scheherazadeNew:   return 'scheherazadeNew';
-      case ArabicFont.notoNaskhArabic:   return 'notoNaskhArabic';
-      case ArabicFont.lateef:            return 'lateef';
-      case ArabicFont.reem:              return 'reemKufi';
+      case ArabicFont.nooreHuda:
+        return 'nooreHuda';
+      case ArabicFont.nooreHera:
+        return 'nooreHera';
+      case ArabicFont.amiri:
+        return 'amiri';
+      case ArabicFont.scheherazadeNew:
+        return 'scheherazadeNew';
+      case ArabicFont.notoNaskhArabic:
+        return 'notoNaskhArabic';
+      case ArabicFont.lateef:
+        return 'lateef';
+      case ArabicFont.reem:
+        return 'reemKufi';
     }
   }
 
@@ -113,21 +170,54 @@ extension ArabicFontExt on ArabicFont {
     Color? color,
   }) {
     switch (this) {
+      case ArabicFont.nooreHuda:
+        return TextStyle(
+          fontFamily: 'NooreHuda',
+          fontFamilyFallback: _fontFallbacks,
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          color: color,
+          height: 1.8,
+        );
+      case ArabicFont.nooreHera:
+        return TextStyle(
+          fontFamily: 'NooreHera',
+          fontFamilyFallback: _fontFallbacks,
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          color: color,
+          height: 1.8,
+        );
       case ArabicFont.amiri:
         return GoogleFonts.amiri(
-            fontSize: fontSize, fontWeight: fontWeight, color: color);
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          color: color,
+        ).copyWith(fontFamilyFallback: _fontFallbacks);
       case ArabicFont.scheherazadeNew:
         return GoogleFonts.scheherazadeNew(
-            fontSize: fontSize, fontWeight: fontWeight, color: color);
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          color: color,
+        ).copyWith(fontFamilyFallback: _fontFallbacks);
       case ArabicFont.notoNaskhArabic:
         return GoogleFonts.notoNaskhArabic(
-            fontSize: fontSize, fontWeight: fontWeight, color: color);
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          color: color,
+        ).copyWith(fontFamilyFallback: _fontFallbacks);
       case ArabicFont.lateef:
         return GoogleFonts.lateef(
-            fontSize: fontSize, fontWeight: fontWeight, color: color);
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          color: color,
+        ).copyWith(fontFamilyFallback: _fontFallbacks);
       case ArabicFont.reem:
         return GoogleFonts.reemKufi(
-            fontSize: fontSize, fontWeight: fontWeight, color: color);
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          color: color,
+        ).copyWith(fontFamilyFallback: _fontFallbacks);
     }
   }
 }
@@ -155,50 +245,50 @@ const List<AppAccentOption> kAccentOptions = [
   AppAccentOption(
     label: 'ডিফল্ট পার্পেল',
     primary: Color(0xFF6C3CE1),
-    light:   Color(0xFF9B6FF5),
-    dark:    Color(0xFF4A2BAD),
+    light: Color(0xFF9B6FF5),
+    dark: Color(0xFF4A2BAD),
     key: 'purple',
   ),
   AppAccentOption(
     label: 'নীল',
     primary: Color(0xFF1565C0),
-    light:   Color(0xFF5E92F3),
-    dark:    Color(0xFF003C8F),
+    light: Color(0xFF5E92F3),
+    dark: Color(0xFF003C8F),
     key: 'blue',
   ),
   AppAccentOption(
     label: 'সবুজ',
     primary: Color(0xFF2E7D32),
-    light:   Color(0xFF60AD5E),
-    dark:    Color(0xFF005005),
+    light: Color(0xFF60AD5E),
+    dark: Color(0xFF005005),
     key: 'green',
   ),
   AppAccentOption(
     label: 'কমলা',
     primary: Color(0xFFE65100),
-    light:   Color(0xFFFF8A50),
-    dark:    Color(0xFFAC1900),
+    light: Color(0xFFFF8A50),
+    dark: Color(0xFFAC1900),
     key: 'orange',
   ),
   AppAccentOption(
     label: 'বেগুনি',
     primary: Color(0xFF7B1FA2),
-    light:   Color(0xFFAE52D4),
-    dark:    Color(0xFF4A0072),
+    light: Color(0xFFAE52D4),
+    dark: Color(0xFF4A0072),
     key: 'violet',
   ),
   AppAccentOption(
     label: 'টিল',
     primary: Color(0xFF00695C),
-    light:   Color(0xFF4DB6AC),
-    dark:    Color(0xFF00352A),
+    light: Color(0xFF4DB6AC),
+    dark: Color(0xFF00352A),
     key: 'teal',
   ),
   AppAccentOption(
     label: 'লাল',
     primary: Color(0xFFC62828),
-    light:   Color(0xFFEF9A9A),
-    dark:    Color(0xFF8E0000),
+    light: Color(0xFFEF9A9A),
+    dark: Color(0xFF8E0000),
     key: 'red',
   ),
 ];
@@ -209,7 +299,7 @@ const List<AppAccentOption> kAccentOptions = [
 class SettingsProvider extends ChangeNotifier {
   // ── Bangla Font ───────────────────────────────────────────
   BanglaFont _banglaFont = BanglaFont.hindSiliguri;
-  
+
   // ── Custom Bangla Fonts ───────────────────────────────────
   List<CustomBanglaFont> _customFonts = [];
   CustomBanglaFont? _selectedCustomFont;
@@ -217,7 +307,7 @@ class SettingsProvider extends ChangeNotifier {
   final Map<String, String> _loadedCustomFonts = {}; // fontFamily -> fileName
 
   // ── Arabic Font ───────────────────────────────────────────
-  ArabicFont _arabicFont = ArabicFont.amiri;
+  ArabicFont _arabicFont = ArabicFont.nooreHuda;
 
   // ── Font size & style ─────────────────────────────────────
   double _fontSize = 16.0;
@@ -229,30 +319,31 @@ class SettingsProvider extends ChangeNotifier {
   String _accentKey = 'purple';
 
   // ── Display options ───────────────────────────────────────
-  bool _coloredCards  = true;
+  bool _coloredCards = true;
   bool _useAnimations = true;
-  bool _compactMode   = false;
-  double _textScale   = 1.0;
+  bool _compactMode = false;
+  double _textScale = 1.0;
 
   // ── Getters ───────────────────────────────────────────────
-  BanglaFont get banglaFont    => _banglaFont;
+  BanglaFont get banglaFont => _banglaFont;
   List<CustomBanglaFont> get customFonts => _customFonts;
   CustomBanglaFont? get selectedCustomFont => _selectedCustomFont;
   bool get isLoadingCustomFonts => _isLoadingCustomFonts;
   bool get isUsingCustomFont => _selectedCustomFont != null;
-  ArabicFont get arabicFont    => _arabicFont;
-  double     get fontSize      => _fontSize;
-  double     get arabicFontSize => _arabicFontSize;
-  FontWeight get fontWeight    => _fontWeight;
-  double     get lineHeight    => _lineHeight;
-  bool       get coloredCards  => _coloredCards;
-  bool       get useAnimations => _useAnimations;
-  bool       get compactMode   => _compactMode;
-  double     get textScale     => _textScale;
+  ArabicFont get arabicFont => _arabicFont;
+  double get fontSize => _fontSize;
+  double get arabicFontSize => _arabicFontSize;
+  FontWeight get fontWeight => _fontWeight;
+  double get lineHeight => _lineHeight;
+  bool get coloredCards => _coloredCards;
+  bool get useAnimations => _useAnimations;
+  bool get compactMode => _compactMode;
+  double get textScale => _textScale;
 
-  AppAccentOption get accent =>
-      kAccentOptions.firstWhere((a) => a.key == _accentKey,
-          orElse: () => kAccentOptions.first);
+  AppAccentOption get accent => kAccentOptions.firstWhere(
+    (a) => a.key == _accentKey,
+    orElse: () => kAccentOptions.first,
+  );
 
   Color get effectivePrimary => accent.primary;
 
@@ -273,30 +364,32 @@ class SettingsProvider extends ChangeNotifier {
     );
 
     // Arabic font
-    final arabicKey = prefs.getString('arabicFont') ?? 'amiri';
+    final arabicKey = prefs.getString('arabicFont') ?? 'nooreHuda';
     _arabicFont = ArabicFont.values.firstWhere(
       (f) => f.key == arabicKey,
-      orElse: () => ArabicFont.amiri,
+      orElse: () => ArabicFont.nooreHuda,
     );
 
-    _fontSize       = prefs.getDouble('fontSize') ?? 16.0;
+    _fontSize = prefs.getDouble('fontSize') ?? 16.0;
     _arabicFontSize = prefs.getDouble('arabicFontSize') ?? 22.0;
     final weightIndex = prefs.getInt('fontWeightIndex') ?? 2;
-    _fontWeight     = _weightFromIndex(weightIndex);
-    _lineHeight     = prefs.getDouble('lineHeight') ?? 1.5;
+    _fontWeight = _weightFromIndex(weightIndex);
+    _lineHeight = prefs.getDouble('lineHeight') ?? 1.5;
 
-    _accentKey      = prefs.getString('accentColor') ?? 'purple';
+    _accentKey = prefs.getString('accentColor') ?? 'purple';
 
-    _coloredCards   = prefs.getBool('coloredCards') ?? true;
-    _useAnimations  = prefs.getBool('useAnimations') ?? true;
-    _compactMode    = prefs.getBool('compactMode') ?? false;
-    _textScale      = prefs.getDouble('textScale') ?? 1.0;
+    _coloredCards = prefs.getBool('coloredCards') ?? true;
+    _useAnimations = prefs.getBool('useAnimations') ?? true;
+    _compactMode = prefs.getBool('compactMode') ?? false;
+    _textScale = prefs.getDouble('textScale') ?? 1.0;
 
     // Load custom font selection
     final customFontFileName = prefs.getString('customFontFileName');
     final customFontDisplayName = prefs.getString('customFontDisplayName');
     final customFontUrl = prefs.getString('customFontUrl');
-    if (customFontFileName != null && customFontDisplayName != null && customFontUrl != null) {
+    if (customFontFileName != null &&
+        customFontDisplayName != null &&
+        customFontUrl != null) {
       _selectedCustomFont = CustomBanglaFont(
         fileName: customFontFileName,
         displayName: customFontDisplayName,
@@ -332,7 +425,8 @@ class SettingsProvider extends ChangeNotifier {
   // ── Bangla font setter ────────────────────────────────────
   Future<void> setFont(BanglaFont font) async {
     _banglaFont = font;
-    _selectedCustomFont = null; // Clear custom font when selecting built-in font
+    _selectedCustomFont =
+        null; // Clear custom font when selecting built-in font
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('banglaFont', font.key);
     await prefs.remove('customFontFileName');
@@ -344,11 +438,13 @@ class SettingsProvider extends ChangeNotifier {
   /// Set custom Bangla font
   Future<void> setCustomFont(CustomBanglaFont font) async {
     _selectedCustomFont = font;
-    
+
     // Load the font if not already loaded
     if (!_loadedCustomFonts.containsKey(font.fileName)) {
       try {
-        final fontData = await CustomFontLoader.loadFontFromUrl(font.downloadUrl);
+        final fontData = await CustomFontLoader.loadFontFromUrl(
+          font.downloadUrl,
+        );
         if (fontData != null) {
           final fontLoader = FontLoader(font.fileName);
           fontLoader.addFont(Future.value(fontData));
@@ -366,7 +462,7 @@ class SettingsProvider extends ChangeNotifier {
     await prefs.setString('customFontFileName', font.fileName);
     await prefs.setString('customFontDisplayName', font.displayName);
     await prefs.setString('customFontUrl', font.downloadUrl);
-    
+
     notifyListeners();
   }
 
@@ -376,9 +472,11 @@ class SettingsProvider extends ChangeNotifier {
     FontWeight? fontWeight,
     Color? color,
   }) {
-    if (_selectedCustomFont != null && _loadedCustomFonts.containsKey(_selectedCustomFont!.fileName)) {
+    if (_selectedCustomFont != null &&
+        _loadedCustomFonts.containsKey(_selectedCustomFont!.fileName)) {
       return TextStyle(
         fontFamily: _selectedCustomFont!.fileName,
+        fontFamilyFallback: _fontFallbacks,
         fontSize: fontSize ?? this.fontSize,
         fontWeight: fontWeight ?? this.fontWeight,
         color: color,
@@ -467,25 +565,35 @@ class SettingsProvider extends ChangeNotifier {
 
   // ── Reset all to defaults ─────────────────────────────────
   Future<void> resetAll() async {
-    _banglaFont     = BanglaFont.hindSiliguri;
+    _banglaFont = BanglaFont.hindSiliguri;
     _selectedCustomFont = null;
-    _arabicFont     = ArabicFont.amiri;
-    _fontSize       = 16.0;
+    _arabicFont = ArabicFont.nooreHuda;
+    _fontSize = 16.0;
     _arabicFontSize = 22.0;
-    _fontWeight     = FontWeight.w500;
-    _lineHeight     = 1.5;
-    _accentKey      = 'purple';
-    _coloredCards   = true;
-    _useAnimations  = true;
-    _compactMode    = false;
-    _textScale      = 1.0;
+    _fontWeight = FontWeight.w500;
+    _lineHeight = 1.5;
+    _accentKey = 'purple';
+    _coloredCards = true;
+    _useAnimations = true;
+    _compactMode = false;
+    _textScale = 1.0;
 
     final prefs = await SharedPreferences.getInstance();
     for (final key in [
-      'banglaFont', 'arabicFont', 'fontSize', 'arabicFontSize',
-      'fontWeightIndex', 'lineHeight', 'accentColor',
-      'coloredCards', 'useAnimations', 'compactMode', 'textScale',
-      'customFontFileName', 'customFontDisplayName', 'customFontUrl',
+      'banglaFont',
+      'arabicFont',
+      'fontSize',
+      'arabicFontSize',
+      'fontWeightIndex',
+      'lineHeight',
+      'accentColor',
+      'coloredCards',
+      'useAnimations',
+      'compactMode',
+      'textScale',
+      'customFontFileName',
+      'customFontDisplayName',
+      'customFontUrl',
     ]) {
       await prefs.remove(key);
     }
@@ -495,23 +603,35 @@ class SettingsProvider extends ChangeNotifier {
   // ── Helpers ───────────────────────────────────────────────
   FontWeight _weightFromIndex(int index) {
     switch (index) {
-      case 0:  return FontWeight.w300;
-      case 1:  return FontWeight.w400;
-      case 2:  return FontWeight.w500;
-      case 3:  return FontWeight.w600;
-      case 4:  return FontWeight.w700;
-      default: return FontWeight.w500;
+      case 0:
+        return FontWeight.w300;
+      case 1:
+        return FontWeight.w400;
+      case 2:
+        return FontWeight.w500;
+      case 3:
+        return FontWeight.w600;
+      case 4:
+        return FontWeight.w700;
+      default:
+        return FontWeight.w500;
     }
   }
 
   int _weightToIndex(FontWeight w) {
     switch (w) {
-      case FontWeight.w300: return 0;
-      case FontWeight.w400: return 1;
-      case FontWeight.w500: return 2;
-      case FontWeight.w600: return 3;
-      case FontWeight.w700: return 4;
-      default:              return 2;
+      case FontWeight.w300:
+        return 0;
+      case FontWeight.w400:
+        return 1;
+      case FontWeight.w500:
+        return 2;
+      case FontWeight.w600:
+        return 3;
+      case FontWeight.w700:
+        return 4;
+      default:
+        return 2;
     }
   }
 }

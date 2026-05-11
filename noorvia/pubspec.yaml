@@ -59,3 +59,10 @@ flutter:
     - assets/data/
     - assets/audio/
     - assets/muslim view app logo .png
+  fonts:
+    - family: NooreHuda
+      fonts:
+        - asset: assets/fonts/NooreHuda.ttf
+    - family: NooreHera
+      fonts:
+        - asset: assets/fonts/NooreHera.ttf

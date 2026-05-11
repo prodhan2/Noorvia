@@ -37,19 +37,68 @@ class TasbihCounter extends StatefulWidget {
 
 class _TasbihCounterState extends State<TasbihCounter>
     with TickerProviderStateMixin {
-
   // ── Zikr list ──────────────────────────────────────────────
   static const List<ZikrItem> _zikrList = [
-    ZikrItem(name: 'সুবহানাল্লাহ',       arabic: 'سُبْحَانَ اللّٰهِ',          defaultTarget: 33, color: Color(0xFF1B6B3A)),
-    ZikrItem(name: 'আলহামদুলিল্লাহ',     arabic: 'اَلْحَمْدُ لِلّٰهِ',          defaultTarget: 33, color: Color(0xFF1565C0)),
-    ZikrItem(name: 'আল্লাহু আকবার',      arabic: 'اَللّٰهُ أَكْبَرُ',           defaultTarget: 34, color: Color(0xFF6A1B9A)),
-    ZikrItem(name: 'লা ইলাহা ইল্লাল্লাহ', arabic: 'لَا إِلٰهَ إِلَّا اللّٰهُ',  defaultTarget: 100, color: Color(0xFFE65100)),
-    ZikrItem(name: 'আস্তাগফিরুল্লাহ',    arabic: 'أَسْتَغْفِرُ اللّٰهَ',        defaultTarget: 100, color: Color(0xFF00838F)),
-    ZikrItem(name: 'দরূদ শরীফ',          arabic: 'صَلَّى اللّٰهُ عَلَيْهِ وَسَلَّمَ', defaultTarget: 100, color: Color(0xFFAD1457)),
-    ZikrItem(name: 'বিসমিল্লাহ',         arabic: 'بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيمِ', defaultTarget: 21, color: Color(0xFF2E7D32)),
-    ZikrItem(name: 'ইয়া আল্লাহ',        arabic: 'يَا اللّٰهُ',                 defaultTarget: 100, color: Color(0xFF4527A0)),
-    ZikrItem(name: 'সুবহানাল্লাহি ওয়া বিহামদিহি', arabic: 'سُبْحَانَ اللّٰهِ وَبِحَمْدِهِ', defaultTarget: 100, color: Color(0xFF00695C)),
-    ZikrItem(name: 'লা হাওলা ওয়ালা কুওয়াতা', arabic: 'لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللّٰهِ', defaultTarget: 100, color: Color(0xFF558B2F)),
+    ZikrItem(
+      name: 'সুবহানাল্লাহ',
+      arabic: 'سُبْحَانَ اللّٰهِ',
+      defaultTarget: 33,
+      color: Color(0xFF1B6B3A),
+    ),
+    ZikrItem(
+      name: 'আলহামদুলিল্লাহ',
+      arabic: 'اَلْحَمْدُ لِلّٰهِ',
+      defaultTarget: 33,
+      color: Color(0xFF1565C0),
+    ),
+    ZikrItem(
+      name: 'আল্লাহু আকবার',
+      arabic: 'اَللّٰهُ أَكْبَرُ',
+      defaultTarget: 34,
+      color: Color(0xFF6A1B9A),
+    ),
+    ZikrItem(
+      name: 'লা ইলাহা ইল্লাল্লাহ',
+      arabic: 'لَا إِلٰهَ إِلَّا اللّٰهُ',
+      defaultTarget: 100,
+      color: Color(0xFFE65100),
+    ),
+    ZikrItem(
+      name: 'আস্তাগফিরুল্লাহ',
+      arabic: 'أَسْتَغْفِرُ اللّٰهَ',
+      defaultTarget: 100,
+      color: Color(0xFF00838F),
+    ),
+    ZikrItem(
+      name: 'দরূদ শরীফ',
+      arabic: 'صَلَّى اللّٰهُ عَلَيْهِ وَسَلَّمَ',
+      defaultTarget: 100,
+      color: Color(0xFFAD1457),
+    ),
+    ZikrItem(
+      name: 'বিসমিল্লাহ',
+      arabic: 'بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيمِ',
+      defaultTarget: 21,
+      color: Color(0xFF2E7D32),
+    ),
+    ZikrItem(
+      name: 'ইয়া আল্লাহ',
+      arabic: 'يَا اللّٰهُ',
+      defaultTarget: 100,
+      color: Color(0xFF4527A0),
+    ),
+    ZikrItem(
+      name: 'সুবহানাল্লাহি ওয়া বিহামদিহি',
+      arabic: 'سُبْحَانَ اللّٰهِ وَبِحَمْدِهِ',
+      defaultTarget: 100,
+      color: Color(0xFF00695C),
+    ),
+    ZikrItem(
+      name: 'লা হাওলা ওয়ালা কুওয়াতা',
+      arabic: 'لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللّٰهِ',
+      defaultTarget: 100,
+      color: Color(0xFF558B2F),
+    ),
   ];
 
   int _selectedIndex = 0;
@@ -82,27 +131,44 @@ class _TasbihCounterState extends State<TasbihCounter>
 
   ZikrItem get _currentZikr => _zikrList[_selectedIndex];
   int get _counter => _zikrData[_currentZikr.name]?['counter'] ?? 0;
-  int get _completedTimes => _zikrData[_currentZikr.name]?['completedTimes'] ?? 0;
-  double get _progress => _targetCount > 0 ? (_counter / _targetCount).clamp(0.0, 1.0) : 0.0;
+  int get _completedTimes =>
+      _zikrData[_currentZikr.name]?['completedTimes'] ?? 0;
+  double get _progress =>
+      _targetCount > 0 ? (_counter / _targetCount).clamp(0.0, 1.0) : 0.0;
 
   @override
   void initState() {
     super.initState();
 
-    _pulseCtrl   = AnimationController(vsync: this, duration: const Duration(milliseconds: 180));
-    _rippleCtrl  = AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
-    _countCtrl   = AnimationController(vsync: this, duration: const Duration(milliseconds: 250));
-    _successCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
+    _pulseCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 180),
+    );
+    _rippleCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _countCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 250),
+    );
+    _successCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
 
-    _pulseAnim = Tween<double>(begin: 1.0, end: 0.92).animate(
-      CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
-    );
-    _rippleAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _rippleCtrl, curve: Curves.easeOut),
-    );
-    _countAnim = Tween<double>(begin: 1.0, end: 1.25).animate(
-      CurvedAnimation(parent: _countCtrl, curve: Curves.elasticOut),
-    );
+    _pulseAnim = Tween<double>(
+      begin: 1.0,
+      end: 0.92,
+    ).animate(CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
+    _rippleAnim = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _rippleCtrl, curve: Curves.easeOut));
+    _countAnim = Tween<double>(
+      begin: 1.0,
+      end: 1.25,
+    ).animate(CurvedAnimation(parent: _countCtrl, curve: Curves.elasticOut));
 
     _loadData();
   }
@@ -148,7 +214,10 @@ class _TasbihCounterState extends State<TasbihCounter>
     int step = 0;
 
     Timer.periodic(Duration(milliseconds: stepDur), (t) {
-      if (!mounted) { t.cancel(); return; }
+      if (!mounted) {
+        t.cancel();
+        return;
+      }
       step++;
       final progress = Curves.easeInOut.transform(step / steps);
       setState(() => _animatingBeadOffset = progress);
@@ -171,11 +240,13 @@ class _TasbihCounterState extends State<TasbihCounter>
   Future<void> _loadData() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString('tasbih_zikr_data_v2');
-    final idx  = prefs.getInt('tasbih_selected_index') ?? 0;
+    final idx = prefs.getInt('tasbih_selected_index') ?? 0;
     setState(() {
       _zikrData = raw != null ? Map<String, dynamic>.from(jsonDecode(raw)) : {};
       _selectedIndex = idx.clamp(0, _zikrList.length - 1);
-      _targetCount = prefs.getInt('tasbih_target_${_currentZikr.name}') ?? _currentZikr.defaultTarget;
+      _targetCount =
+          prefs.getInt('tasbih_target_${_currentZikr.name}') ??
+          _currentZikr.defaultTarget;
       // Sync bead visual to saved counter
       _animatedBeadCount = _counter.clamp(0, _targetCount);
       _animatingBeadIndex = null;
@@ -258,10 +329,12 @@ class _TasbihCounterState extends State<TasbihCounter>
 
   // ── Bangla digits ──────────────────────────────────────────
   String _bn(int n) {
-    const e = ['0','1','2','3','4','5','6','7','8','9'];
-    const b = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+    const e = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    const b = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
     String s = n.toString();
-    for (int i = 0; i < e.length; i++) { s = s.replaceAll(e[i], b[i]); }
+    for (int i = 0; i < e.length; i++) {
+      s = s.replaceAll(e[i], b[i]);
+    }
     return s;
   }
 
@@ -309,10 +382,7 @@ class _TasbihCounterState extends State<TasbihCounter>
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (_) => _HistorySheet(
-        zikrList: _zikrList,
-        zikrData: _zikrData,
-      ),
+      builder: (_) => _HistorySheet(zikrList: _zikrList, zikrData: _zikrData),
     );
   }
 
@@ -342,7 +412,11 @@ class _TasbihCounterState extends State<TasbihCounter>
           decoration: BoxDecoration(gradient: AppColors.gradient),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: Colors.white,
+            size: 20,
+          ),
           onPressed: () => Navigator.maybePop(context),
         ),
         // Arabic + name in the title area
@@ -354,7 +428,7 @@ class _TasbihCounterState extends State<TasbihCounter>
               style: const TextStyle(
                 fontSize: 17,
                 color: Colors.white,
-                fontFamily: 'Amiri',
+                fontFamily: 'NooreHuda',
                 height: 1.3,
               ),
               textDirection: TextDirection.rtl,
@@ -374,7 +448,11 @@ class _TasbihCounterState extends State<TasbihCounter>
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.bar_chart_rounded, color: Colors.white, size: 22),
+            icon: const Icon(
+              Icons.bar_chart_rounded,
+              color: Colors.white,
+              size: 22,
+            ),
             onPressed: _showHistory,
             tooltip: 'পরিসংখ্যান',
           ),
@@ -401,10 +479,15 @@ class _TasbihCounterState extends State<TasbihCounter>
                     onTap: () {
                       setState(() {
                         _selectedIndex = i;
-                        _targetCount = _zikrData['tasbih_target_${_zikrList[i].name}'] != null
-                            ? _zikrData['tasbih_target_${_zikrList[i].name}'] as int
+                        _targetCount =
+                            _zikrData['tasbih_target_${_zikrList[i].name}'] !=
+                                null
+                            ? _zikrData['tasbih_target_${_zikrList[i].name}']
+                                  as int
                             : _zikrList[i].defaultTarget;
-                        _animatedBeadCount = (_zikrData[_zikrList[i].name]?['counter'] ?? 0) as int;
+                        _animatedBeadCount =
+                            (_zikrData[_zikrList[i].name]?['counter'] ?? 0)
+                                as int;
                         _slideQueue.clear();
                         _isAnimating = false;
                         _animatingBeadIndex = null;
@@ -414,16 +497,34 @@ class _TasbihCounterState extends State<TasbihCounter>
                     },
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
-                      margin: const EdgeInsets.only(right: 6, top: 5, bottom: 5),
+                      margin: const EdgeInsets.only(
+                        right: 6,
+                        top: 5,
+                        bottom: 5,
+                      ),
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       decoration: BoxDecoration(
-                        color: selected ? _zikrList[i].color : (isDark ? AppColors.darkCard : Colors.white),
+                        color: selected
+                            ? _zikrList[i].color
+                            : (isDark ? AppColors.darkCard : Colors.white),
                         borderRadius: BorderRadius.circular(16),
-                        boxShadow: selected ? [
-                          BoxShadow(color: _zikrList[i].color.withValues(alpha: 0.3), blurRadius: 6, offset: const Offset(0, 2)),
-                        ] : [],
+                        boxShadow: selected
+                            ? [
+                                BoxShadow(
+                                  color: _zikrList[i].color.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ]
+                            : [],
                         border: Border.all(
-                          color: selected ? Colors.transparent : (isDark ? Colors.grey[700]! : Colors.grey[300]!),
+                          color: selected
+                              ? Colors.transparent
+                              : (isDark
+                                    ? Colors.grey[700]!
+                                    : Colors.grey[300]!),
                         ),
                       ),
                       child: Center(
@@ -431,7 +532,9 @@ class _TasbihCounterState extends State<TasbihCounter>
                           _zikrList[i].name,
                           style: GoogleFonts.hindSiliguri(
                             fontSize: 11,
-                            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                            fontWeight: selected
+                                ? FontWeight.w700
+                                : FontWeight.w500,
                             color: selected ? Colors.white : subColor,
                           ),
                         ),
@@ -466,10 +569,8 @@ class _TasbihCounterState extends State<TasbihCounter>
                   onTap: _increment,
                   child: AnimatedBuilder(
                     animation: _pulseAnim,
-                    builder: (_, child) => Transform.scale(
-                      scale: _pulseAnim.value,
-                      child: child,
-                    ),
+                    builder: (_, child) =>
+                        Transform.scale(scale: _pulseAnim.value, child: child),
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
@@ -498,7 +599,10 @@ class _TasbihCounterState extends State<TasbihCounter>
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             gradient: RadialGradient(
-                              colors: [zikrColor.withValues(alpha: 0.12), Colors.transparent],
+                              colors: [
+                                zikrColor.withValues(alpha: 0.12),
+                                Colors.transparent,
+                              ],
                             ),
                           ),
                         ),
@@ -509,7 +613,10 @@ class _TasbihCounterState extends State<TasbihCounter>
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             gradient: LinearGradient(
-                              colors: [zikrColor, zikrColor.withValues(alpha: 0.75)],
+                              colors: [
+                                zikrColor,
+                                zikrColor.withValues(alpha: 0.75),
+                              ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
@@ -564,7 +671,10 @@ class _TasbihCounterState extends State<TasbihCounter>
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 10,
+                  horizontal: 8,
+                ),
                 decoration: BoxDecoration(
                   color: cardBg,
                   borderRadius: BorderRadius.circular(14),
@@ -578,13 +688,35 @@ class _TasbihCounterState extends State<TasbihCounter>
                 ),
                 child: Row(
                   children: [
-                    _InlineStat(label: 'সম্পন্ন', value: _bn(_completedTimes), color: zikrColor, subColor: subColor),
+                    _InlineStat(
+                      label: 'সম্পন্ন',
+                      value: _bn(_completedTimes),
+                      color: zikrColor,
+                      subColor: subColor,
+                    ),
                     _Divider(color: subColor),
-                    _InlineStat(label: 'বর্তমান', value: _bn(_counter), color: zikrColor, subColor: subColor),
+                    _InlineStat(
+                      label: 'বর্তমান',
+                      value: _bn(_counter),
+                      color: zikrColor,
+                      subColor: subColor,
+                    ),
                     _Divider(color: subColor),
-                    _InlineStat(label: 'লক্ষ্য', value: _bn(_targetCount), color: zikrColor, subColor: subColor),
+                    _InlineStat(
+                      label: 'লক্ষ্য',
+                      value: _bn(_targetCount),
+                      color: zikrColor,
+                      subColor: subColor,
+                    ),
                     _Divider(color: subColor),
-                    _InlineStat(label: 'বাকি', value: _bn((_targetCount - _counter).clamp(0, _targetCount)), color: zikrColor, subColor: subColor),
+                    _InlineStat(
+                      label: 'বাকি',
+                      value: _bn(
+                        (_targetCount - _counter).clamp(0, _targetCount),
+                      ),
+                      color: zikrColor,
+                      subColor: subColor,
+                    ),
                   ],
                 ),
               ),
@@ -607,7 +739,9 @@ class _TasbihCounterState extends State<TasbihCounter>
                         builder: (_, val, __) => LinearProgressIndicator(
                           value: val,
                           minHeight: 8,
-                          backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
+                          backgroundColor: isDark
+                              ? Colors.grey[800]
+                              : Colors.grey[200],
                           valueColor: AlwaysStoppedAnimation<Color>(zikrColor),
                         ),
                       ),
@@ -631,9 +765,15 @@ class _TasbihCounterState extends State<TasbihCounter>
                       decoration: BoxDecoration(
                         color: zikrColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: zikrColor.withValues(alpha: 0.3)),
+                        border: Border.all(
+                          color: zikrColor.withValues(alpha: 0.3),
+                        ),
                       ),
-                      child: Icon(Icons.refresh_rounded, color: zikrColor, size: 18),
+                      child: Icon(
+                        Icons.refresh_rounded,
+                        color: zikrColor,
+                        size: 18,
+                      ),
                     ),
                   ),
                 ],
@@ -647,7 +787,6 @@ class _TasbihCounterState extends State<TasbihCounter>
     );
   }
 }
-
 
 // ─────────────────────────────────────────────────────────────────────────────
 // _BeadSlide — data class for queued animations
@@ -731,7 +870,8 @@ class _TasbihBeadRow extends StatelessWidget {
                 left: 12,
                 top: stringY - 5,
                 child: Container(
-                  width: 10, height: 10,
+                  width: 10,
+                  height: 10,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: color.withValues(alpha: 0.6),
@@ -744,7 +884,8 @@ class _TasbihBeadRow extends StatelessWidget {
                 right: 12,
                 top: stringY - 5,
                 child: Container(
-                  width: 10, height: 10,
+                  width: 10,
+                  height: 10,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: color.withValues(alpha: 0.6),
@@ -755,7 +896,8 @@ class _TasbihBeadRow extends StatelessWidget {
               // ── Beads ────────────────────────────────────
               ...List.generate(visibleTotal, (i) {
                 final bool isCounted = i < visibleCounted;
-                final bool isAnimating = visibleAnimating != null && i == visibleAnimating;
+                final bool isAnimating =
+                    visibleAnimating != null && i == visibleAnimating;
 
                 // Layout: slots 0..visibleTotal-1 evenly spaced left to right.
                 // Uncounted beads occupy left slots (0-based from left).
@@ -792,8 +934,10 @@ class _TasbihBeadRow extends StatelessWidget {
                 }
 
                 // Slight vertical arc: beads in the middle dip a little
-                final double midFraction = (i / (visibleTotal - 1).clamp(1, 999)) - 0.5;
-                final double arcDip = 8 * (1 - 4 * midFraction * midFraction).clamp(0.0, 1.0);
+                final double midFraction =
+                    (i / (visibleTotal - 1).clamp(1, 999)) - 0.5;
+                final double arcDip =
+                    8 * (1 - 4 * midFraction * midFraction).clamp(0.0, 1.0);
                 final double beadY = stringY - beadR + arcDip;
 
                 return Positioned(
@@ -842,7 +986,9 @@ class _Bead extends StatelessWidget {
     final double scale = isAnimating ? (1.0 + 0.25 * sin(progress * pi)) : 1.0;
     final Color beadColor = isCounted
         ? color
-        : (isDark ? color.withValues(alpha: 0.28) : color.withValues(alpha: 0.18));
+        : (isDark
+              ? color.withValues(alpha: 0.28)
+              : color.withValues(alpha: 0.18));
     final Color borderColor = isCounted
         ? color.withValues(alpha: 0.9)
         : color.withValues(alpha: 0.45);
@@ -1056,19 +1202,24 @@ class _SuccessSheetState extends State<_SuccessSheet>
   late Animation<double> _fadeAnim;
 
   String _bn(int n) {
-    const e = ['0','1','2','3','4','5','6','7','8','9'];
-    const b = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+    const e = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    const b = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
     String s = n.toString();
-    for (int i = 0; i < e.length; i++) { s = s.replaceAll(e[i], b[i]); }
+    for (int i = 0; i < e.length; i++) {
+      s = s.replaceAll(e[i], b[i]);
+    }
     return s;
   }
 
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
     _scaleAnim = CurvedAnimation(parent: _ctrl, curve: Curves.elasticOut);
-    _fadeAnim  = CurvedAnimation(parent: _ctrl, curve: Curves.easeIn);
+    _fadeAnim = CurvedAnimation(parent: _ctrl, curve: Curves.easeIn);
     _ctrl.forward();
   }
 
@@ -1136,7 +1287,11 @@ class _SuccessSheetState extends State<_SuccessSheet>
                     ),
                   ],
                 ),
-                child: const Icon(Icons.check_rounded, color: Colors.white, size: 44),
+                child: const Icon(
+                  Icons.check_rounded,
+                  color: Colors.white,
+                  size: 44,
+                ),
               ),
             ),
 
@@ -1270,7 +1425,9 @@ class _SettingsSheetState extends State<_SettingsSheet> {
     return Container(
       margin: const EdgeInsets.only(top: 60),
       padding: EdgeInsets.only(
-        left: 20, right: 20, top: 20,
+        left: 20,
+        right: 20,
+        top: 20,
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
       ),
       decoration: BoxDecoration(
@@ -1285,7 +1442,8 @@ class _SettingsSheetState extends State<_SettingsSheet> {
             // Handle
             Center(
               child: Container(
-                width: 40, height: 4,
+                width: 40,
+                height: 4,
                 decoration: BoxDecoration(
                   color: Colors.grey[300],
                   borderRadius: BorderRadius.circular(2),
@@ -1297,7 +1455,9 @@ class _SettingsSheetState extends State<_SettingsSheet> {
             Text(
               'সেটিংস',
               style: GoogleFonts.hindSiliguri(
-                fontSize: 20, fontWeight: FontWeight.w800, color: textColor,
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: textColor,
               ),
             ),
             const SizedBox(height: 20),
@@ -1306,7 +1466,9 @@ class _SettingsSheetState extends State<_SettingsSheet> {
             Text(
               'জিকির নির্বাচন করুন',
               style: GoogleFonts.hindSiliguri(
-                fontSize: 13, fontWeight: FontWeight.w600, color: subColor,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: subColor,
               ),
             ),
             const SizedBox(height: 10),
@@ -1322,19 +1484,27 @@ class _SettingsSheetState extends State<_SettingsSheet> {
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
-                    color: sel ? z.color.withValues(alpha: 0.12) : Colors.transparent,
+                    color: sel
+                        ? z.color.withValues(alpha: 0.12)
+                        : Colors.transparent,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: sel ? z.color : (isDark ? Colors.grey[700]! : Colors.grey[200]!),
+                      color: sel
+                          ? z.color
+                          : (isDark ? Colors.grey[700]! : Colors.grey[200]!),
                       width: sel ? 1.5 : 1,
                     ),
                   ),
                   child: Row(
                     children: [
                       Container(
-                        width: 10, height: 10,
+                        width: 10,
+                        height: 10,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: sel ? z.color : Colors.grey[400],
@@ -1371,7 +1541,9 @@ class _SettingsSheetState extends State<_SettingsSheet> {
             Text(
               'লক্ষ্য সংখ্যা',
               style: GoogleFonts.hindSiliguri(
-                fontSize: 13, fontWeight: FontWeight.w600, color: subColor,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: subColor,
               ),
             ),
             const SizedBox(height: 10),
@@ -1389,12 +1561,17 @@ class _SettingsSheetState extends State<_SettingsSheet> {
                   }),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: sel ? color : Colors.transparent,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: sel ? color : (isDark ? Colors.grey[600]! : Colors.grey[300]!),
+                        color: sel
+                            ? color
+                            : (isDark ? Colors.grey[600]! : Colors.grey[300]!),
                       ),
                     ),
                     child: Text(
@@ -1418,13 +1595,21 @@ class _SettingsSheetState extends State<_SettingsSheet> {
               style: GoogleFonts.hindSiliguri(color: textColor),
               decoration: InputDecoration(
                 labelText: 'কাস্টম সংখ্যা লিখুন',
-                labelStyle: GoogleFonts.hindSiliguri(color: subColor, fontSize: 13),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                labelStyle: GoogleFonts.hindSiliguri(
+                  color: subColor,
+                  fontSize: 13,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(color: color, width: 2),
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
               ),
               onChanged: (v) {
                 final n = int.tryParse(v);
@@ -1442,12 +1627,17 @@ class _SettingsSheetState extends State<_SettingsSheet> {
                   backgroundColor: color,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   elevation: 0,
                 ),
                 child: Text(
                   'সেভ করুন',
-                  style: GoogleFonts.hindSiliguri(fontSize: 16, fontWeight: FontWeight.w700),
+                  style: GoogleFonts.hindSiliguri(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ),
@@ -1465,16 +1655,15 @@ class _HistorySheet extends StatelessWidget {
   final List<ZikrItem> zikrList;
   final Map<String, dynamic> zikrData;
 
-  const _HistorySheet({
-    required this.zikrList,
-    required this.zikrData,
-  });
+  const _HistorySheet({required this.zikrList, required this.zikrData});
 
   String _bn(int n) {
-    const e = ['0','1','2','3','4','5','6','7','8','9'];
-    const b = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+    const e = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    const b = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
     String s = n.toString();
-    for (int i = 0; i < e.length; i++) { s = s.replaceAll(e[i], b[i]); }
+    for (int i = 0; i < e.length; i++) {
+      s = s.replaceAll(e[i], b[i]);
+    }
     return s;
   }
 
@@ -1505,7 +1694,8 @@ class _HistorySheet extends StatelessWidget {
           // Handle
           Center(
             child: Container(
-              width: 40, height: 4,
+              width: 40,
+              height: 4,
               decoration: BoxDecoration(
                 color: Colors.grey[300],
                 borderRadius: BorderRadius.circular(2),
@@ -1520,11 +1710,16 @@ class _HistorySheet extends StatelessWidget {
               Text(
                 'পরিসংখ্যান',
                 style: GoogleFonts.hindSiliguri(
-                  fontSize: 20, fontWeight: FontWeight.w800, color: textColor,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: textColor,
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
@@ -1555,14 +1750,13 @@ class _HistorySheet extends StatelessWidget {
               decoration: BoxDecoration(
                 color: isDark ? AppColors.darkBg : AppColors.lightBg,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: z.color.withValues(alpha: 0.2),
-                ),
+                border: Border.all(color: z.color.withValues(alpha: 0.2)),
               ),
               child: Row(
                 children: [
                   Container(
-                    width: 40, height: 40,
+                    width: 40,
+                    height: 40,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: z.color.withValues(alpha: 0.15),
@@ -1583,13 +1777,18 @@ class _HistorySheet extends StatelessWidget {
                         Text(
                           z.name,
                           style: GoogleFonts.hindSiliguri(
-                            fontSize: 14, fontWeight: FontWeight.w600, color: textColor,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: textColor,
                           ),
                         ),
                         if (counter > 0)
                           Text(
                             'চলমান: ${_bn(counter)}',
-                            style: GoogleFonts.hindSiliguri(fontSize: 12, color: subColor),
+                            style: GoogleFonts.hindSiliguri(
+                              fontSize: 12,
+                              color: subColor,
+                            ),
                           ),
                       ],
                     ),
@@ -1600,12 +1799,17 @@ class _HistorySheet extends StatelessWidget {
                       Text(
                         _bn(completed),
                         style: GoogleFonts.hindSiliguri(
-                          fontSize: 22, fontWeight: FontWeight.w800, color: z.color,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          color: z.color,
                         ),
                       ),
                       Text(
                         'বার',
-                        style: GoogleFonts.hindSiliguri(fontSize: 11, color: subColor),
+                        style: GoogleFonts.hindSiliguri(
+                          fontSize: 11,
+                          color: subColor,
+                        ),
                       ),
                     ],
                   ),
@@ -1617,19 +1821,25 @@ class _HistorySheet extends StatelessWidget {
           // Empty state
           if (zikrList.every((z) {
             final d = zikrData[z.name];
-            return (d?['counter'] ?? 0) == 0 && (d?['completedTimes'] ?? 0) == 0;
+            return (d?['counter'] ?? 0) == 0 &&
+                (d?['completedTimes'] ?? 0) == 0;
           }))
             Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 32),
                 child: Column(
                   children: [
-                    Icon(Icons.history_rounded, size: 48, color: Colors.grey[400]),
+                    Icon(
+                      Icons.history_rounded,
+                      size: 48,
+                      color: Colors.grey[400],
+                    ),
                     const SizedBox(height: 12),
                     Text(
                       'এখনো কোনো জিকির করা হয়নি',
                       style: GoogleFonts.hindSiliguri(
-                        fontSize: 14, color: subColor,
+                        fontSize: 14,
+                        color: subColor,
                       ),
                     ),
                   ],

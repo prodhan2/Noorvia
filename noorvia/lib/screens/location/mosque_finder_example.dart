@@ -12,7 +12,7 @@ class MosqueFinderExample extends StatelessWidget {
       appBar: AppBar(
         title: const Text(
           'মসজিদ খুঁজুন - উদাহরণ',
-          style: TextStyle(fontFamily: 'Kalpurush'),
+          style: TextStyle(fontFamily: null),
         ),
         centerTitle: true,
       ),
@@ -25,7 +25,7 @@ class MosqueFinderExample extends StatelessWidget {
             const Text(
               'আমার মসজিদ ফিচার',
               style: TextStyle(
-                fontFamily: 'Kalpurush',
+                fontFamily: null,
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
@@ -34,7 +34,7 @@ class MosqueFinderExample extends StatelessWidget {
             Text(
               'আপনার আশেপাশের মসজিদগুলো খুঁজে বের করুন এবং দিকনির্দেশনা পান',
               style: TextStyle(
-                fontFamily: 'Kalpurush',
+                fontFamily: null,
                 fontSize: 16,
                 color: Colors.grey[600],
               ),
@@ -45,7 +45,7 @@ class MosqueFinderExample extends StatelessWidget {
             const Text(
               '১. পূর্ণ বাটন (হোম স্ক্রিনের জন্য)',
               style: TextStyle(
-                fontFamily: 'Kalpurush',
+                fontFamily: null,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -58,22 +58,20 @@ class MosqueFinderExample extends StatelessWidget {
             const Text(
               '২. কমপ্যাক্ট বাটন',
               style: TextStyle(
-                fontFamily: 'Kalpurush',
+                fontFamily: null,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 12),
-            const Center(
-              child: AmarMosjidButton(isCompact: true),
-            ),
+            const Center(child: AmarMosjidButton(isCompact: true)),
             const SizedBox(height: 32),
 
             // Features list
             const Text(
               'ফিচার সমূহ:',
               style: TextStyle(
-                fontFamily: 'Kalpurush',
+                fontFamily: null,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -129,7 +127,7 @@ class MosqueFinderExample extends StatelessWidget {
                       Text(
                         'প্রযুক্তিগত তথ্য',
                         style: TextStyle(
-                          fontFamily: 'Kalpurush',
+                          fontFamily: null,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Colors.blue[900],
@@ -173,7 +171,7 @@ class MosqueFinderExample extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
-                    fontFamily: 'Kalpurush',
+                    fontFamily: null,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -182,7 +180,7 @@ class MosqueFinderExample extends StatelessWidget {
                 Text(
                   description,
                   style: TextStyle(
-                    fontFamily: 'Kalpurush',
+                    fontFamily: null,
                     fontSize: 14,
                     color: Colors.grey[600],
                   ),
@@ -203,7 +201,7 @@ class MosqueFinderExample extends StatelessWidget {
           Text(
             '$label: ',
             style: const TextStyle(
-              fontFamily: 'Kalpurush',
+              fontFamily: null,
               fontSize: 14,
               fontWeight: FontWeight.bold,
             ),
@@ -211,10 +209,7 @@ class MosqueFinderExample extends StatelessWidget {
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
-                fontFamily: 'Kalpurush',
-                fontSize: 14,
-              ),
+              style: const TextStyle(fontFamily: null, fontSize: 14),
             ),
           ),
         ],

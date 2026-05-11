@@ -112,10 +112,7 @@ class _DuaCardState extends State<_DuaCard> {
     Clipboard.setData(ClipboardData(text: text));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          'দু\'আ কপি হয়েছে',
-          style: GoogleFonts.hindSiliguri(),
-        ),
+        content: Text('দু\'আ কপি হয়েছে', style: GoogleFonts.hindSiliguri()),
         backgroundColor: AppColors.primary,
         duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
@@ -184,11 +181,7 @@ class _DuaCardState extends State<_DuaCard> {
                 // Copy button
                 GestureDetector(
                   onTap: () => _copyToClipboard(context),
-                  child: Icon(
-                    Icons.copy_rounded,
-                    size: 18,
-                    color: subtleColor,
-                  ),
+                  child: Icon(Icons.copy_rounded, size: 18, color: subtleColor),
                 ),
               ],
             ),
@@ -212,7 +205,7 @@ class _DuaCardState extends State<_DuaCard> {
                 fontSize: 20,
                 height: 2.0,
                 color: Color(0xFF1B5E20),
-                fontFamily: 'serif',
+                fontFamily: 'NooreHuda',
               ),
               textAlign: TextAlign.right,
               textDirection: TextDirection.rtl,
@@ -251,8 +244,11 @@ class _DuaCardState extends State<_DuaCard> {
             padding: const EdgeInsets.fromLTRB(14, 8, 14, 0),
             child: Row(
               children: [
-                Icon(Icons.bookmark_rounded,
-                    size: 14, color: AppColors.primary.withOpacity(0.7)),
+                Icon(
+                  Icons.bookmark_rounded,
+                  size: 14,
+                  color: AppColors.primary.withOpacity(0.7),
+                ),
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
@@ -317,8 +313,7 @@ class _DuaCardState extends State<_DuaCard> {
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('✨ ',
-                                  style: TextStyle(fontSize: 14)),
+                              const Text('✨ ', style: TextStyle(fontSize: 14)),
                               Expanded(
                                 child: Text(
                                   dua.virtue,
@@ -346,8 +341,7 @@ class _DuaCardState extends State<_DuaCard> {
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('📝 ',
-                                  style: TextStyle(fontSize: 14)),
+                              const Text('📝 ', style: TextStyle(fontSize: 14)),
                               Expanded(
                                 child: Text(
                                   dua.note!,

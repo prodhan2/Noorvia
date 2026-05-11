@@ -4,7 +4,7 @@ import '../../widgets/amar_mosjid_button.dart';
 
 /// Demo screen to test the Mosque Finder feature
 /// Run this screen to see all the features in action
-/// 
+///
 /// To test: Add this route to your app and navigate to it
 class MosqueFinderDemo extends StatelessWidget {
   const MosqueFinderDemo({super.key});
@@ -15,7 +15,7 @@ class MosqueFinderDemo extends StatelessWidget {
       appBar: AppBar(
         title: const Text(
           'মসজিদ খুঁজুন - ডেমো',
-          style: TextStyle(fontFamily: 'Kalpurush'),
+          style: TextStyle(fontFamily: null),
         ),
         centerTitle: true,
         backgroundColor: Colors.green,
@@ -26,10 +26,7 @@ class MosqueFinderDemo extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Colors.green[50]!,
-              Colors.white,
-            ],
+            colors: [Colors.green[50]!, Colors.white],
           ),
         ),
         child: SingleChildScrollView(
@@ -44,12 +41,12 @@ class MosqueFinderDemo extends StatelessWidget {
               // Button Demos
               _buildSectionTitle('বাটন স্টাইল'),
               const SizedBox(height: 16),
-              
+
               // Full Button
               const Text(
                 '১. পূর্ণ বাটন (Full Button)',
                 style: TextStyle(
-                  fontFamily: 'Kalpurush',
+                  fontFamily: null,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -62,22 +59,20 @@ class MosqueFinderDemo extends StatelessWidget {
               const Text(
                 '২. কমপ্যাক্ট বাটন (Compact Button)',
                 style: TextStyle(
-                  fontFamily: 'Kalpurush',
+                  fontFamily: null,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 8),
-              const Center(
-                child: AmarMosjidButton(isCompact: true),
-              ),
+              const Center(child: AmarMosjidButton(isCompact: true)),
               const SizedBox(height: 20),
 
               // Custom Button
               const Text(
                 '৩. কাস্টম বাটন (Custom Button)',
                 style: TextStyle(
-                  fontFamily: 'Kalpurush',
+                  fontFamily: null,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -148,16 +143,12 @@ class MosqueFinderDemo extends StatelessWidget {
       ),
       child: const Column(
         children: [
-          Icon(
-            Icons.mosque,
-            size: 64,
-            color: Colors.white,
-          ),
+          Icon(Icons.mosque, size: 64, color: Colors.white),
           SizedBox(height: 16),
           Text(
             'আমার মসজিদ',
             style: TextStyle(
-              fontFamily: 'Kalpurush',
+              fontFamily: null,
               fontSize: 28,
               fontWeight: FontWeight.bold,
               color: Colors.white,
@@ -167,7 +158,7 @@ class MosqueFinderDemo extends StatelessWidget {
           Text(
             'আশেপাশের মসজিদ খুঁজুন',
             style: TextStyle(
-              fontFamily: 'Kalpurush',
+              fontFamily: null,
               fontSize: 16,
               color: Colors.white70,
             ),
@@ -206,7 +197,7 @@ class MosqueFinderDemo extends StatelessWidget {
       child: Text(
         title,
         style: const TextStyle(
-          fontFamily: 'Kalpurush',
+          fontFamily: null,
           fontSize: 20,
           fontWeight: FontWeight.bold,
           color: Colors.green,
@@ -220,18 +211,14 @@ class MosqueFinderDemo extends StatelessWidget {
       onPressed: () {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => const NearbyMosquesScreen(),
-          ),
+          MaterialPageRoute(builder: (context) => const NearbyMosquesScreen()),
         );
       },
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.purple,
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
       child: const Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -241,7 +228,7 @@ class MosqueFinderDemo extends StatelessWidget {
           Text(
             'আমার মসজিদ খুঁজুন',
             style: TextStyle(
-              fontFamily: 'Kalpurush',
+              fontFamily: null,
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
@@ -260,9 +247,7 @@ class MosqueFinderDemo extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
@@ -283,7 +268,7 @@ class MosqueFinderDemo extends StatelessWidget {
                   Text(
                     title,
                     style: const TextStyle(
-                      fontFamily: 'Kalpurush',
+                      fontFamily: null,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
@@ -292,7 +277,7 @@ class MosqueFinderDemo extends StatelessWidget {
                   Text(
                     description,
                     style: TextStyle(
-                      fontFamily: 'Kalpurush',
+                      fontFamily: null,
                       fontSize: 13,
                       color: Colors.grey[600],
                     ),
@@ -324,7 +309,7 @@ class MosqueFinderDemo extends StatelessWidget {
               Text(
                 'টেস্ট করার নির্দেশনা',
                 style: TextStyle(
-                  fontFamily: 'Kalpurush',
+                  fontFamily: null,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Colors.blue[900],
@@ -359,7 +344,7 @@ class MosqueFinderDemo extends StatelessWidget {
               child: Text(
                 number,
                 style: const TextStyle(
-                  fontFamily: 'Kalpurush',
+                  fontFamily: null,
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
@@ -370,10 +355,7 @@ class MosqueFinderDemo extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
-                fontFamily: 'Kalpurush',
-                fontSize: 15,
-              ),
+              style: const TextStyle(fontFamily: null, fontSize: 15),
             ),
           ),
         ],
@@ -418,7 +400,7 @@ class MosqueFinderDemo extends StatelessWidget {
                 Text(
                   'এখনই টেস্ট করুন',
                   style: TextStyle(
-                    fontFamily: 'Kalpurush',
+                    fontFamily: null,
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,

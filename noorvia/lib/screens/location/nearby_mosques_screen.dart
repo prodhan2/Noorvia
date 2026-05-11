@@ -62,7 +62,7 @@ class _NearbyMosquesScreenState extends State<NearbyMosquesScreen> {
     try {
       // Get current location - this will request permissions if needed
       final position = await _mosqueService.getCurrentLocation();
-      
+
       // Get mosques with cache (returns cached data immediately if available)
       final mosques = await _mosqueService.getNearbyMosquesWithCache(
         latitude: position.latitude,
@@ -78,16 +78,18 @@ class _NearbyMosquesScreenState extends State<NearbyMosquesScreen> {
           }
         },
       );
-      
+
       setState(() {
         _mosques = mosques;
         _isLoading = false;
-        _isRefreshingInBackground = mosques.isNotEmpty; // If we got cached data, refresh is happening
+        _isRefreshingInBackground =
+            mosques.isNotEmpty; // If we got cached data, refresh is happening
       });
 
       if (mosques.isEmpty) {
         setState(() {
-          _errorMessage = 'আশেপাশে কোনো মসজিদ পাওয়া যায়নি। অনুসন্ধান পরিসীমা বাড়ান।';
+          _errorMessage =
+              'আশেপাশে কোনো মসজিদ পাওয়া যায়নি। অনুসন্ধান পরিসীমা বাড়ান।';
           // No mosques found nearby. Increase search radius.
         });
       }
@@ -97,7 +99,7 @@ class _NearbyMosquesScreenState extends State<NearbyMosquesScreen> {
         _isRefreshingInBackground = false;
         _errorMessage = e.toString().replaceAll('Exception: ', '');
       });
-      
+
       // Show snackbar for permission errors
       if (mounted && e.toString().contains('অনুমতি')) {
         final permissionService = LocationPermissionService();
@@ -105,7 +107,7 @@ class _NearbyMosquesScreenState extends State<NearbyMosquesScreen> {
           SnackBar(
             content: Text(
               e.toString().replaceAll('Exception: ', ''),
-              style: const TextStyle(fontFamily: 'Kalpurush'),
+              style: const TextStyle(fontFamily: null),
             ),
             backgroundColor: Colors.orange,
             duration: const Duration(seconds: 5),
@@ -134,14 +136,16 @@ class _NearbyMosquesScreenState extends State<NearbyMosquesScreen> {
   /// Open mosque location in Google Maps
   Future<void> _openInGoogleMaps(Mosque mosque) async {
     final url = Uri.parse(mosque.getGoogleMapsUrl());
-    
+
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('গুগল ম্যাপস খুলতে ব্যর্থ'), // Failed to open Google Maps
+            content: Text(
+              'গুগল ম্যাপস খুলতে ব্যর্থ',
+            ), // Failed to open Google Maps
             backgroundColor: Colors.red,
           ),
         );
@@ -156,7 +160,7 @@ class _NearbyMosquesScreenState extends State<NearbyMosquesScreen> {
       builder: (context) => AlertDialog(
         title: const Text(
           'অনুসন্ধান পরিসীমা নির্বাচন করুন',
-          style: TextStyle(fontFamily: 'Kalpurush'),
+          style: TextStyle(fontFamily: null),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -174,7 +178,7 @@ class _NearbyMosquesScreenState extends State<NearbyMosquesScreen> {
 
   Widget _buildRadiusOption(String label, int radius) {
     return RadioListTile<int>(
-      title: Text(label, style: const TextStyle(fontFamily: 'Kalpurush')),
+      title: Text(label, style: const TextStyle(fontFamily: null)),
       value: radius,
       groupValue: _searchRadius,
       onChanged: (value) {
@@ -197,7 +201,7 @@ class _NearbyMosquesScreenState extends State<NearbyMosquesScreen> {
             const Text(
               'আমার মসজিদ',
               style: TextStyle(
-                fontFamily: 'Kalpurush',
+                fontFamily: null,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
@@ -260,14 +264,12 @@ class _NearbyMosquesScreenState extends State<NearbyMosquesScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const CircularProgressIndicator(
-            strokeWidth: 3,
-          ),
+          const CircularProgressIndicator(strokeWidth: 3),
           const SizedBox(height: 24),
           Text(
             'আশেপাশের মসজিদ খুঁজছি...',
             style: TextStyle(
-              fontFamily: 'Kalpurush',
+              fontFamily: null,
               fontSize: 16,
               color: Colors.grey[600],
             ),
@@ -276,7 +278,7 @@ class _NearbyMosquesScreenState extends State<NearbyMosquesScreen> {
           Text(
             'অনুগ্রহ করে অপেক্ষা করুন',
             style: TextStyle(
-              fontFamily: 'Kalpurush',
+              fontFamily: null,
               fontSize: 14,
               color: Colors.grey[500],
             ),
@@ -294,17 +296,13 @@ class _NearbyMosquesScreenState extends State<NearbyMosquesScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red[300],
-            ),
+            Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
             const SizedBox(height: 16),
             Text(
               _errorMessage!,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                fontFamily: 'Kalpurush',
+                fontFamily: null,
                 fontSize: 16,
                 color: Colors.black87,
               ),
@@ -315,7 +313,7 @@ class _NearbyMosquesScreenState extends State<NearbyMosquesScreen> {
               icon: const Icon(Icons.refresh),
               label: const Text(
                 'আবার চেষ্টা করুন',
-                style: TextStyle(fontFamily: 'Kalpurush'),
+                style: TextStyle(fontFamily: null),
               ),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(
@@ -338,16 +336,12 @@ class _NearbyMosquesScreenState extends State<NearbyMosquesScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.mosque_outlined,
-              size: 64,
-              color: Colors.grey[400],
-            ),
+            Icon(Icons.mosque_outlined, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             const Text(
               'কোনো মসজিদ পাওয়া যায়নি',
               style: TextStyle(
-                fontFamily: 'Kalpurush',
+                fontFamily: null,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -357,7 +351,7 @@ class _NearbyMosquesScreenState extends State<NearbyMosquesScreen> {
               'আপনার আশেপাশে কোনো মসজিদ খুঁজে পাওয়া যায়নি',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontFamily: 'Kalpurush',
+                fontFamily: null,
                 fontSize: 14,
                 color: Colors.grey[600],
               ),
@@ -368,7 +362,7 @@ class _NearbyMosquesScreenState extends State<NearbyMosquesScreen> {
               icon: const Icon(Icons.tune),
               label: const Text(
                 'অনুসন্ধান পরিসীমা বাড়ান',
-                style: TextStyle(fontFamily: 'Kalpurush'),
+                style: TextStyle(fontFamily: null),
               ),
             ),
           ],
@@ -389,7 +383,7 @@ class _NearbyMosquesScreenState extends State<NearbyMosquesScreen> {
           child: Text(
             '${_mosques.length}টি মসজিদ পাওয়া গেছে',
             style: const TextStyle(
-              fontFamily: 'Kalpurush',
+              fontFamily: null,
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
@@ -420,10 +414,7 @@ class _NearbyMosquesScreenState extends State<NearbyMosquesScreen> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: isNearest
-            ? BorderSide(
-                color: Theme.of(context).primaryColor,
-                width: 2,
-              )
+            ? BorderSide(color: Theme.of(context).primaryColor, width: 2)
             : BorderSide.none,
       ),
       child: Container(
@@ -459,16 +450,12 @@ class _NearbyMosquesScreenState extends State<NearbyMosquesScreen> {
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        Icons.star,
-                        size: 16,
-                        color: Colors.white,
-                      ),
+                      Icon(Icons.star, size: 16, color: Colors.white),
                       SizedBox(width: 4),
                       Text(
                         'সবচেয়ে কাছের মসজিদ',
                         style: TextStyle(
-                          fontFamily: 'Kalpurush',
+                          fontFamily: null,
                           color: Colors.white,
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -478,7 +465,7 @@ class _NearbyMosquesScreenState extends State<NearbyMosquesScreen> {
                   ),
                 ),
               if (isNearest) const SizedBox(height: 12),
-              
+
               // Mosque name
               Row(
                 children: [
@@ -492,7 +479,7 @@ class _NearbyMosquesScreenState extends State<NearbyMosquesScreen> {
                     child: Text(
                       mosque.name,
                       style: TextStyle(
-                        fontFamily: 'Kalpurush',
+                        fontFamily: null,
                         fontSize: isNearest ? 18 : 16,
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
@@ -502,20 +489,16 @@ class _NearbyMosquesScreenState extends State<NearbyMosquesScreen> {
                 ],
               ),
               const SizedBox(height: 12),
-              
+
               // Distance
               Row(
                 children: [
-                  Icon(
-                    Icons.location_on,
-                    color: Colors.red[400],
-                    size: 20,
-                  ),
+                  Icon(Icons.location_on, color: Colors.red[400], size: 20),
                   const SizedBox(width: 8),
                   Text(
                     mosque.getFormattedDistance(),
                     style: TextStyle(
-                      fontFamily: 'Kalpurush',
+                      fontFamily: null,
                       fontSize: 15,
                       color: Colors.grey[700],
                       fontWeight: FontWeight.w600,
@@ -523,23 +506,19 @@ class _NearbyMosquesScreenState extends State<NearbyMosquesScreen> {
                   ),
                 ],
               ),
-              
+
               // Address if available
               if (mosque.address != null) ...[
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(
-                      Icons.home,
-                      color: Colors.grey[600],
-                      size: 18,
-                    ),
+                    Icon(Icons.home, color: Colors.grey[600], size: 18),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         mosque.address!,
                         style: TextStyle(
-                          fontFamily: 'Kalpurush',
+                          fontFamily: null,
                           fontSize: 13,
                           color: Colors.grey[600],
                         ),
@@ -550,9 +529,9 @@ class _NearbyMosquesScreenState extends State<NearbyMosquesScreen> {
                   ],
                 ),
               ],
-              
+
               const SizedBox(height: 16),
-              
+
               // Action buttons
               Row(
                 children: [
@@ -562,7 +541,7 @@ class _NearbyMosquesScreenState extends State<NearbyMosquesScreen> {
                       icon: const Icon(Icons.directions, size: 18),
                       label: const Text(
                         'দিকনির্দেশনা',
-                        style: TextStyle(fontFamily: 'Kalpurush'),
+                        style: TextStyle(fontFamily: null),
                       ),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -579,7 +558,7 @@ class _NearbyMosquesScreenState extends State<NearbyMosquesScreen> {
                       icon: const Icon(Icons.map, size: 18),
                       label: const Text(
                         'ম্যাপে দেখুন',
-                        style: TextStyle(fontFamily: 'Kalpurush'),
+                        style: TextStyle(fontFamily: null),
                       ),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),

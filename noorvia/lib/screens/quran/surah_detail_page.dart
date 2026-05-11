@@ -142,34 +142,49 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
           itemCount: _ayahs.length,
           itemBuilder: (context, index) {
             return _buildAyahCard(
-                _ayahs[index], isDark, cardColor, textColor, subColor);
+              _ayahs[index],
+              isDark,
+              cardColor,
+              textColor,
+              subColor,
+            );
           },
         ),
       ),
     );
   }
 
-  Widget _buildSliverAppBar(bool isDark, Color cardColor, Color textColor,
-      Color subColor) {
+  Widget _buildSliverAppBar(
+    bool isDark,
+    Color cardColor,
+    Color textColor,
+    Color subColor,
+  ) {
     return SliverAppBar(
       expandedHeight: 200,
       pinned: true,
       backgroundColor: AppColors.primary,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+        icon: const Icon(
+          Icons.arrow_back_ios_new,
+          color: Colors.white,
+          size: 20,
+        ),
         onPressed: () => Navigator.pop(context),
       ),
       actions: [
         // Font size controls
         IconButton(
           icon: const Icon(Icons.text_decrease, color: Colors.white, size: 20),
-          onPressed: () =>
-              setState(() => _arabicFontSize = (_arabicFontSize - 2).clamp(18, 40)),
+          onPressed: () => setState(
+            () => _arabicFontSize = (_arabicFontSize - 2).clamp(18, 40),
+          ),
         ),
         IconButton(
           icon: const Icon(Icons.text_increase, color: Colors.white, size: 20),
-          onPressed: () =>
-              setState(() => _arabicFontSize = (_arabicFontSize + 2).clamp(18, 40)),
+          onPressed: () => setState(
+            () => _arabicFontSize = (_arabicFontSize + 2).clamp(18, 40),
+          ),
         ),
         // Settings popup
         PopupMenuButton<String>(
@@ -184,31 +199,35 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
           itemBuilder: (_) => [
             PopupMenuItem(
               value: 'trans',
-              child: Row(children: [
-                Icon(
-                  _showTransliteration
-                      ? Icons.check_box
-                      : Icons.check_box_outline_blank,
-                  color: AppColors.primary,
-                  size: 18,
-                ),
-                const SizedBox(width: 8),
-                const Text('উচ্চারণ দেখান'),
-              ]),
+              child: Row(
+                children: [
+                  Icon(
+                    _showTransliteration
+                        ? Icons.check_box
+                        : Icons.check_box_outline_blank,
+                    color: AppColors.primary,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  const Text('উচ্চারণ দেখান'),
+                ],
+              ),
             ),
             PopupMenuItem(
               value: 'bangla',
-              child: Row(children: [
-                Icon(
-                  _showTranslation
-                      ? Icons.check_box
-                      : Icons.check_box_outline_blank,
-                  color: AppColors.primary,
-                  size: 18,
-                ),
-                const SizedBox(width: 8),
-                const Text('অনুবাদ দেখান'),
-              ]),
+              child: Row(
+                children: [
+                  Icon(
+                    _showTranslation
+                        ? Icons.check_box
+                        : Icons.check_box_outline_blank,
+                    color: AppColors.primary,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  const Text('অনুবাদ দেখান'),
+                ],
+              ),
             ),
           ],
         ),
@@ -233,7 +252,7 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
                   style: const TextStyle(
                     fontSize: 36,
                     color: Colors.white,
-                    fontFamily: 'serif',
+                    fontFamily: 'NooreHuda',
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -265,7 +284,7 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
                     style: const TextStyle(
                       fontSize: 18,
                       color: Colors.white70,
-                      fontFamily: 'serif',
+                      fontFamily: 'NooreHuda',
                     ),
                   ),
               ],
@@ -294,8 +313,13 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
     );
   }
 
-  Widget _buildAyahCard(Ayah ayah, bool isDark, Color cardColor,
-      Color textColor, Color subColor) {
+  Widget _buildAyahCard(
+    Ayah ayah,
+    bool isDark,
+    Color cardColor,
+    Color textColor,
+    Color subColor,
+  ) {
     final isBookmarked = _bookmarked.contains(ayah.number);
 
     return Container(
@@ -402,7 +426,7 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
                 fontSize: _arabicFontSize,
                 color: isDark ? AppColors.darkText : const Color(0xFF1A1A2E),
                 height: 2.0,
-                fontFamily: 'serif',
+                fontFamily: 'NooreHuda',
               ),
             ),
           ),
@@ -435,12 +459,18 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
           if (_showTranslation)
             Padding(
               padding: EdgeInsets.fromLTRB(
-                  16, _showTransliteration ? 4 : 10, 16, 16),
+                16,
+                _showTransliteration ? 4 : 10,
+                16,
+                16,
+              ),
               child: Text(
                 ayah.bangla,
                 style: GoogleFonts.hindSiliguri(
                   fontSize: 14,
-                  color: isDark ? AppColors.darkSubText : AppColors.lightSubText,
+                  color: isDark
+                      ? AppColors.darkSubText
+                      : AppColors.lightSubText,
                   height: 1.7,
                 ),
               ),
@@ -470,11 +500,7 @@ class _SurahDetailPageState extends State<SurahDetailPage> {
             color: AppColors.primary.withValues(alpha: 0.08),
             shape: BoxShape.circle,
           ),
-          child: Icon(
-            icon,
-            size: 15,
-            color: color ?? AppColors.primary,
-          ),
+          child: Icon(icon, size: 15, color: color ?? AppColors.primary),
         ),
       ),
     );

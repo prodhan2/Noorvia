@@ -36,24 +36,31 @@ class _HadithDemoPageState extends State<HadithDemoPage> {
 
   Future<void> _fetchHadiths() async {
     try {
-      final response = await http.get(Uri.parse(
-          'https://alquranbd.com/api/hadith/bukhari/bn/$currentPage/$itemsPerPage'));
+      final response = await http.get(
+        Uri.parse(
+          'https://alquranbd.com/api/hadith/bukhari/bn/$currentPage/$itemsPerPage',
+        ),
+      );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final hadithData = data as List;
 
         setState(() {
-          hadiths.addAll(hadithData
-              .map((h) => Hadith(
+          hadiths.addAll(
+            hadithData
+                .map(
+                  (h) => Hadith(
                     id: h['id'].toString(),
                     text: h['hadithBengali'],
                     arabic: h['hadithArabic'],
                     source: 'সহীহ বুখারী',
                     number: h['hadithNumber'].toString(),
                     chapter: h['chapterNameBengali'],
-                  ))
-              .toList());
+                  ),
+                )
+                .toList(),
+          );
 
           filteredHadiths = hadiths;
           isLoading = false;
@@ -82,9 +89,11 @@ class _HadithDemoPageState extends State<HadithDemoPage> {
     setState(() {
       searchQuery = query;
       filteredHadiths = hadiths
-          .where((hadith) =>
-              hadith.text.toLowerCase().contains(query.toLowerCase()) ||
-              hadith.number.contains(query))
+          .where(
+            (hadith) =>
+                hadith.text.toLowerCase().contains(query.toLowerCase()) ||
+                hadith.number.contains(query),
+          )
           .toList();
     });
   }
@@ -104,16 +113,16 @@ class _HadithDemoPageState extends State<HadithDemoPage> {
   void _shareHadith(Hadith hadith) {
     // share_plus not available on web — copy to clipboard instead
     if (kIsWeb) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('হাদিস কপি করা হয়েছে')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('হাদিস কপি করা হয়েছে')));
       return;
     }
     // On mobile: use clipboard as fallback
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-          content: Text('${hadith.text}\n- ${hadith.source}',
-              maxLines: 2)),
+        content: Text('${hadith.text}\n- ${hadith.source}', maxLines: 2),
+      ),
     );
   }
 
@@ -121,7 +130,7 @@ class _HadithDemoPageState extends State<HadithDemoPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('হাদিস সংগ্রহ', style: TextStyle(fontFamily: 'Bangla')),
+        title: Text('হাদিস সংগ্রহ', style: TextStyle(fontFamily: null)),
         centerTitle: true,
         elevation: 0,
         flexibleSpace: Container(
@@ -142,7 +151,7 @@ class _HadithDemoPageState extends State<HadithDemoPage> {
               onChanged: _searchHadiths,
               decoration: InputDecoration(
                 hintText: 'হাদিস খুঁজুন...',
-                hintStyle: TextStyle(fontFamily: 'Bangla'),
+                hintStyle: TextStyle(fontFamily: null),
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(30),
@@ -157,44 +166,44 @@ class _HadithDemoPageState extends State<HadithDemoPage> {
             child: isLoading && hadiths.isEmpty
                 ? Center(child: CircularProgressIndicator())
                 : filteredHadiths.isEmpty
-                    ? Center(
-                        child: Text(
-                          'কোন হাদিস পাওয়া যায়নি',
-                          style: TextStyle(fontFamily: 'Bangla', fontSize: 18),
-                        ),
-                      )
-                    : NotificationListener<ScrollNotification>(
-                        onNotification: (ScrollNotification scrollInfo) {
-                          if (scrollInfo.metrics.pixels ==
-                                  scrollInfo.metrics.maxScrollExtent &&
-                              !isLoading &&
-                              hasMore) {
-                            _loadMore();
-                          }
-                          return true;
-                        },
-                        child: ListView.builder(
-                          padding: EdgeInsets.symmetric(horizontal: 8),
-                          itemCount: filteredHadiths.length + (hasMore ? 1 : 0),
-                          itemBuilder: (context, index) {
-                            if (index >= filteredHadiths.length) {
-                              return Center(
-                                child: Padding(
-                                  padding: EdgeInsets.all(16),
-                                  child: CircularProgressIndicator(),
-                                ),
-                              );
-                            }
-                            final hadith = filteredHadiths[index];
-                            return HadithCard(
-                              hadith: hadith,
-                              isBookmarked: bookmarks.contains(hadith.id),
-                              onBookmark: _toggleBookmark,
-                              onShare: _shareHadith,
-                            );
-                          },
-                        ),
-                      ),
+                ? Center(
+                    child: Text(
+                      'কোন হাদিস পাওয়া যায়নি',
+                      style: TextStyle(fontFamily: null, fontSize: 18),
+                    ),
+                  )
+                : NotificationListener<ScrollNotification>(
+                    onNotification: (ScrollNotification scrollInfo) {
+                      if (scrollInfo.metrics.pixels ==
+                              scrollInfo.metrics.maxScrollExtent &&
+                          !isLoading &&
+                          hasMore) {
+                        _loadMore();
+                      }
+                      return true;
+                    },
+                    child: ListView.builder(
+                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      itemCount: filteredHadiths.length + (hasMore ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index >= filteredHadiths.length) {
+                          return Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(16),
+                              child: CircularProgressIndicator(),
+                            ),
+                          );
+                        }
+                        final hadith = filteredHadiths[index];
+                        return HadithCard(
+                          hadith: hadith,
+                          isBookmarked: bookmarks.contains(hadith.id),
+                          onBookmark: _toggleBookmark,
+                          onShare: _shareHadith,
+                        );
+                      },
+                    ),
+                  ),
           ),
         ],
       ),
@@ -220,9 +229,7 @@ class HadithCard extends StatelessWidget {
     return Card(
       margin: EdgeInsets.all(8),
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: EdgeInsets.all(16),
         child: Column(
@@ -255,26 +262,17 @@ class HadithCard extends StatelessWidget {
             Text(
               hadith.chapter,
               style: TextStyle(
-                fontFamily: 'Bangla',
+                fontFamily: null,
                 fontWeight: FontWeight.bold,
                 color: AppColors.primaryLight,
               ),
             ),
             SizedBox(height: 8),
-            Text(
-              hadith.text,
-              style: TextStyle(
-                fontSize: 16,
-                fontFamily: 'Bangla',
-              ),
-            ),
+            Text(hadith.text, style: TextStyle(fontSize: 16, fontFamily: null)),
             SizedBox(height: 12),
             Text(
               hadith.arabic,
-              style: TextStyle(
-                fontSize: 18,
-                fontFamily: 'Arabic',
-              ),
+              style: TextStyle(fontSize: 18, fontFamily: 'NooreHuda'),
               textDirection: TextDirection.rtl,
             ),
             SizedBox(height: 12),
@@ -282,10 +280,7 @@ class HadithCard extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: Text(
                 hadith.source,
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontFamily: 'Bangla',
-                ),
+                style: TextStyle(color: Colors.grey, fontFamily: null),
               ),
             ),
           ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
@@ -19,6 +20,7 @@ class MushafPage extends StatefulWidget {
 class _MushafPageState extends State<MushafPage> {
   static const String _lastSurahKey = 'mushafLastSurah';
   static const String _mushafSourceKey = 'selectedMushafSource';
+  static const String _madaniSvgSourceId = 'alfurqan_svg';
 
   int _lastSurah = 1;
   _MushafSource _selectedSource = _mushafSources.first;
@@ -54,6 +56,17 @@ class _MushafPageState extends State<MushafPage> {
     await prefs.setInt(_lastSurahKey, surah.number);
     if (!mounted) return;
     setState(() => _lastSurah = surah.number);
+    if (_selectedSource.id == _madaniSvgSourceId) {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) =>
+              _MadaniSvgSurahReaderPage(surah: surah, source: _selectedSource),
+        ),
+      );
+      return;
+    }
+
     await Navigator.push(
       context,
       MaterialPageRoute(
@@ -65,6 +78,7 @@ class _MushafPageState extends State<MushafPage> {
     );
   }
 
+  // ignore: unused_element
   String _bn(Object value) {
     const en = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
     const bn = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
@@ -311,6 +325,12 @@ class _MushafSurah {
   final String arabic;
   final int ayahs;
   int get startPage => _surahStartPages[number] ?? 1;
+  int get endPage {
+    if (number >= 114) return 604;
+    final nextStartPage = _surahStartPages[number + 1] ?? 605;
+    if (nextStartPage <= startPage) return startPage;
+    return nextStartPage - 1;
+  }
 
   const _MushafSurah(this.number, this.name, this.arabic, this.ayahs);
 }
@@ -475,6 +495,164 @@ const Map<int, int> _surahStartPages = {
   113: 604,
   114: 604,
 };
+
+class _MadaniSvgSurahReaderPage extends StatefulWidget {
+  final _MushafSurah surah;
+  final _MushafSource source;
+
+  const _MadaniSvgSurahReaderPage({required this.surah, required this.source});
+
+  @override
+  State<_MadaniSvgSurahReaderPage> createState() =>
+      _MadaniSvgSurahReaderPageState();
+}
+
+class _MadaniSvgSurahReaderPageState extends State<_MadaniSvgSurahReaderPage> {
+  late final PageController _pageController;
+  late int _currentPage;
+
+  static const int _firstPage = 1;
+  static const int _lastPage = 604;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentPage = widget.surah.startPage;
+    _pageController = PageController(initialPage: _currentPage - 1);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  String _pageUrl(int page) {
+    return 'https://alfurqan.online/api/v1/quran-text/page/$page';
+  }
+
+  // ignore: unused_element
+  String _bn(Object value) {
+    const en = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    const bn = [
+      'à§¦',
+      'à§§',
+      'à§¨',
+      'à§©',
+      'à§ª',
+      'à§«',
+      'à§¬',
+      'à§­',
+      'à§®',
+      'à§¯',
+    ];
+    var text = value.toString();
+    for (var i = 0; i < en.length; i++) {
+      text = text.replaceAll(en[i], bn[i]);
+    }
+    return text;
+  }
+
+  Future<void> _goToPage(int page) async {
+    if (page < _firstPage || page > _lastPage) return;
+    await _pageController.animateToPage(
+      page - 1,
+      duration: const Duration(milliseconds: 260),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = context.watch<ThemeProvider>().isDark;
+    final bg = isDark ? AppColors.darkBg : AppColors.lightBg;
+
+    return Scaffold(
+      backgroundColor: bg,
+      appBar: AppBar(
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        title: Text(
+          '${widget.surah.name} - ${widget.source.label}',
+          style: GoogleFonts.hindSiliguri(
+            color: Colors.white,
+            fontWeight: FontWeight.w800,
+            fontSize: 17,
+          ),
+        ),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: PageView.builder(
+              controller: _pageController,
+              reverse: true,
+              itemCount: _lastPage,
+              onPageChanged: (index) {
+                setState(() => _currentPage = index + 1);
+              },
+              itemBuilder: (context, index) {
+                final page = index + 1;
+                return InteractiveViewer(
+                  minScale: 0.8,
+                  maxScale: 5,
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: SvgPicture.network(
+                      _pageUrl(page),
+                      fit: BoxFit.contain,
+                      placeholderBuilder: (_) =>
+                          const Center(child: CircularProgressIndicator()),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          SafeArea(
+            top: false,
+            child: Container(
+              height: 56,
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                border: Border(top: BorderSide(color: Color(0xFFE0E6E2))),
+              ),
+              child: Row(
+                children: [
+                  IconButton(
+                    tooltip: 'Next page',
+                    onPressed: _currentPage < _lastPage
+                        ? () => _goToPage(_currentPage + 1)
+                        : null,
+                    icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+                  ),
+                  Expanded(
+                    child: Text(
+                      'Page $_currentPage / $_lastPage',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.hindSiliguri(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Previous page',
+                    onPressed: _currentPage > _firstPage
+                        ? () => _goToPage(_currentPage - 1)
+                        : null,
+                    icon: const Icon(Icons.arrow_forward_ios, size: 20),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class _MushafSurahReaderPage extends StatefulWidget {
   final _MushafSurah surah;

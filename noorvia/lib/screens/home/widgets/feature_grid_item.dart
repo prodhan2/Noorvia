@@ -7,6 +7,7 @@ class FeatureItem {
   final String emoji;
   final String label;
   final VoidCallback? onTap;
+
   /// Optional network image URL — replaces the emoji icon when provided
   final String? imageUrl;
 
@@ -60,10 +61,12 @@ class FeatureGridItem extends StatelessWidget {
                     ? null
                     : LinearGradient(
                         colors: [
-                          AppColors.primary
-                              .withValues(alpha: isDark ? 0.25 : 0.10),
-                          AppColors.accent
-                              .withValues(alpha: isDark ? 0.20 : 0.08),
+                          AppColors.primary.withValues(
+                            alpha: isDark ? 0.25 : 0.10,
+                          ),
+                          AppColors.accent.withValues(
+                            alpha: isDark ? 0.20 : 0.08,
+                          ),
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
@@ -118,7 +121,7 @@ class FeatureGridItem extends StatelessWidget {
       SnackBar(
         content: Text(
           '$label — শীঘ্রই আসছে',
-          style: const TextStyle(fontFamily: 'HindSiliguri'),
+          style: const TextStyle(fontFamily: null),
         ),
         backgroundColor: AppColors.primary,
         duration: const Duration(seconds: 1),
