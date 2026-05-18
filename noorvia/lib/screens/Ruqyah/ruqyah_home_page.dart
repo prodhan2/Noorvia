@@ -13,6 +13,7 @@ import 'ruqyah_diagnosis_page.dart';
 import 'ruqyah_audio_page.dart';
 import 'ruqyah_gosol_page.dart';
 import 'ruqyah_detox_page.dart';
+import 'hijama_page.dart';
 import 'promotion.dart';
 import 'developer.dart';
 
@@ -136,6 +137,7 @@ class _RuqyahHomePageState extends State<RuqyahHomePage>
     {'icon': '💧', 'title': 'রুকইয়াহ গোসল', 'color': Color(0xFF06B6D4)},
     {'icon': '🌿', 'title': 'ডিটক্স রুকইয়াহ', 'color': Color(0xFF10B981)},
     {'icon': '📖', 'title': 'রুকইয়াহ নোটস', 'color': Color(0xFF6C3CE1)},
+    {'icon': '🩺', 'title': 'হিজামা', 'color': Color(0xFF1E6F5C)},
     {'icon': '🏥', 'title': 'Ruqyah Center Info', 'color': Color(0xFF0EA5E9)},
     {'icon': '💻', 'title': 'Developer Info', 'color': Color(0xFF2563EB)},
   ];
@@ -188,10 +190,16 @@ class _RuqyahHomePageState extends State<RuqyahHomePage>
       case 8:
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const RuqyahPromotionPage()),
+          MaterialPageRoute(builder: (_) => const HijamaPage()),
         );
         break;
       case 9:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const RuqyahPromotionPage()),
+        );
+        break;
+      case 10:
         Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const RuqyahDeveloperInfoPage()),
@@ -501,6 +509,7 @@ class _RuqyahHomePageState extends State<RuqyahHomePage>
               MaterialPageRoute(builder: (_) => const RuqyahDiagnosisPage()),
             ),
           ),
+
           const SizedBox(height: 12),
 
           _buildWhiteCard(
@@ -608,6 +617,22 @@ class _RuqyahHomePageState extends State<RuqyahHomePage>
             subtitle: 'রুকইয়াহ সম্পর্কিত গুরুত্বপূর্ণ নোট ও গাইডলাইন',
             badge: _notes.isNotEmpty ? '${_notes.length} টি নোট' : null,
             onTap: () => _openPage(isNotes: true),
+          ),
+          const SizedBox(height: 12),
+
+          _buildWhiteCard(
+            isDark: isDark,
+            cardColor: cardColor,
+            textColor: textColor,
+            subColor: subColor,
+            icon: '🩺',
+            accentColor: const Color(0xFF1E6F5C),
+            title: 'হিজামা',
+            subtitle: 'নববী চিকিৎসা পদ্ধতি, উপকারিতা, সময় ও সতর্কতা',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const HijamaPage()),
+            ),
           ),
           const SizedBox(height: 12),
 
