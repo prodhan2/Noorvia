@@ -4,7 +4,8 @@
 //  নতুন route যোগ করতে শুধু app_routes.dart এডিট করুন।
 // ============================================================
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../core/theme/app_theme.dart';
@@ -153,7 +154,7 @@ class _MuslimViewAppBar extends StatelessWidget implements PreferredSizeWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              'মুসলিম ভিউ',
+                              'Noorvia',
                               style: settings.banglaFont.style(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w800,
@@ -161,7 +162,7 @@ class _MuslimViewAppBar extends StatelessWidget implements PreferredSizeWidget {
                               ),
                             ),
                             const Text(
-                              'Muslim View',
+                              'Noorvia',
                               style: TextStyle(
                                 fontSize: 9,
                                 color: Colors.white70,
@@ -400,7 +401,7 @@ class _MuslimViewDrawer extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'মুসলিম ভিউ',
+                            'Noorvia',
                             style: settings.banglaFont.style(
                               fontSize: 24,
                               fontWeight: FontWeight.w700,
@@ -408,7 +409,7 @@ class _MuslimViewDrawer extends StatelessWidget {
                             ),
                           ),
                           const Text(
-                            'Muslim View',
+                            'Noorvia',
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.white70,
@@ -828,7 +829,7 @@ class _ExitDialog extends StatelessWidget {
                   const Text('🕌', style: TextStyle(fontSize: 40)),
                   const SizedBox(height: 8),
                   Text(
-                    'মুসলিম ভিউ',
+                    'Noorvia',
                     style: settings.banglaFont.style(
                       fontSize: 20,
                       fontWeight: FontWeight.w800,
@@ -855,7 +856,7 @@ class _ExitDialog extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'আপনি কি সত্যিই মুসলিম ভিউ বন্ধ করতে চান?\nআল্লাহ আপনার সাথে থাকুন। 🤲',
+                    'আপনি কি সত্যিই Noorvia বন্ধ করতে চান?\nআল্লাহ আপনার সাথে থাকুন। 🤲',
                     style: settings.banglaFont.style(
                       fontSize: 13,
                       color: subColor,

@@ -28,5 +28,7 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Noorvia uses the camera only when you scan a food barcode for ingredient information.</string>
 </dict>
 </plist>

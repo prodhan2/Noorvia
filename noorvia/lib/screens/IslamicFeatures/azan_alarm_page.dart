@@ -3,7 +3,9 @@
 //  আযান অ্যালার্ম পেজ - সম্পূর্ণ আলাদা পেজ
 // ============================================================
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
+import 'package:muslim_view/core/localization/app_i18n.dart';
 import 'package:provider/provider.dart';
 import '../../core/providers/prayer_provider.dart';
 import '../../core/providers/prayer_alarm_provider.dart';
@@ -94,7 +96,7 @@ class _AzanAlarmPageState extends State<AzanAlarmPage> {
                   IconButton(
                     icon: const Icon(Icons.settings_rounded,
                         color: Colors.white, size: 22),
-                    tooltip: 'বিস্তারিত সেটিংস',
+                    tooltip: AppI18n.current('বিস্তারিত সেটিংস'),
                     onPressed: () {
                       Navigator.push(
                         context,

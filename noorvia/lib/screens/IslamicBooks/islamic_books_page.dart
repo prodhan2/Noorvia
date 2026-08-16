@@ -1,5 +1,7 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
+import 'package:muslim_view/core/localization/app_i18n.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
@@ -366,7 +368,7 @@ class _IslamicBooksPageState extends State<IslamicBooksPage> {
         controller: _searchCtrl,
         style: GoogleFonts.hindSiliguri(fontSize: 15),
         decoration: InputDecoration(
-          hintText: 'খুঁজুন...',
+          hintText: AppI18n.current('খুঁজুন...'),
           hintStyle: GoogleFonts.hindSiliguri(color: Colors.grey),
           prefixIcon: const Icon(Icons.search_rounded),
           suffixIcon: _searchQuery.isNotEmpty

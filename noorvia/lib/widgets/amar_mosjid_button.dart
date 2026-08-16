@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
 import '../screens/location/nearby_mosques_screen.dart';
 
 /// A beautiful button widget to navigate to nearby mosques screen

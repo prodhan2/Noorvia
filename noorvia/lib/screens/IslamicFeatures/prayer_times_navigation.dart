@@ -3,7 +3,9 @@
 //  Helper widgets for navigating to prayer times and alarm pages
 // ============================================================
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
+import 'package:muslim_view/core/localization/app_i18n.dart';
 import 'prayer_times_page.dart';
 import 'prayer_alarm_settings_page.dart';
 
@@ -219,7 +221,7 @@ class PrayerTimesIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return IconButton(
       icon: const Icon(Icons.access_time_rounded),
-      tooltip: 'নামাজের সময়',
+      tooltip: AppI18n.current('নামাজের সময়'),
       onPressed: () => navigateToPrayerTimes(context),
     );
   }
@@ -233,7 +235,7 @@ class PrayerAlarmIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return IconButton(
       icon: const Icon(Icons.alarm_rounded),
-      tooltip: 'আযান সেটিংস',
+      tooltip: AppI18n.current('আযান সেটিংস'),
       onPressed: () => navigateToPrayerAlarmSettings(context),
     );
   }

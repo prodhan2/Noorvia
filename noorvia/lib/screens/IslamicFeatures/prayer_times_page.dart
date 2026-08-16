@@ -3,12 +3,15 @@
 //  Enhanced prayer times page with alarm integration
 // ============================================================
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
+import 'package:muslim_view/core/localization/app_i18n.dart';
 import 'package:provider/provider.dart';
 import '../../core/providers/prayer_provider.dart';
 import '../../core/providers/prayer_alarm_provider.dart';
 import '../../core/theme/app_theme.dart';
 import 'prayer_alarm_settings_page.dart';
+import 'home_screen_widgets_page.dart';
 
 class PrayerTimesPage extends StatefulWidget {
   const PrayerTimesPage({super.key});
@@ -107,6 +110,18 @@ class _PrayerTimesPageState extends State<PrayerTimesPage> {
                   onPressed: () => Navigator.pop(context),
                 ),
                 actions: [
+                  IconButton(
+                    tooltip: AppI18n.current('হোম স্ক্রিন উইজেট'),
+                    icon: const Icon(Icons.widgets_rounded, color: Colors.white),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const HomeScreenWidgetsPage(),
+                        ),
+                      );
+                    },
+                  ),
                   IconButton(
                     icon: const Icon(Icons.alarm_rounded, color: Colors.white),
                     onPressed: () {

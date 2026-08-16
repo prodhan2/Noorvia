@@ -1,10 +1,13 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../core/data/local/local_store.dart';
 import '../../core/providers/audio_provider.dart';
 import '../../core/providers/theme_provider.dart';
 import '../../core/theme/app_theme.dart';
@@ -51,74 +54,158 @@ class _RadioScreenState extends State<RadioScreen> {
   }
 
   Future<void> fetchRadioStations() async {
-    setState(() {
-      isLoading = true;
-      errorMessage = '';
-    });
+    if (mounted) {
+      setState(() {
+        isLoading = true;
+        errorMessage = '';
+      });
+    }
 
     final prefs = await SharedPreferences.getInstance();
 
-    // ── ১. Cache থেকে তাৎক্ষণিক দেখাও ───────────────────────
-    final cached = prefs.getString('radio_cache');
-    if (cached != null) {
-      try {
-        final data = json.decode(cached);
-        setState(() {
-          radioStations = (data['radios'] as List)
-              .map((s) => RadioStation.fromJson(s))
-              .toList();
-          isLoading = false;
-        });
-      } catch (_) {}
+    // 1) Isar cache first. Legacy SharedPreferences cache is kept as a
+    // migration fallback for users upgrading from older Noorvia builds.
+    try {
+      final cached = await LocalStore.instance.getJson('radio_cache_v2', 'stations');
+      final raw = cached?['radios'];
+      if (raw is List) {
+        final stations = raw
+            .whereType<Map>()
+            .map((item) => RadioStation.fromJson(Map<String, dynamic>.from(item)))
+            .where((station) => station.url.isNotEmpty)
+            .toList();
+        if (stations.isNotEmpty && mounted) {
+          setState(() {
+            radioStations = stations;
+            isLoading = false;
+          });
+        }
+      }
+    } catch (_) {}
+
+    if (radioStations.isEmpty) {
+      final legacy = prefs.getString('radio_cache');
+      if (legacy != null) {
+        try {
+          final data = json.decode(legacy);
+          final raw = data is Map ? data['radios'] : null;
+          if (raw is List) {
+            final stations = raw
+                .whereType<Map>()
+                .map((item) => RadioStation.fromJson(Map<String, dynamic>.from(item)))
+                .where((station) => station.url.isNotEmpty)
+                .toList();
+            if (stations.isNotEmpty && mounted) {
+              setState(() {
+                radioStations = stations;
+                isLoading = false;
+              });
+            }
+          }
+        } catch (_) {}
+      }
     }
 
-    // ── ২. Network থেকে fresh data আনো ───────────────────────
     if (!isConnected) {
-      if (radioStations.isEmpty) {
+      if (mounted) {
         setState(() {
-          errorMessage = 'ইন্টারনেট সংযোগ নেই';
           isLoading = false;
+          if (radioStations.isEmpty) errorMessage = 'ইন্টারনেট সংযোগ নেই';
         });
-      } else {
-        setState(() { isLoading = false; });
       }
       return;
     }
 
-    try {
-      final response = await http.get(
-        Uri.parse('https://data-rosy.vercel.app/radio.json'),
-      ).timeout(const Duration(seconds: 10));
+    List<RadioStation> fresh = const [];
 
+    // 2) Noorvia curated feed remains first priority.
+    try {
+      final response = await http
+          .get(Uri.parse('https://data-rosy.vercel.app/radio.json'))
+          .timeout(const Duration(seconds: 8));
       if (response.statusCode == 200) {
-        await prefs.setString('radio_cache', response.body);
         final data = json.decode(response.body);
-        setState(() {
-          radioStations = (data['radios'] as List)
-              .map((station) => RadioStation.fromJson(station))
+        final raw = data is Map ? data['radios'] : null;
+        if (raw is List) {
+          fresh = raw
+              .whereType<Map>()
+              .map((item) => RadioStation.fromJson(Map<String, dynamic>.from(item)))
+              .where((station) => station.url.isNotEmpty)
               .toList();
-          isLoading = false;
-        });
-      } else {
-        if (radioStations.isEmpty) {
-          setState(() {
-            isLoading = false;
-            errorMessage = 'Failed to load radio stations (${response.statusCode})';
-          });
-        } else {
-          setState(() { isLoading = false; });
         }
       }
-    } catch (e) {
-      if (radioStations.isEmpty) {
+    } catch (_) {}
+
+    // 3) Global free/open Radio Browser fallback. This keeps Noorvia useful
+    // even when the curated feed is temporarily unavailable.
+    if (fresh.isEmpty) {
+      try {
+        fresh = await _fetchRadioBrowserStations();
+      } catch (_) {}
+    }
+
+    if (fresh.isNotEmpty) {
+      final normalized = {'radios': fresh.map((station) => station.toJson()).toList()};
+      await LocalStore.instance.putJson('radio_cache_v2', 'stations', normalized);
+      if (mounted) {
         setState(() {
+          radioStations = fresh;
           isLoading = false;
-          errorMessage = 'Error: ${e.toString()}';
+          errorMessage = '';
         });
-      } else {
-        setState(() { isLoading = false; });
+      }
+      return;
+    }
+
+    if (mounted) {
+      setState(() {
+        isLoading = false;
+        if (radioStations.isEmpty) {
+          errorMessage = 'রেডিও স্টেশন লোড করা যায়নি। আবার চেষ্টা করুন।';
+        }
+      });
+    }
+  }
+
+  Future<List<RadioStation>> _fetchRadioBrowserStations() async {
+    final queries = <Uri>[
+      Uri.https('all.api.radio-browser.info', '/json/stations/search', {
+        'tag': 'quran',
+        'hidebroken': 'true',
+        'limit': '80',
+        'order': 'votes',
+        'reverse': 'true',
+      }),
+      Uri.https('all.api.radio-browser.info', '/json/stations/search', {
+        'tag': 'islamic',
+        'hidebroken': 'true',
+        'limit': '80',
+        'order': 'votes',
+        'reverse': 'true',
+      }),
+    ];
+
+    final byUuid = <String, RadioStation>{};
+    for (final uri in queries) {
+      final response = await http.get(
+        uri,
+        headers: const {
+          'User-Agent': 'Noorvia/1.0 (com.butterflydevs.noorvia)',
+          'Accept': 'application/json',
+        },
+      ).timeout(const Duration(seconds: 8));
+      if (response.statusCode != 200) continue;
+      final decoded = json.decode(response.body);
+      if (decoded is! List) continue;
+      for (final item in decoded.whereType<Map>()) {
+        final station = RadioStation.fromRadioBrowser(
+          Map<String, dynamic>.from(item),
+        );
+        if (station.url.isEmpty || station.name.isEmpty) continue;
+        byUuid[station.stationUuid ?? station.url] = station;
       }
     }
+    return byUuid.values.take(120).toList(growable: false);
   }
 
   void setupAudioPlayer() {
@@ -181,12 +268,29 @@ class _RadioScreenState extends State<RadioScreen> {
       });
     } else {
       await audioPlayer.stop();
+      if (station.source == 'Radio Browser' && station.stationUuid != null) {
+        unawaited(_registerRadioBrowserClick(station.stationUuid!));
+      }
       await audioPlayer.play(UrlSource(station.url));
       setState(() {
         currentlyPlayingId = station.id;
         playerState = PlayerState.playing;
       });
     }
+  }
+
+  Future<void> _registerRadioBrowserClick(String stationUuid) async {
+    try {
+      await http.get(
+        Uri.https(
+          'all.api.radio-browser.info',
+          '/json/url/$stationUuid',
+        ),
+        headers: const {
+          'User-Agent': 'Noorvia/1.0 (com.butterflydevs.noorvia)',
+        },
+      ).timeout(const Duration(seconds: 3));
+    } catch (_) {}
   }
 
   Future<void> refreshStations() async {
@@ -354,21 +458,67 @@ class RadioStation {
   final String name;
   final String url;
   final String img;
+  final String? stationUuid;
+  final String source;
 
-  RadioStation({
+  const RadioStation({
     required this.id,
     required this.name,
     required this.url,
     required this.img,
+    this.stationUuid,
+    this.source = 'Noorvia',
   });
 
   factory RadioStation.fromJson(Map<String, dynamic> json) {
+    final url = (json['url'] ?? json['url_resolved'] ?? '').toString();
+    final uuid = json['stationUuid']?.toString() ?? json['stationuuid']?.toString();
     return RadioStation(
-      id: json['id'],
-      name: json['name'],
-      url: json['url'],
-      img: json['img'],
+      id: _coerceId(json['id'], uuid ?? url),
+      name: (json['name'] ?? 'Islamic Radio').toString().trim(),
+      url: url.trim(),
+      img: (json['img'] ?? json['favicon'] ?? '').toString().trim(),
+      stationUuid: uuid,
+      source: (json['source'] ?? 'Noorvia').toString(),
     );
+  }
+
+  factory RadioStation.fromRadioBrowser(Map<String, dynamic> json) {
+    final uuid = (json['stationuuid'] ?? '').toString();
+    final url = (json['url_resolved'] ?? json['url'] ?? '').toString();
+    return RadioStation(
+      id: _stableId(uuid.isNotEmpty ? uuid : url),
+      name: (json['name'] ?? 'Islamic Radio').toString().trim(),
+      url: url.trim(),
+      img: (json['favicon'] ?? '').toString().trim(),
+      stationUuid: uuid.isEmpty ? null : uuid,
+      source: 'Radio Browser',
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'url': url,
+        'img': img,
+        if (stationUuid != null) 'stationUuid': stationUuid,
+        'source': source,
+      };
+
+  static int _coerceId(dynamic value, String fallback) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? _stableId(fallback);
+  }
+
+  static int _stableId(String input) {
+    // Stable positive 31-bit FNV-1a for UI identity/cache compatibility.
+    var hash = 0x811c9dc5;
+    for (final unit in input.codeUnits) {
+      hash ^= unit;
+      hash = (hash * 0x01000193) & 0x7fffffff;
+    }
+    return hash == 0 ? 1 : hash;
   }
 }
 

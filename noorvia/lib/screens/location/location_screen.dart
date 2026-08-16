@@ -1,6 +1,8 @@
 ﻿import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
+import 'package:muslim_view/core/localization/app_i18n.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart';
@@ -695,7 +697,7 @@ class _CitySearchPanel extends StatelessWidget {
               onChanged: onSearch,
               style: GoogleFonts.hindSiliguri(color: textColor),
               decoration: InputDecoration(
-                hintText: 'শহর খুঁজুন...',
+                hintText: AppI18n.current('শহর খুঁজুন...'),
                 hintStyle: GoogleFonts.hindSiliguri(
                   color: subColor, fontSize: 13),
                 prefixIcon: const Icon(Icons.search_rounded,

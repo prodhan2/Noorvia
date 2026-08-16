@@ -3,7 +3,8 @@
 //  এই ফাইলটি দেখুন কিভাবে আযান সিস্টেম যুক্ত করবেন
 // ============================================================
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
 import 'prayer_times_navigation.dart';
 
 // ═══════════════════════════════════════════════════════════════
@@ -128,7 +129,7 @@ class DrawerExample extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Text(
-                  'মুসলিম ভিউ',
+                  'Noorvia',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 24,

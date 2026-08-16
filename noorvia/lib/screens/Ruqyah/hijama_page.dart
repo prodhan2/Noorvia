@@ -1,6 +1,8 @@
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
+import 'package:muslim_view/core/localization/app_i18n.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
@@ -620,7 +622,7 @@ class _SearchBox extends StatelessWidget {
       controller: controller,
       style: GoogleFonts.hindSiliguri(fontSize: 14),
       decoration: InputDecoration(
-        hintText: 'হিজামা বিষয়ে খুঁজুন',
+        hintText: AppI18n.current('হিজামা বিষয়ে খুঁজুন'),
         prefixIcon: Icon(Icons.search_rounded, color: accent),
         suffixIcon: controller.text.isEmpty
             ? null

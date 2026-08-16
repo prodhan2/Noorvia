@@ -1,4 +1,6 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import '../models/poster_model.dart';
@@ -37,12 +39,23 @@ class _PosterCarouselWidgetState extends State<PosterCarouselWidget> {
   int _currentPage = 0;
   bool _autoSlideEnabled = true;
   bool _showShimmer = true;
+  StreamSubscription<List<PosterModel>>? _posterSubscription;
 
   @override
   void initState() {
     super.initState();
     _autoSlideEnabled = widget.autoSlide;
     _loadPosters();
+    _posterSubscription = _posterService.watchPosters().listen((posters) {
+      if (!mounted) return;
+      setState(() {
+        _posters = posters;
+        _isLoading = false;
+        _hasError = false;
+        _showShimmer = false;
+        if (posters.isEmpty || _currentPage >= posters.length) _currentPage = 0;
+      });
+    });
   }
 
   Future<void> _loadPosters() async {
@@ -97,6 +110,7 @@ class _PosterCarouselWidgetState extends State<PosterCarouselWidget> {
 
   @override
   void dispose() {
+    _posterSubscription?.cancel();
     _pageController.dispose();
     super.dispose();
   }
@@ -122,7 +136,9 @@ class _PosterCarouselWidgetState extends State<PosterCarouselWidget> {
       return _buildErrorWidget();
     }
 
-    // Fallback shimmer
+    // Firestore can intentionally contain zero active banners.
+    if (!_isLoading) return const SizedBox.shrink();
+
     return PosterShimmerWidget(
       height: widget.height,
       borderRadius: widget.borderRadius,

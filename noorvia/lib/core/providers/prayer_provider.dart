@@ -1,12 +1,17 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import '../services/native_prayer_alarm_service.dart';
+import '../services/integrated_prayer_alarm_service.dart';
+import '../services/offline_prayer_calculator.dart';
+import '../data/local/local_store.dart';
 
 // ─── Prayer time model ────────────────────────────────────────
 class PrayerTimeModel {
@@ -38,10 +43,13 @@ class HijriDateModel {
 // PrayerProvider
 // ═══════════════════════════════════════════════════════════════
 class PrayerProvider extends ChangeNotifier {
+  static const _cacheNamespace = 'prayer_cache_v3';
+  static const _cacheKey = 'current';
+
   // State
   bool isLoading = true;
-  bool isOffline = false;        // true when network failed & no fresh data
-  bool hasCachedData = false;    // true when cache was loaded successfully
+  bool isOffline = false; // true when network failed & no fresh data
+  bool hasCachedData = false; // true when cache was loaded successfully
   bool locationDenied = false;
   bool locationDeniedForever = false;
   String cityName = 'ঢাকা';
@@ -100,26 +108,74 @@ class PrayerProvider extends ChangeNotifier {
     });
   }
 
-  // ── Load cached data ──────────────────────────────────────
+  // ── Load cached data (Isar primary, SharedPreferences legacy migration) ──
   Future<void> _loadCached() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final cached = prefs.getString('prayer_data');
-      final cachedCity = prefs.getString('prayer_city');
-      final cachedLat = prefs.getDouble('prayer_lat');
-      final cachedLon = prefs.getDouble('prayer_lon');
+      var cached = await LocalStore.instance.getJson(_cacheNamespace, _cacheKey);
 
-      if (cachedCity != null) cityName = cachedCity;
-      if (cachedLat != null) latitude = cachedLat;
-      if (cachedLon != null) longitude = cachedLon;
+      // One-time migration from the old SharedPreferences prayer cache.
+      if (cached == null) {
+        final prefs = await SharedPreferences.getInstance();
+        final legacyRaw = prefs.getString('prayer_data');
+        if (legacyRaw != null) {
+          try {
+            cached = <String, dynamic>{
+              'data': Map<String, dynamic>.from(json.decode(legacyRaw) as Map),
+              'city': prefs.getString('prayer_city'),
+              'country': prefs.getString('prayer_country'),
+              'latitude': prefs.getDouble('prayer_lat'),
+              'longitude': prefs.getDouble('prayer_lon'),
+              'savedAt': DateTime.now().toUtc().toIso8601String(),
+            };
+            await LocalStore.instance.putJson(
+              _cacheNamespace,
+              _cacheKey,
+              cached,
+              syncStatus: 'migrated',
+            );
+          } catch (_) {}
+        }
+      }
 
-      if (cached != null) {
-        final data = json.decode(cached);
-        _parsePrayerData(data);
+      if (cached == null) return;
+      cityName = cached['city']?.toString().isNotEmpty == true
+          ? cached['city'].toString()
+          : cityName;
+      countryName = cached['country']?.toString().isNotEmpty == true
+          ? cached['country'].toString()
+          : countryName;
+      latitude = (cached['latitude'] as num?)?.toDouble() ?? latitude;
+      longitude = (cached['longitude'] as num?)?.toDouble() ?? longitude;
+
+      final prayerData = cached['data'];
+      if (prayerData is Map) {
+        _parsePrayerData(Map<String, dynamic>.from(prayerData));
         hasCachedData = true;
         isLoading = false;
         notifyListeners();
       }
+    } catch (_) {}
+  }
+
+  Future<void> _persistCache({Map<String, dynamic>? prayerData}) async {
+    try {
+      final existing = await LocalStore.instance.getJson(_cacheNamespace, _cacheKey) ??
+          <String, dynamic>{};
+      final next = <String, dynamic>{
+        ...existing,
+        'city': cityName,
+        'country': countryName,
+        'latitude': latitude,
+        'longitude': longitude,
+        'savedAt': DateTime.now().toUtc().toIso8601String(),
+        if (prayerData != null) 'data': prayerData,
+      };
+      await LocalStore.instance.putJson(
+        _cacheNamespace,
+        _cacheKey,
+        next,
+        syncStatus: 'cached',
+      );
     } catch (_) {}
   }
 
@@ -170,10 +226,13 @@ class PrayerProvider extends ChangeNotifier {
       // Reverse geocode
       try {
         final placemarks = await placemarkFromCoordinates(
-            pos.latitude, pos.longitude);
+          pos.latitude,
+          pos.longitude,
+        );
         if (placemarks.isNotEmpty) {
           final p = placemarks.first;
-          cityName = p.locality ??
+          cityName =
+              p.locality ??
               p.subAdministrativeArea ??
               p.administrativeArea ??
               'ঢাকা';
@@ -181,11 +240,8 @@ class PrayerProvider extends ChangeNotifier {
         }
       } catch (_) {}
 
-      // Save
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('prayer_city', cityName);
-      await prefs.setDouble('prayer_lat', latitude!);
-      await prefs.setDouble('prayer_lon', longitude!);
+      // Save location metadata in the Isar offline store.
+      await _persistCache();
 
       await _fetchByCoords(latitude!, longitude!);
     } catch (e) {
@@ -205,17 +261,18 @@ class PrayerProvider extends ChangeNotifier {
       // Prayer times
       final prayerUrl =
           'https://api.aladhan.com/v1/timings/$dateStr?latitude=$lat&longitude=$lon&method=2';
-      final prayerRes =
-          await http.get(Uri.parse(prayerUrl)).timeout(const Duration(seconds: 15));
+      final prayerRes = await http
+          .get(Uri.parse(prayerUrl))
+          .timeout(const Duration(seconds: 15));
 
-      if (prayerRes.statusCode == 200) {
-        final data = json.decode(prayerRes.body);
-        _parsePrayerData(data);
-        hasCachedData = true;
-        isOffline = false;
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('prayer_data', prayerRes.body);
+      if (prayerRes.statusCode != 200) {
+        throw Exception('Prayer API ${prayerRes.statusCode}');
       }
+      final data = json.decode(prayerRes.body);
+      _parsePrayerData(data);
+      hasCachedData = true;
+      isOffline = false;
+      await _persistCache(prayerData: Map<String, dynamic>.from(data));
 
       // Hijri date
       await _fetchHijriDate();
@@ -223,8 +280,9 @@ class PrayerProvider extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
     } catch (_) {
-      // Network failed — show cached data if available, else offline UI
-      if (!hasCachedData) isOffline = true;
+      // Network failed: calculate today's prayer times locally instead of
+      // leaving a previous-day API cache on screen.
+      _useOfflineCalculation(lat, lon);
       isLoading = false;
       notifyListeners();
     }
@@ -239,25 +297,73 @@ class PrayerProvider extends ChangeNotifier {
 
       final url =
           'https://api.aladhan.com/v1/timingsByCity/$dateStr?city=$city&country=$country&method=2';
-      final res =
-          await http.get(Uri.parse(url)).timeout(const Duration(seconds: 15));
+      final res = await http
+          .get(Uri.parse(url))
+          .timeout(const Duration(seconds: 15));
 
-      if (res.statusCode == 200) {
-        final data = json.decode(res.body);
-        _parsePrayerData(data);
-        hasCachedData = true;
-        isOffline = false;
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('prayer_data', res.body);
+      if (res.statusCode != 200) {
+        throw Exception('Prayer API ${res.statusCode}');
       }
+      final data = json.decode(res.body);
+      _parsePrayerData(data);
+      hasCachedData = true;
+      isOffline = false;
+      await _persistCache(prayerData: Map<String, dynamic>.from(data));
 
       await _fetchHijriDate();
       isLoading = false;
       notifyListeners();
     } catch (_) {
-      if (!hasCachedData) isOffline = true;
+      final lat = latitude ?? 23.8103;
+      final lon = longitude ?? 90.4125;
+      _useOfflineCalculation(lat, lon);
       isLoading = false;
       notifyListeners();
+    }
+  }
+
+  void _useOfflineCalculation(double lat, double lon) {
+    try {
+      final offline = OfflinePrayerCalculator.calculate(
+        latitude: lat,
+        longitude: lon,
+        // Noorvia's current Bangla location flow is primarily Bangladesh.
+        // Use UTC+6 for BD even if the phone timezone is temporarily wrong;
+        // other countries keep the device-local timezone fallback.
+        utcOffset: countryName.toUpperCase() == 'BD'
+            ? const Duration(hours: 6)
+            : null,
+      );
+      final tahajjud = _calcTahajjud(offline.isha, offline.fajr);
+      prayerTimes = PrayerTimeModel(
+        fajr: offline.fajr,
+        sunrise: offline.sunrise,
+        dhuhr: offline.dhuhr,
+        asr: offline.asr,
+        maghrib: offline.maghrib,
+        isha: offline.isha,
+        tahajjud: tahajjud,
+      );
+      hijriDate = HijriDateModel(
+        day: offline.hijri.hDay.toString(),
+        month: offline.hijri.hMonth.toString(),
+        year: offline.hijri.hYear.toString(),
+        monthAr: '',
+        weekday: '',
+      );
+      hasCachedData = true;
+      isOffline = true;
+      _updatePrayerProgress();
+      unawaited(_updateWidget());
+      unawaited(IntegratedPrayerAlarmService().scheduleAllAlarms({
+        'fajr': offline.fajr,
+        'dhuhr': offline.dhuhr,
+        'asr': offline.asr,
+        'maghrib': offline.maghrib,
+        'isha': offline.isha,
+      }));
+    } catch (_) {
+      if (!hasCachedData) isOffline = true;
     }
   }
 
@@ -268,8 +374,9 @@ class PrayerProvider extends ChangeNotifier {
       final dateStr =
           '${now.day.toString().padLeft(2, '0')}-${now.month.toString().padLeft(2, '0')}-${now.year}';
       final url = 'https://api.aladhan.com/v1/gToH/$dateStr';
-      final res =
-          await http.get(Uri.parse(url)).timeout(const Duration(seconds: 10));
+      final res = await http
+          .get(Uri.parse(url))
+          .timeout(const Duration(seconds: 10));
 
       if (res.statusCode == 200) {
         final data = json.decode(res.body);
@@ -329,7 +436,40 @@ class PrayerProvider extends ChangeNotifier {
       } catch (_) {}
 
       _updatePrayerProgress();
+
+      // Keep widgets and enabled alarms in sync whenever fresh/cached prayer
+      // times are parsed. Alarm settings themselves remain user-controlled.
+      _updateWidget();
+      unawaited(IntegratedPrayerAlarmService().scheduleAllAlarms({
+        'fajr': fajr,
+        'dhuhr': dhuhr,
+        'asr': asr,
+        'maghrib': maghrib,
+        'isha': isha,
+      }));
     } catch (_) {}
+  }
+
+  // ── Update Android widget with prayer times ───────────────
+  Future<void> _updateWidget() async {
+    if (prayerTimes == null) return;
+
+    try {
+      await NativePrayerAlarmService.updateWidget(
+        fajr: prayerTimes!.fajr,
+        dhuhr: prayerTimes!.dhuhr,
+        asr: prayerTimes!.asr,
+        maghrib: prayerTimes!.maghrib,
+        isha: prayerTimes!.isha,
+        location: cityDisplayName,
+        nextPrayer: nextPrayer,
+        nextPrayerTime: nextPrayerTime,
+        ramadanDay: hijriDate?.day ?? '',
+        isRamadan: hijriDate?.month == '9',
+      );
+    } catch (e) {
+      debugPrint('Error updating widget: $e');
+    }
   }
 
   String _cleanTime(String t) {
@@ -439,20 +579,34 @@ class PrayerProvider extends ChangeNotifier {
 
   String _getBanglaDate(DateTime now) {
     const months = [
-      'জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল',
-      'মে', 'জুন', 'জুলাই', 'আগস্ট',
-      'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'
+      'জানুয়ারি',
+      'ফেব্রুয়ারি',
+      'মার্চ',
+      'এপ্রিল',
+      'মে',
+      'জুন',
+      'জুলাই',
+      'আগস্ট',
+      'সেপ্টেম্বর',
+      'অক্টোবর',
+      'নভেম্বর',
+      'ডিসেম্বর',
     ];
     const days = [
-      'সোমবার', 'মঙ্গলবার', 'বুধবার', 'বৃহস্পতিবার',
-      'শুক্রবার', 'শনিবার', 'রবিবার'
+      'সোমবার',
+      'মঙ্গলবার',
+      'বুধবার',
+      'বৃহস্পতিবার',
+      'শুক্রবার',
+      'শনিবার',
+      'রবিবার',
     ];
     return '${days[now.weekday - 1]}, ${_bn(now.day)} ${months[now.month - 1]} ${_bn(now.year)}';
   }
 
   String _bn(dynamic n) {
-    const e = ['0','1','2','3','4','5','6','7','8','9'];
-    const b = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+    const e = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    const b = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
     var s = n.toString();
     for (int i = 0; i < e.length; i++) s = s.replaceAll(e[i], b[i]);
     return s;
@@ -461,20 +615,35 @@ class PrayerProvider extends ChangeNotifier {
   // ── City display name in Bangla ───────────────────────────
   String get cityDisplayName {
     const map = {
-      'Dhaka': 'ঢাকা', 'Chittagong': 'চট্টগ্রাম',
-      'Sylhet': 'সিলেট', 'Rajshahi': 'রাজশাহী',
-      'Khulna': 'খুলনা', 'Barisal': 'বরিশাল',
-      'Rangpur': 'রংপুর', 'Mymensingh': 'ময়মনসিংহ',
-      'Comilla': 'কুমিল্লা', 'Narayanganj': 'নারায়ণগঞ্জ',
-      'Gazipur': 'গাজীপুর', 'Jessore': 'যশোর',
-      'Bogra': 'বগুড়া', 'Dinajpur': 'দিনাজপুর',
+      'Dhaka': 'ঢাকা',
+      'Chittagong': 'চট্টগ্রাম',
+      'Sylhet': 'সিলেট',
+      'Rajshahi': 'রাজশাহী',
+      'Khulna': 'খুলনা',
+      'Barisal': 'বরিশাল',
+      'Rangpur': 'রংপুর',
+      'Mymensingh': 'ময়মনসিংহ',
+      'Comilla': 'কুমিল্লা',
+      'Narayanganj': 'নারায়ণগঞ্জ',
+      'Gazipur': 'গাজীপুর',
+      'Jessore': 'যশোর',
+      'Bogra': 'বগুড়া',
+      'Dinajpur': 'দিনাজপুর',
       'Cox\'s Bazar': 'কক্সবাজার',
-      'Mecca': 'মক্কা', 'Medina': 'মদিনা', 'Riyadh': 'রিয়াদ',
-      'Dubai': 'দুবাই', 'London': 'লন্ডন',
-      'New York': 'নিউ ইয়র্ক', 'Kuala Lumpur': 'কুয়ালালামপুর',
-      'Jakarta': 'জাকার্তা', 'Istanbul': 'ইস্তাম্বুল',
-      'Cairo': 'কায়রো', 'Karachi': 'করাচি',
-      'Lahore': 'লাহোর', 'Delhi': 'দিল্লি', 'Kolkata': 'কলকাতা',
+      'Mecca': 'মক্কা',
+      'Medina': 'মদিনা',
+      'Riyadh': 'রিয়াদ',
+      'Dubai': 'দুবাই',
+      'London': 'লন্ডন',
+      'New York': 'নিউ ইয়র্ক',
+      'Kuala Lumpur': 'কুয়ালালামপুর',
+      'Jakarta': 'জাকার্তা',
+      'Istanbul': 'ইস্তাম্বুল',
+      'Cairo': 'কায়রো',
+      'Karachi': 'করাচি',
+      'Lahore': 'লাহোর',
+      'Delhi': 'দিল্লি',
+      'Kolkata': 'কলকাতা',
     };
     return map[cityName] ?? cityName;
   }
@@ -487,14 +656,11 @@ class PrayerProvider extends ChangeNotifier {
     isOffline = false;
     notifyListeners();
 
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('prayer_city', city);
-    await prefs.setString('prayer_country', country);
-    // Clear lat/lon so next auto-detect starts fresh
-    await prefs.remove('prayer_lat');
-    await prefs.remove('prayer_lon');
+    // Manual city selection becomes the active offline location. Coordinates
+    // are cleared so a later auto-detect can replace them cleanly.
     latitude = null;
     longitude = null;
+    await _persistCache();
 
     await _fetchByCity(city, country);
   }
@@ -502,12 +668,24 @@ class PrayerProvider extends ChangeNotifier {
   String get hijriDisplayDate {
     if (hijriDate == null) return '';
     final months = [
-      '', 'মুহাররম', 'সফর', 'রবিউল আউয়াল', 'রবিউস সানি',
-      'জুমাদাল উলা', 'জুমাদাস সানি', 'রজব', 'শাবান',
-      'রমজান', 'শাওয়াল', 'জিলকদ', 'জিলহজ'
+      '',
+      'মুহাররম',
+      'সফর',
+      'রবিউল আউয়াল',
+      'রবিউস সানি',
+      'জুমাদাল উলা',
+      'জুমাদাস সানি',
+      'রজব',
+      'শাবান',
+      'রমজান',
+      'শাওয়াল',
+      'জিলকদ',
+      'জিলহজ',
     ];
     final mNum = int.tryParse(hijriDate!.month) ?? 0;
-    final mName = mNum > 0 && mNum < months.length ? months[mNum] : hijriDate!.monthAr;
+    final mName = mNum > 0 && mNum < months.length
+        ? months[mNum]
+        : hijriDate!.monthAr;
     return '${_bn(hijriDate!.day)} $mName ${_bn(hijriDate!.year)} হিজরি';
   }
 }

@@ -1,6 +1,8 @@
 ﻿import 'dart:async';
 import 'dart:math' as math;
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
+import 'package:muslim_view/core/localization/app_i18n.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -178,7 +180,7 @@ class _QiblaDirectionPageState extends State<QiblaDirectionPage>
           child: IconButton(
             icon: const Icon(Icons.my_location_rounded, color: _QColors.teal, size: 20),
             onPressed: _initQibla,
-            tooltip: 'রিফ্রেশ',
+            tooltip: AppI18n.current('রিফ্রেশ'),
           ),
         ),
       ],
@@ -523,7 +525,7 @@ class _QiblaDirectionPageState extends State<QiblaDirectionPage>
                 style: GoogleFonts.hindSiliguri(color: textColor),
                 children: [
                   TextSpan(
-                    text: 'উত্তর দিক থেকে কিবলার অভিমুখঃ ',
+                    text: AppI18n.current('উত্তর দিক থেকে কিবলার অভিমুখঃ '),
                     style: GoogleFonts.hindSiliguri(fontSize: 14, color: subColor),
                   ),
                   TextSpan(

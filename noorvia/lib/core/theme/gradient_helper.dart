@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
 import 'app_theme.dart';
 
 /// Utility class providing reusable gradient decorations, painters, and widgets.

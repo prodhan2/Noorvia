@@ -1,5 +1,7 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
+import 'package:muslim_view/core/localization/app_i18n.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
@@ -289,7 +291,7 @@ class _RuqyahDuaPageState extends State<RuqyahDuaPage> {
         if (_selectedChapter != null) ...[
           IconButton(
             icon: const Icon(Icons.text_decrease_rounded, color: Colors.black, size: 20),
-            tooltip: 'ছোট করুন',
+            tooltip: AppI18n.current('ছোট করুন'),
             onPressed: () {
               setState(() {
                 if (_fontSize > 11) _fontSize -= 1;
@@ -298,7 +300,7 @@ class _RuqyahDuaPageState extends State<RuqyahDuaPage> {
           ),
           IconButton(
             icon: const Icon(Icons.text_increase_rounded, color: Colors.black, size: 20),
-            tooltip: 'বড় করুন',
+            tooltip: AppI18n.current('বড় করুন'),
             onPressed: () {
               setState(() {
                 if (_fontSize < 26) _fontSize += 1;

@@ -2,14 +2,20 @@
     <!-- Location permissions for prayer times & qibla -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- Optional: only requested when user enables mosque-aware Smart Salah Mode -->
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <!-- DND/Silent control is granted by the user from Notification Policy Access settings -->
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Barcode scanner for Halal Ingredient Assistant -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera.any" android:required="false" />
     <!-- Local notifications -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <!-- Scheduled exact alarms (Android 12+) -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <!-- Full screen intent for prayer alarms -->
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <!-- Wake lock to ensure alarms work when device is sleeping -->
@@ -22,7 +28,7 @@
     <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="false" />
     <uses-feature android:name="android.hardware.sensor.gyroscope" android:required="false" />
     <application
-        android:label="মুসলিম ভিউ"
+        android:label="Noorvia"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
@@ -53,7 +59,42 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
-        <!-- WorkManager: reschedule notifications after reboot -->
+        <!-- Custom Prayer Alarm Receiver -->
+        <receiver
+            android:name=".PrayerAlarmReceiver"
+            android:exported="false"
+            android:enabled="true" />
+            
+        <!-- Boot Receiver to reschedule alarms -->
+        <receiver
+            android:name=".PrayerAlarmBootReceiver"
+            android:exported="true"
+            android:enabled="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.DATE_CHANGED" />
+                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
+
+
+        <!-- Smart Salah Mode: prayer-time ringer/DND automation -->
+        <receiver
+            android:name=".SmartSalahStartReceiver"
+            android:exported="false" />
+        <receiver
+            android:name=".SmartSalahRestoreReceiver"
+            android:exported="false" />
+        <receiver
+            android:name=".MosqueGeofenceReceiver"
+            android:exported="false" />
+
+        <!-- Keep existing flutter_local_notifications for backward compatibility -->
         <receiver
             android:name="androidx.work.impl.background.systemalarm.RescheduleReceiver"
             android:exported="false"
@@ -63,7 +104,6 @@
             </intent-filter>
         </receiver>
 
-        <!-- flutter_local_notifications: exact alarm receiver -->
         <receiver
             android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver"
             android:exported="false" />
@@ -77,11 +117,39 @@
                 <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
             </intent-filter>
         </receiver>
+        
         <!-- Foreground service for audio playback during alarm -->
         <service
             android:name="xyz.luan.audioplayers.AudioService"
             android:exported="false"
             android:foregroundServiceType="mediaPlayback" />
+
+        <service
+            android:name=".AzanPlaybackService"
+            android:exported="false"
+            android:stopWithTask="false"
+            android:foregroundServiceType="mediaPlayback" />
+
+        <receiver
+            android:name=".PrayerTimesWidget"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/prayer_times_widget_info" />
+        </receiver>
+
+        <receiver android:name=".NextAzanWidget" android:exported="false">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/next_azan_widget_info" />
+        </receiver>
+
+        <receiver android:name=".RamadanWidget" android:exported="false">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/ramadan_widget_info" />
+        </receiver>
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

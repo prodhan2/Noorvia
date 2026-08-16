@@ -7,7 +7,8 @@
 //
 // ════════════════════════════════════════════════════════════
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
 import 'package:provider/provider.dart';
 import '../providers/settings_provider.dart';
 import '../providers/theme_provider.dart';

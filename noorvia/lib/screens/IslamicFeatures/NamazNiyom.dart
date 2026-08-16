@@ -1,10 +1,12 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
+import 'package:muslim_view/core/localization/app_i18n.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../core/theme/app_theme.dart';
+import '../../core/theme/app_theme.dart';
 
 // ── Theme colors ──────────────────────────────────────────────
 const _kPrimary = AppColors.primary;
@@ -256,7 +258,7 @@ class _ChapterListPageState extends State<ChapterListPage> {
         IconButton(
           icon: const Icon(Icons.refresh, color: Colors.white),
           onPressed: () => _load(forceRefresh: true),
-          tooltip: 'রিফ্রেশ',
+          tooltip: AppI18n.current('রিফ্রেশ'),
         ),
       ],
       flexibleSpace: FlexibleSpaceBar(
@@ -368,7 +370,7 @@ class _NamazDetailPageState extends State<NamazDetailPage> {
                   size: 20,
                 ),
                 onPressed: _copy,
-                tooltip: 'কপি করুন',
+                tooltip: AppI18n.current('কপি করুন'),
               ),
             ],
           ),
@@ -703,7 +705,7 @@ class _SearchBar extends StatelessWidget {
             color: isDark ? Colors.white : const Color(0xFF1A1A1A),
           ),
           decoration: InputDecoration(
-            hintText: 'নিয়ত বা দু\'আ খুঁজুন...',
+            hintText: AppI18n.current('নিয়ত বা দু\'আ খুঁজুন...'),
             hintStyle: GoogleFonts.hindSiliguri(
               color: Colors.grey,
               fontSize: 13,

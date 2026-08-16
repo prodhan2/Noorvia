@@ -1,26 +1,51 @@
 {
   "project_info": {
-    "project_number": "000000000000",
-    "project_id": "noorvia-app",
-    "storage_bucket": "noorvia-app.appspot.com"
+    "project_number": "386955907787",
+    "project_id": "noorvia-3a12e",
+    "storage_bucket": "noorvia-3a12e.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
+        "mobilesdk_app_id": "1:386955907787:android:076d39c65c79343853414e",
         "android_client_info": {
-          "package_name": "com.noorvia.noorvia"
+          "package_name": "com.butterflydevs.noorvia"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "386955907787-05kt1so58u899ejithjtgm2vshpt2jom.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.butterflydevs.noorvia",
+            "certificate_hash": "456362b31060c2e4764a286d661b09eeb323789f"
+          }
+        },
+        {
+          "client_id": "386955907787-a785bkpqvqqc3c322rnnnr1rscee30n6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "placeholder-replace-with-real-key"
+          "current_key": "AIzaSyDhNISkwjrTNAYqoIsWDt4A2brHPhjRPWg"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "386955907787-a785bkpqvqqc3c322rnnnr1rscee30n6.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "386955907787-60qcmr88pq6vshl63ha54hq6ss0babm9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.butterflydevs.noorvia"
+              }
+            }
+          ]
         }
       }
     }

@@ -6,7 +6,7 @@
 
 // Local azan asset path
 const String kLocalAzanPath = 'audio/azan.mp3';
-const String kLocalAzanName = 'মুসলিম ভিউ আযান';
+const String kLocalAzanName = 'Noorvia আযান';
 
 class PrayerAlarmSettings {
   // Individual prayer alarm enabled/disabled

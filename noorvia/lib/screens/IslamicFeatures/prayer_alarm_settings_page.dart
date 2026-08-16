@@ -3,7 +3,8 @@
 //  UI for configuring prayer alarms with individual customization
 // ============================================================
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
 import 'package:provider/provider.dart';
 import '../../core/providers/prayer_alarm_provider.dart';
 import '../../core/providers/prayer_provider.dart';
@@ -369,7 +370,7 @@ class _PrayerAlarmSettingsPageState extends State<PrayerAlarmSettingsPage> {
                   ),
                 ),
                 title: const Text(
-                  'মুসলিম ভিউ আযান (স্থানীয়)',
+                  'Noorvia আযান (স্থানীয়)',
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
                 subtitle: const Text(
@@ -384,7 +385,7 @@ class _PrayerAlarmSettingsPageState extends State<PrayerAlarmSettingsPage> {
                 onTap: () {
                   provider.selectAzan(
                     'assets/audio/azan.mp3',
-                    'মুসলিম ভিউ আযান (স্থানীয়)',
+                    'Noorvia আযান (স্থানীয়)',
                   );
                   Navigator.pop(context);
                 },
@@ -535,7 +536,7 @@ class _PrayerAlarmCard extends StatelessWidget {
                 Icon(Icons.alarm_rounded, color: subColor, size: 20),
                 const SizedBox(width: 8),
                 Text(
-                  'আযান বাজবে:',
+                  'আগে রিমাইন্ডার:',
                   style: TextStyle(color: subColor, fontSize: 14),
                 ),
                 const Spacer(),

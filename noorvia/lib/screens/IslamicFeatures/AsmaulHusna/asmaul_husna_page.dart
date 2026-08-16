@@ -1,5 +1,7 @@
 ﻿import 'dart:convert';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
+import 'package:muslim_view/core/localization/app_i18n.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
@@ -318,7 +320,7 @@ class _AsmaulHusnaPageState extends State<AsmaulHusnaPage>
           onTap: () => setState(() => _searching = true),
           onSubmitted: (_) => setState(() => _searching = false),
           decoration: InputDecoration(
-            hintText: 'নাম বা অর্থ খুঁজুন…',
+            hintText: AppI18n.current('নাম বা অর্থ খুঁজুন…'),
             hintStyle: GoogleFonts.hindSiliguri(color: tc.sub, fontSize: 14),
             prefixIcon: Icon(Icons.search_rounded, color: tc.sub, size: 20),
             suffixIcon: _searchCtrl.text.isNotEmpty

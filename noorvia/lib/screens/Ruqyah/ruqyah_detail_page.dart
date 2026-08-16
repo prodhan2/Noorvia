@@ -1,4 +1,6 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
+import 'package:muslim_view/core/localization/app_i18n.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
@@ -246,7 +248,7 @@ class _RuqyahDetailPageState extends State<RuqyahDetailPage> {
           onPressed: () {
             if (_fontSize > 12) setState(() => _fontSize -= 1);
           },
-          tooltip: 'ছোট',
+          tooltip: AppI18n.current('ছোট'),
         ),
         Center(
           child: Text(
@@ -259,7 +261,7 @@ class _RuqyahDetailPageState extends State<RuqyahDetailPage> {
           onPressed: () {
             if (_fontSize < 22) setState(() => _fontSize += 1);
           },
-          tooltip: 'বড়',
+          tooltip: AppI18n.current('বড়'),
         ),
         const SizedBox(width: 4),
       ],

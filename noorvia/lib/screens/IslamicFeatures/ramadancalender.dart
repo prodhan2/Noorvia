@@ -1,6 +1,8 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:convert';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
+import 'package:muslim_view/core/localization/app_i18n.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -9,6 +11,10 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
+import '../../core/data/local/local_store.dart';
+import 'package:adhan_dart/adhan_dart.dart';
+import 'package:hijri/hijri_calendar.dart';
+import 'package:intl/intl.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/gradient_helper.dart';
 import '../../core/providers/theme_provider.dart';
@@ -42,6 +48,8 @@ class _RamadanCalendarPageState extends State<RamadanCalendarPage> {
   String _city = 'Dhaka';
   String _cityBnDisplay = 'ঢাকা';
   bool _locationLoading = false;
+  double _latitude = 23.8103;
+  double _longitude = 90.4125;
 
   // Clock
   Timer? _timer;
@@ -66,6 +74,17 @@ class _RamadanCalendarPageState extends State<RamadanCalendarPage> {
     'Dhaka': 'ঢাকা', 'Chittagong': 'চট্টগ্রাম', 'Sylhet': 'সিলেট',
     'Rajshahi': 'রাজশাহী', 'Khulna': 'খুলনা', 'Barishal': 'বরিশাল',
     'Rangpur': 'রংপুর', 'Mymensingh': 'ময়মনসিংহ',
+  };
+
+  static const Map<String, (double, double)> _cityCoordinates = {
+    'Dhaka': (23.8103, 90.4125),
+    'Chittagong': (22.3569, 91.7832),
+    'Sylhet': (24.8949, 91.8687),
+    'Rajshahi': (24.3745, 88.6042),
+    'Khulna': (22.8456, 89.5403),
+    'Barishal': (22.7010, 90.3535),
+    'Rangpur': (25.7439, 89.2752),
+    'Mymensingh': (24.7471, 90.4203),
   };
 
   // ── Beautiful Islamic color palette ──────────────────────
@@ -163,6 +182,9 @@ class _RamadanCalendarPageState extends State<RamadanCalendarPage> {
           timeLimit: Duration(seconds: 10),
         ),
       );
+      _latitude = pos.latitude;
+      _longitude = pos.longitude;
+
       try {
         final marks = await placemarkFromCoordinates(
             pos.latitude, pos.longitude);
@@ -228,10 +250,15 @@ class _RamadanCalendarPageState extends State<RamadanCalendarPage> {
       _loadingYear[hijriYear] = true;
       _errorYear[hijriYear] = null;
     });
+
+    // Load persisted data first so Ramadan works immediately without network.
+    final saved = await _loadRamadanCache(hijriYear);
+    if (saved.isNotEmpty && mounted) {
+      setState(() => _cache[hijriYear] = saved);
+    }
+
     try {
       final start = _ramadanGregorianStart(hijriYear);
-      // Ramadan spans ~30 days; may cross two Gregorian months.
-      // Fetch the start month and optionally the next month, then filter.
       final allDays = <dynamic>[];
 
       Future<List<dynamic>> fetchMonth(int year, int month) async {
@@ -245,31 +272,29 @@ class _RamadanCalendarPageState extends State<RamadanCalendarPage> {
           final body = json.decode(res.body);
           return (body['data'] as List<dynamic>?) ?? [];
         }
-        return [];
+        throw Exception('Ramadan API ${res.statusCode}');
       }
 
-      // Fetch start month
       final m1 = await fetchMonth(start.year, start.month);
       allDays.addAll(m1);
-
-      // Fetch next month too (Ramadan often spills over)
       final nextMonth = start.month == 12 ? 1 : start.month + 1;
-      final nextYear  = start.month == 12 ? start.year + 1 : start.year;
+      final nextYear = start.month == 12 ? start.year + 1 : start.year;
       final m2 = await fetchMonth(nextYear, nextMonth);
       allDays.addAll(m2);
 
-      // Filter only days whose hijri month == 9 (Ramadan)
       final ramadanDays = allDays.where((d) {
         final hMonth = d['date']?['hijri']?['month']?['number'];
-        return hMonth != null && hMonth.toString() == '9';
-      }).toList();
+        final hYear = d['date']?['hijri']?['year'];
+        return hMonth?.toString() == '9' && hYear?.toString() == '$hijriYear';
+      }).toList()
+        ..sort((a, b) {
+          final ta = int.tryParse(a['date']?['timestamp']?.toString() ?? '0') ?? 0;
+          final tb = int.tryParse(b['date']?['timestamp']?.toString() ?? '0') ?? 0;
+          return ta.compareTo(tb);
+        });
 
-      // Sort by timestamp to be safe
-      ramadanDays.sort((a, b) {
-        final ta = int.tryParse(a['date']?['timestamp']?.toString() ?? '0') ?? 0;
-        final tb = int.tryParse(b['date']?['timestamp']?.toString() ?? '0') ?? 0;
-        return ta.compareTo(tb);
-      });
+      if (ramadanDays.isEmpty) throw Exception('Empty Ramadan response');
+      await _saveRamadanCache(hijriYear, ramadanDays);
 
       if (mounted) {
         setState(() {
@@ -277,20 +302,140 @@ class _RamadanCalendarPageState extends State<RamadanCalendarPage> {
           _loadingYear[hijriYear] = false;
         });
         if (hijriYear == _currentHijriYear()) {
-          // Small delay so the newly built rows are laid out before scrolling
           Future.delayed(const Duration(milliseconds: 300), () {
             if (mounted) _scrollToToday();
           });
         }
       }
-    } catch (e) {
+    } catch (_) {
+      // If no API/cache is available, calculate a complete Ramadan calendar
+      // locally. This keeps sehri/iftar and the Ramadan widget usable offline.
+      final offline = saved.isNotEmpty ? saved : _generateOfflineRamadan(hijriYear);
+      if (offline.isNotEmpty) {
+        await _saveRamadanCache(hijriYear, offline);
+      }
       if (mounted) {
         setState(() {
+          _cache[hijriYear] = offline;
           _loadingYear[hijriYear] = false;
-          _errorYear[hijriYear] = 'নেটওয়ার্ক ত্রুটি';
+          _errorYear[hijriYear] = offline.isEmpty ? 'ডাটা পাওয়া যায়নি' : null;
         });
       }
     }
+  }
+
+  static const _ramadanCacheNamespace = 'ramadan_calendar_v3';
+
+  Future<List<dynamic>> _loadRamadanCache(int hijriYear) async {
+    try {
+      final cached = await LocalStore.instance.getJson(
+        _ramadanCacheNamespace,
+        '${_city}_$hijriYear',
+      );
+      final items = cached?['items'];
+      return items is List ? List<dynamic>.from(items) : <dynamic>[];
+    } catch (_) {
+      return <dynamic>[];
+    }
+  }
+
+  Future<void> _saveRamadanCache(int hijriYear, List<dynamic> data) async {
+    try {
+      await LocalStore.instance.putJson(
+        _ramadanCacheNamespace,
+        '${_city}_$hijriYear',
+        <String, dynamic>{
+          'city': _city,
+          'hijriYear': hijriYear,
+          'latitude': _latitude,
+          'longitude': _longitude,
+          'savedAt': DateTime.now().toUtc().toIso8601String(),
+          'items': data,
+        },
+        syncStatus: 'cached',
+      );
+    } catch (_) {}
+  }
+
+  List<dynamic> _generateOfflineRamadan(int hijriYear) {
+    final result = <dynamic>[];
+    final approximate = _ramadanGregorianStart(hijriYear);
+    final center = DateTime(approximate.year, approximate.month, 15);
+    final startScan = center.subtract(const Duration(days: 45));
+    final endScan = center.add(const Duration(days: 45));
+
+    final coordinates = Coordinates(_latitude, _longitude);
+    final params = CalculationMethodParameters.northAmerica();
+
+    for (DateTime date = startScan;
+        !date.isAfter(endScan);
+        date = date.add(const Duration(days: 1))) {
+      final hijri = HijriCalendar.fromDate(date);
+      if (hijri.hYear != hijriYear || hijri.hMonth != 9) continue;
+
+      final times = PrayerTimes(
+        coordinates: coordinates,
+        date: date,
+        calculationParameters: params,
+      );
+
+      // adhan_dart returns UTC-based instants; Bangladesh calendar cities use
+      // UTC+6. The app's Ramadan city selector currently contains BD cities.
+      DateTime bd(DateTime value) => value.toUtc().add(const Duration(hours: 6));
+      final fajr = bd(times.fajr);
+      final sunrise = bd(times.sunrise);
+      final dhuhr = bd(times.dhuhr);
+      final asr = bd(times.asr);
+      final maghrib = bd(times.maghrib);
+      final isha = bd(times.isha);
+      final imsak = fajr.subtract(const Duration(minutes: 10));
+
+      String hm(DateTime value) =>
+          '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}';
+      final dd = date.day.toString().padLeft(2, '0');
+      final mm = date.month.toString().padLeft(2, '0');
+
+      result.add({
+        'date': {
+          'readable': DateFormat('dd MMM yyyy', 'en').format(date),
+          'timestamp': (date.millisecondsSinceEpoch ~/ 1000).toString(),
+          'gregorian': {
+            'date': '$dd-$mm-${date.year}',
+            'day': dd,
+            'weekday': {'en': DateFormat('EEEE', 'en').format(date)},
+            'month': {
+              'number': date.month,
+              'en': DateFormat('MMMM', 'en').format(date),
+            },
+            'year': date.year.toString(),
+          },
+          'hijri': {
+            'date': '${hijri.hDay.toString().padLeft(2, '0')}-09-${hijri.hYear}',
+            'day': hijri.hDay.toString().padLeft(2, '0'),
+            'weekday': {'en': DateFormat('EEEE', 'en').format(date), 'ar': ''},
+            'month': {'number': 9, 'en': 'Ramadan', 'ar': 'رَمَضان'},
+            'year': hijri.hYear.toString(),
+          },
+        },
+        'timings': {
+          'Imsak': hm(imsak),
+          'Fajr': hm(fajr),
+          'Sunrise': hm(sunrise),
+          'Dhuhr': hm(dhuhr),
+          'Asr': hm(asr),
+          'Maghrib': hm(maghrib),
+          'Isha': hm(isha),
+        },
+        'offlineCalculated': true,
+      });
+    }
+
+    result.sort((a, b) {
+      final ta = int.tryParse(a['date']?['timestamp']?.toString() ?? '0') ?? 0;
+      final tb = int.tryParse(b['date']?['timestamp']?.toString() ?? '0') ?? 0;
+      return ta.compareTo(tb);
+    });
+    return result;
   }
 
   // ── Re-fetch all when city changes ────────────────────────
@@ -518,7 +663,7 @@ class _RamadanCalendarPageState extends State<RamadanCalendarPage> {
                   )
                 : IconButton(
                     onPressed: _generateAndDownloadPdf,
-                    tooltip: 'PDF ডাউনলোড',
+                    tooltip: AppI18n.current('PDF ডাউনলোড'),
                     icon: const Icon(
                       Icons.picture_as_pdf_rounded,
                       color: Colors.white,
@@ -547,6 +692,11 @@ class _RamadanCalendarPageState extends State<RamadanCalendarPage> {
                     setState(() {
                       _city = v;
                       _cityBnDisplay = _cityBn[v] ?? v;
+                      final coords = _cityCoordinates[v];
+                      if (coords != null) {
+                        _latitude = coords.$1;
+                        _longitude = coords.$2;
+                      }
                     });
                     _refetchAll();
                   }
@@ -578,7 +728,7 @@ class _RamadanCalendarPageState extends State<RamadanCalendarPage> {
         foregroundColor: Colors.white,
         elevation: 4,
         child: const Icon(Icons.today_rounded, color: Colors.white),
-        tooltip: 'আজকে যান',
+        tooltip: AppI18n.current('আজকে যান'),
       ),
     );
   }

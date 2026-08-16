@@ -1,10 +1,16 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
+import 'package:muslim_view/core/localization/app_i18n.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:async';
 import 'package:intl/intl.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/providers/prayer_provider.dart';
+import '../../core/services/firebase_session_service.dart';
+import '../../core/data/local/local_store.dart';
 import 'prayer_alarm_settings_page.dart';
 
 // ─── Model ────────────────────────────────────────────────────
@@ -31,10 +37,25 @@ class DayPrayerRecord {
       };
 
   factory DayPrayerRecord.fromJson(Map<String, dynamic> json) {
-    final p = (json['prayers'] as Map<String, dynamic>).map(
-      (k, v) => MapEntry(k, PrayerStatus.values[v as int]),
-    );
-    return DayPrayerRecord(date: json['date'], prayers: p);
+    final date = json['date']?.toString() ?? '';
+    final defaults = DayPrayerRecord.empty(date).prayers;
+    final raw = json['prayers'];
+    final parsed = <String, PrayerStatus>{};
+    if (raw is Map) {
+      for (final entry in raw.entries) {
+        final value = entry.value;
+        final index = value is num
+            ? value.toInt()
+            : int.tryParse(value.toString()) ?? 0;
+        final safeIndex = index < 0
+            ? 0
+            : (index >= PrayerStatus.values.length
+                ? PrayerStatus.values.length - 1
+                : index);
+        parsed[entry.key.toString()] = PrayerStatus.values[safeIndex];
+      }
+    }
+    return DayPrayerRecord(date: date, prayers: {...defaults, ...parsed});
   }
 
   int get completedCount =>
@@ -52,6 +73,12 @@ class NamazTrackerProvider extends ChangeNotifier {
   Map<String, DayPrayerRecord> _records = {};
   static const _key = 'namaz_tracker_data';
 
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _cloudSub;
+  bool cloudSyncReady = false;
+  bool cloudSyncing = false;
+  String? cloudSyncError;
+  bool _localHistoryMigrationDone = false;
+
   NamazTrackerProvider() {
     _load();
   }
@@ -67,28 +94,186 @@ class NamazTrackerProvider extends ChangeNotifier {
     rec.prayers[prayer] = PrayerStatus.values[(current.index + 1) % 4];
     _records[date] = rec;
     notifyListeners();
-    await _save();
+
+    // Local-first save keeps the tracker instant even without internet.
+    await _saveLocal();
+    await _saveRecordToFirestore(rec);
   }
 
   Future<void> _load() async {
+    await _loadLocal();
+    await _startCloudSync();
+  }
+
+  Future<void> _loadLocal() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final raw = prefs.getString(_key);
-      if (raw != null) {
-        final list = json.decode(raw) as List;
+      // Isar is the primary offline source. Keep one compact JSON document so
+      // the tracker remains fast while Firestore handles cross-device sync.
+      final cached = await LocalStore.instance.getJson('namaz_tracker', 'all');
+      final rawList = cached?['records'];
+      if (rawList is List) {
         _records = {
-          for (final item in list)
-            (item['date'] as String): DayPrayerRecord.fromJson(item)
+          for (final item in rawList.whereType<Map>())
+            item['date'].toString():
+                DayPrayerRecord.fromJson(Map<String, dynamic>.from(item)),
         };
+        notifyListeners();
+        return;
+      }
+
+      // One-time migration from the previous SharedPreferences store.
+      final prefs = await SharedPreferences.getInstance();
+      final legacyRaw = prefs.getString(_key);
+      if (legacyRaw != null) {
+        final list = json.decode(legacyRaw) as List;
+        _records = {
+          for (final item in list.whereType<Map>())
+            item['date'].toString():
+                DayPrayerRecord.fromJson(Map<String, dynamic>.from(item)),
+        };
+        await _saveLocal();
+        await prefs.remove(_key);
         notifyListeners();
       }
     } catch (_) {}
   }
 
-  Future<void> _save() async {
-    final prefs = await SharedPreferences.getInstance();
+  Future<void> _saveLocal() async {
     final list = _records.values.map((r) => r.toJson()).toList();
-    await prefs.setString(_key, json.encode(list));
+    await LocalStore.instance.putJson(
+      'namaz_tracker',
+      'all',
+      {'records': list, 'schemaVersion': 2},
+      syncStatus: cloudSyncReady ? 'synced' : 'pending',
+    );
+  }
+
+  Future<void> _startCloudSync() async {
+    cloudSyncing = true;
+    cloudSyncError = null;
+    notifyListeners();
+
+    final user = await FirebaseSessionService.ensureSignedIn();
+    if (user == null) {
+      cloudSyncing = false;
+      cloudSyncReady = false;
+      cloudSyncError = 'Firebase sign-in unavailable';
+      notifyListeners();
+      return;
+    }
+
+    // Do not blindly push local history before reading the cloud: an older
+    // SharedPreferences copy could overwrite a newer Firestore record. The
+    // first server-backed snapshot below migrates only dates that do not yet
+    // exist in Firestore.
+    await _cloudSub?.cancel();
+    _cloudSub = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('namaz_tracker')
+        .orderBy(FieldPath.documentId, descending: true)
+        .limit(550)
+        .snapshots()
+        .listen(
+      (snapshot) async {
+        final localBeforeMerge = Map<String, DayPrayerRecord>.from(_records);
+        final cloudIds = snapshot.docs.map((doc) => doc.id).toSet();
+
+        for (final doc in snapshot.docs) {
+          final data = doc.data();
+          final prayersRaw = data['prayers'];
+          if (prayersRaw is! Map) continue;
+
+          final prayerMap = <String, PrayerStatus>{};
+          for (final entry in prayersRaw.entries) {
+            final value = entry.value;
+            int index = 0;
+            if (value is int) {
+              index = value;
+            } else if (value is num) {
+              index = value.toInt();
+            } else {
+              index = int.tryParse(value.toString()) ?? 0;
+            }
+            if (index < 0 || index >= PrayerStatus.values.length) index = 0;
+            prayerMap[entry.key.toString()] = PrayerStatus.values[index];
+          }
+
+          _records[doc.id] = DayPrayerRecord(
+            date: doc.id,
+            prayers: {
+              ...DayPrayerRecord.empty(doc.id).prayers,
+              ...prayerMap,
+            },
+          );
+        }
+
+        // One-time migration from the old local-only tracker. Only do this
+        // after a server-backed snapshot so an offline empty cache cannot
+        // accidentally overwrite cloud history on reconnect.
+        if (!_localHistoryMigrationDone && !snapshot.metadata.isFromCache) {
+          _localHistoryMigrationDone = true;
+          for (final entry in localBeforeMerge.entries) {
+            if (!cloudIds.contains(entry.key)) {
+              await _saveRecordToFirestore(entry.value, notify: false);
+            }
+          }
+        }
+
+        cloudSyncReady = true;
+        cloudSyncing = false;
+        cloudSyncError = null;
+        await _saveLocal();
+        notifyListeners();
+      },
+      onError: (Object e) {
+        cloudSyncing = false;
+        cloudSyncError = e.toString();
+        notifyListeners();
+      },
+    );
+  }
+
+  Future<void> _saveRecordToFirestore(
+    DayPrayerRecord record, {
+    bool notify = true,
+  }) async {
+    try {
+      final user = await FirebaseSessionService.ensureSignedIn();
+      if (user == null) return;
+
+      if (notify) {
+        cloudSyncing = true;
+        notifyListeners();
+      }
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('namaz_tracker')
+          .doc(record.date)
+          .set({
+        'date': record.date,
+        'prayers': record.prayers.map((k, v) => MapEntry(k, v.index)),
+        'completedCount': record.completedCount,
+        'missedCount': record.missedCount,
+        'qazaCount': record.qazaCount,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      if (notify) {
+        cloudSyncing = false;
+        cloudSyncReady = true;
+        cloudSyncError = null;
+        notifyListeners();
+      }
+    } catch (e) {
+      if (notify) {
+        cloudSyncing = false;
+        cloudSyncError = e.toString();
+        notifyListeners();
+      }
+    }
   }
 
   // Monthly stats
@@ -116,6 +301,12 @@ class NamazTrackerProvider extends ChangeNotifier {
     final total = s['total']!;
     if (total == 0) return 0;
     return s['completed']! / total;
+  }
+
+  @override
+  void dispose() {
+    _cloudSub?.cancel();
+    super.dispose();
   }
 }
 
@@ -230,7 +421,7 @@ class _NamazTrackerPageState extends State<NamazTrackerPage> {
                     IconButton(
                       icon: const Icon(Icons.alarm_rounded,
                           color: Colors.white),
-                      tooltip: 'আযান সেটিংস',
+                      tooltip: AppI18n.current('আযান সেটিংস'),
                       onPressed: () {
                         Navigator.push(
                           context,

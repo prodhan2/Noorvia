@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../data/local/local_store.dart';
 import '../models/mosque.dart';
 import 'location_permission_service.dart';
 
@@ -15,10 +15,8 @@ class MosqueService {
     'https://overpass.openstreetmap.ru/api/interpreter',
   ];
   
-  static const String _cacheKey = 'cached_mosques';
-  static const String _cacheLocationKey = 'cached_location';
-  static const String _cacheRadiusKey = 'cached_radius';
-  static const String _cacheTimeKey = 'cached_time';
+  static const String _cacheNamespace = 'mosque_cache';
+  static const String _cacheKey = 'nearby_mosques';
   
   // Cache duration: 1 hour
   static const Duration _cacheDuration = Duration(hours: 1);
@@ -107,6 +105,9 @@ class MosqueService {
   node["amenity"="place_of_worship"]["religion"="muslim"](around:$radiusInMeters,$latitude,$longitude);
   way["amenity"="place_of_worship"]["religion"="muslim"](around:$radiusInMeters,$latitude,$longitude);
   relation["amenity"="place_of_worship"]["religion"="muslim"](around:$radiusInMeters,$latitude,$longitude);
+  node["place_of_worship"="musalla"](around:$radiusInMeters,$latitude,$longitude);
+  way["place_of_worship"="musalla"](around:$radiusInMeters,$latitude,$longitude);
+  relation["place_of_worship"="musalla"](around:$radiusInMeters,$latitude,$longitude);
 );
 out center;
 ''';
@@ -164,8 +165,13 @@ out center;
           }
         }
 
-        // Sort mosques by distance (nearest first)
-        mosques.sort((a, b) => a.distanceInMeters.compareTo(b.distanceInMeters));
+        // Deduplicate union-query results and sort nearest first.
+        final unique = <String, Mosque>{};
+        for (final mosque in mosques) {
+          unique[mosque.osmId] = mosque;
+        }
+        mosques = unique.values.toList()
+          ..sort((a, b) => a.distanceInMeters.compareTo(b.distanceInMeters));
 
         print('✅ Found ${mosques.length} mosques from $apiUrl');
         return mosques;
@@ -205,57 +211,57 @@ out center;
     );
   }
 
-  /// Get cached mosques if available and valid
+  /// Get cached mosques from the offline-first Isar store if available and valid.
   Future<List<Mosque>?> _getCachedMosques(
     double latitude,
     double longitude,
     int radiusInMeters,
   ) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      
-      // Check if cache exists
-      final cachedData = prefs.getString(_cacheKey);
-      final cachedLat = prefs.getDouble(_cacheLocationKey + '_lat');
-      final cachedLon = prefs.getDouble(_cacheLocationKey + '_lon');
-      final cachedRadius = prefs.getInt(_cacheRadiusKey);
-      final cachedTimeStr = prefs.getString(_cacheTimeKey);
-      
-      if (cachedData == null || cachedLat == null || cachedLon == null || 
-          cachedRadius == null || cachedTimeStr == null) {
+      final cached = await LocalStore.instance.getJson(_cacheNamespace, _cacheKey);
+      if (cached == null) return null;
+
+      final cachedLat = (cached['latitude'] as num?)?.toDouble();
+      final cachedLon = (cached['longitude'] as num?)?.toDouble();
+      final cachedRadius = (cached['radius'] as num?)?.toInt();
+      final cachedTimeStr = cached['cachedAt']?.toString();
+      final items = cached['items'];
+
+      if (cachedLat == null ||
+          cachedLon == null ||
+          cachedRadius == null ||
+          cachedTimeStr == null ||
+          items is! List) {
         return null;
       }
-      
-      // Check if cache is still valid (within 1 hour)
-      final cachedTime = DateTime.parse(cachedTimeStr);
-      if (DateTime.now().difference(cachedTime) > _cacheDuration) {
-        return null; // Cache expired
+
+      final cachedTime = DateTime.tryParse(cachedTimeStr);
+      if (cachedTime == null || DateTime.now().difference(cachedTime) > _cacheDuration) {
+        return null;
       }
-      
-      // Check if location and radius are similar
+
       final distance = Geolocator.distanceBetween(
-        cachedLat, cachedLon, latitude, longitude,
+        cachedLat,
+        cachedLon,
+        latitude,
+        longitude,
       );
-      
-      // If user moved more than 500 meters or radius changed, invalidate cache
-      if (distance > 500 || cachedRadius != radiusInMeters) {
-        return null;
-      }
-      
-      // Parse cached data
-      final List<dynamic> jsonList = json.decode(cachedData);
-      final mosques = jsonList.map((json) {
-        return Mosque.fromJson(json, latitude, longitude);
-      }).toList();
-      
-      return mosques;
-    } catch (e) {
-      // If any error in reading cache, return null
+      if (distance > 500 || cachedRadius != radiusInMeters) return null;
+
+      return items
+          .whereType<Map>()
+          .map((item) => Mosque.fromJson(
+                Map<String, dynamic>.from(item),
+                latitude,
+                longitude,
+              ))
+          .toList();
+    } catch (_) {
       return null;
     }
   }
 
-  /// Save mosques to cache
+  /// Save nearby mosque results to Isar so they remain available offline.
   Future<void> _saveMosquesToCache(
     List<Mosque> mosques,
     double latitude,
@@ -263,28 +269,40 @@ out center;
     int radiusInMeters,
   ) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      
-      // Convert mosques to JSON
-      final jsonList = mosques.map((mosque) {
-        return {
+      final items = mosques.map((mosque) {
+        return <String, dynamic>{
+          'type': mosque.osmId.split('/').first,
+          'id': int.tryParse(mosque.osmId.split('/').last) ?? mosque.osmId.hashCode,
           'lat': mosque.latitude,
           'lon': mosque.longitude,
-          'tags': {
+          'tags': <String, dynamic>{
             'name': mosque.name,
+            'amenity': 'place_of_worship',
+            'religion': 'muslim',
+            if (mosque.type == 'musalla') 'place_of_worship': 'musalla',
             if (mosque.address != null) 'addr:full': mosque.address,
+            if (mosque.openingHours != null) 'opening_hours': mosque.openingHours,
+            if (mosque.serviceTimes != null) 'service_times': mosque.serviceTimes,
+            if (mosque.level != null) 'level': mosque.level,
+            if (mosque.wheelchair) 'wheelchair': 'yes',
+            if (mosque.hasWuduHint) 'ablution': 'yes',
           },
         };
       }).toList();
-      
-      // Save to cache
-      await prefs.setString(_cacheKey, json.encode(jsonList));
-      await prefs.setDouble(_cacheLocationKey + '_lat', latitude);
-      await prefs.setDouble(_cacheLocationKey + '_lon', longitude);
-      await prefs.setInt(_cacheRadiusKey, radiusInMeters);
-      await prefs.setString(_cacheTimeKey, DateTime.now().toIso8601String());
-    } catch (e) {
-      // Ignore cache save errors
+
+      await LocalStore.instance.putJson(
+        _cacheNamespace,
+        _cacheKey,
+        <String, dynamic>{
+          'latitude': latitude,
+          'longitude': longitude,
+          'radius': radiusInMeters,
+          'cachedAt': DateTime.now().toIso8601String(),
+          'items': items,
+        },
+      );
+    } catch (_) {
+      // Cache failure must never block mosque discovery.
     }
   }
 

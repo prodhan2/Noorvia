@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:async';
 import 'dart:math' as math;
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
+import 'package:muslim_view/core/localization/app_i18n.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -293,12 +295,12 @@ class _PrayerTimesCalendarPageState extends State<PrayerTimesCalendarPage>
         IconButton(
           icon: const Icon(Icons.calendar_month),
           onPressed: _showMonthYearPicker,
-          tooltip: 'মাস/বছর বেছে নিন',
+          tooltip: AppI18n.current('মাস/বছর বেছে নিন'),
         ),
         IconButton(
           icon: const Icon(Icons.refresh),
           onPressed: _fetchCalendar,
-          tooltip: 'রিফ্রেশ',
+          tooltip: AppI18n.current('রিফ্রেশ'),
         ),
       ],
     );

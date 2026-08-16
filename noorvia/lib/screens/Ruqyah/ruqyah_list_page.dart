@@ -1,5 +1,7 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
+import 'package:muslim_view/core/localization/app_i18n.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
@@ -383,12 +385,12 @@ class _RuqyahListPageState extends State<RuqyahListPage>
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.black, size: 20),
             onPressed: _fetchData,
-            tooltip: 'রিফ্রেশ',
+            tooltip: AppI18n.current('রিফ্রেশ'),
           ),
           IconButton(
             icon: const Icon(Icons.menu, color: Colors.black, size: 22),
             onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-            tooltip: 'মেনু',
+            tooltip: AppI18n.current('মেনু'),
           ),
           const SizedBox(width: 4),
         ],
@@ -438,7 +440,7 @@ class _RuqyahListPageState extends State<RuqyahListPage>
                           style: GoogleFonts.hindSiliguri(
                               color: textColor, fontSize: 14),
                           decoration: InputDecoration(
-                            hintText: 'খুঁজুন...',
+                            hintText: AppI18n.current('খুঁজুন...'),
                             hintStyle: GoogleFonts.hindSiliguri(
                                 color: subColor, fontSize: 14),
                             prefixIcon: Icon(Icons.search,

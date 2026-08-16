@@ -7,10 +7,11 @@
 //    3. শেষ — navbar, drawer, pages সব auto-update হবে
 // ============================================================
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
 import '../../screens/home/home_screen.dart';
 import '../../screens/tools/tools_screen.dart';
-import '../../screens/IslamicFeatures/BangalQUran/BanglaQuran.dart';
+import '../../screens/quran/quran_screen.dart';
 import '../../screens/dowa/dowa_screen.dart';
 import '../../screens/settings/settings_screen.dart';
 
@@ -101,7 +102,7 @@ final List<AppRouteConfig> appRoutes = [
     icon: Icons.menu_book_outlined,
     activeIcon: Icons.menu_book_rounded,
     // SurahListPage — QuranApp-এর home screen (QuranApp নিজে MaterialApp তাই সরাসরি দেওয়া যায় না)
-    pageBuilder: () => const SurahListPage(),
+    pageBuilder: () => const QuranScreen(),
     showInNavbar: true,
     showInDrawer: true,
   ),

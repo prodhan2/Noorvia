@@ -1,0 +1,41 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn() && request.auth.token.admin == true;
+    }
+
+    function owns(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // Public/admin-controlled home banners.
+    match /banners/{bannerId} {
+      allow read: if resource.data.active == true || isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Optional remotely managed app/Quran configuration.
+    // Secrets MUST never be stored here; public config only.
+    match /app_config/{configId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Private per-user root profile/settings document.
+    match /users/{uid} {
+      allow read, create, update: if owns(uid);
+      allow delete: if false;
+
+      // Namaz history, Smart Salah settings, Quran progress/bookmarks and
+      // future private user-owned subcollections remain isolated by uid.
+      match /{document=**} {
+        allow read, create, update, delete: if owns(uid);
+      }
+    }
+  }
+}

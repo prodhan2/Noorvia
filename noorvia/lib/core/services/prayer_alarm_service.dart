@@ -302,7 +302,7 @@ class PrayerAlarmService {
                   ? '$preAlarmMinutes মিনিট পরে $prayerName নামাজের সময় হবে। প্রস্তুতি নিন।'
                   : '$prayerName নামাজের সময় হয়েছে। এখনই নামাজ পড়ুন।',
               contentTitle: '🕌 $prayerName নামাজ',
-              summaryText: 'মুসলিম ভিউ - ইসলামিক অ্যাপ',
+              summaryText: 'Noorvia - ইসলামিক অ্যাপ',
             ),
             actions: [
               const AndroidNotificationAction(

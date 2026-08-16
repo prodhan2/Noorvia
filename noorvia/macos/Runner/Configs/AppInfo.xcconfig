@@ -8,7 +8,7 @@
 PRODUCT_NAME = Muslim View
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.noorvia.noorvia
+PRODUCT_BUNDLE_IDENTIFIER = com.butterflydevs.noorvia
 
 // The copyright displayed in application information
 PRODUCT_COPYRIGHT = Copyright © 2026 Muslim View. All rights reserved.

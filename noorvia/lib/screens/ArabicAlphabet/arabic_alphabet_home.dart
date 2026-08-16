@@ -1,6 +1,8 @@
 import 'dart:math';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
+import 'package:muslim_view/core/localization/app_i18n.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
@@ -245,7 +247,7 @@ class _ArabicAlphabetHomeState extends State<ArabicAlphabetHome> {
                 ),
                 // Quiz icon button
                 IconButton(
-                  tooltip: 'কুইজ',
+                  tooltip: AppI18n.current('কুইজ'),
                   icon: const Icon(Icons.quiz_rounded,
                       color: Colors.white, size: 24),
                   onPressed: _letters.isEmpty
@@ -281,7 +283,7 @@ class _ArabicAlphabetHomeState extends State<ArabicAlphabetHome> {
             color: isDark ? AppColors.darkText : AppColors.lightText,
           ),
           decoration: InputDecoration(
-            hintText: 'অক্ষর, বাংলা বা ইংরেজি নাম দিয়ে খুঁজুন...',
+            hintText: AppI18n.current('অক্ষর, বাংলা বা ইংরেজি নাম দিয়ে খুঁজুন...'),
             hintStyle: GoogleFonts.hindSiliguri(
               fontSize: 13,
               color: isDark

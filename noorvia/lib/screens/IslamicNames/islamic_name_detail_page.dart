@@ -1,4 +1,6 @@
-﻿import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
+import 'package:muslim_view/core/localization/app_i18n.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -51,7 +53,7 @@ class IslamicNameDetailPage extends StatelessWidget {
           // Copy button
           IconButton(
             icon: const Icon(Icons.copy_rounded, color: Colors.white, size: 20),
-            tooltip: 'কপি করুন',
+            tooltip: AppI18n.current('কপি করুন'),
             onPressed: () {
               Clipboard.setData(ClipboardData(
                 text:

@@ -2,12 +2,16 @@
 //  settings_screen.dart  —  থিম, ফন্ট ও ডিসপ্লে সেটিংস
 // ============================================================
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/providers/theme_provider.dart';
 import '../../core/providers/settings_provider.dart';
+import '../../core/providers/app_language_provider.dart';
+import 'smart_salah_settings_page.dart';
+import 'data_sources_page.dart';
 import '../../core/services/custom_font_loader.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -88,6 +92,48 @@ class SettingsScreen extends StatelessWidget {
             ),
 
             const SizedBox(height: 28),
+
+            // ════════════════════════════════════════════════
+            // LANGUAGE — পুরো অ্যাপ বাংলা / English
+            // ════════════════════════════════════════════════
+            _SectionHeader(label: 'ভাষা', textColor: subColor),
+            _Card(
+              isDark: isDark,
+              children: [
+                _DropdownTile<AppLanguage>(
+                  icon: Icons.translate_rounded,
+                  label: 'অ্যাপের ভাষা',
+                  textColor: textColor,
+                  accent: accent,
+                  isDark: isDark,
+                  value: context.watch<AppLanguageProvider>().language,
+                  items: AppLanguage.values,
+                  itemLabel: (language) =>
+                      language == AppLanguage.bangla ? 'বাংলা' : 'English',
+                  onChanged: (language) {
+                    if (language != null) {
+                      context.read<AppLanguageProvider>().setLanguage(language);
+                    }
+                  },
+                ),
+                _Divider(isDark: isDark),
+                _SettingsTile(
+                  icon: Icons.mosque_rounded,
+                  label: 'স্মার্ট সালাহ মোড',
+                  textColor: textColor,
+                  accent: accent,
+                  trailing: Icon(Icons.arrow_forward_ios, size: 14, color: accent),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const SmartSalahSettingsPage(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 20),
 
             // ════════════════════════════════════════════════
             // SECTION 1 — থিম
@@ -544,6 +590,21 @@ class SettingsScreen extends StatelessWidget {
                   trailing: Icon(Icons.arrow_forward_ios,
                       size: 14, color: accent),
                   onTap: () {},
+                ),
+                _Divider(isDark: isDark),
+                _SettingsTile(
+                  icon: Icons.hub_outlined,
+                  label: 'ডেটা সোর্স ও অফলাইন',
+                  textColor: textColor,
+                  accent: accent,
+                  trailing: Icon(Icons.arrow_forward_ios,
+                      size: 14, color: accent),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const DataSourcesPage(),
+                    ),
+                  ),
                 ),
                 _Divider(isDark: isDark),
                 _SettingsTile(

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_next_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="16dp"
+    android:background="#0D5C3A">
+    <TextView android:id="@+id/widget_next_title" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="পরবর্তী আযান" android:textColor="#D8F3E5" android:textSize="13sp" />
+    <TextView android:id="@+id/widget_next_name" android:layout_width="wrap_content"
+        android:layout_height="wrap_content" android:text="ফজর" android:textColor="#FFFFFF"
+        android:textStyle="bold" android:textSize="20sp" android:layout_marginTop="4dp" />
+    <TextView android:id="@+id/widget_next_time" android:layout_width="wrap_content"
+        android:layout_height="wrap_content" android:text="05:30" android:textColor="#F5C842"
+        android:textStyle="bold" android:textSize="28sp" />
+    <Chronometer android:id="@+id/widget_next_countdown"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:textColor="#D8F3E5" android:textSize="12sp" android:textStyle="bold"
+        android:format="বাকি %s" android:layout_marginTop="2dp" />
+    <TextView android:id="@+id/widget_next_location" android:layout_width="wrap_content"
+        android:layout_height="wrap_content" android:text="📍 ঢাকা" android:textColor="#D8F3E5"
+        android:textSize="11sp" android:layout_marginTop="4dp" />
+</LinearLayout>

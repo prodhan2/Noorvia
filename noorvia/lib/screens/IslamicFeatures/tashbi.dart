@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:math';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
+import 'package:muslim_view/core/localization/app_i18n.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -454,12 +456,12 @@ class _TasbihCounterState extends State<TasbihCounter>
               size: 22,
             ),
             onPressed: _showHistory,
-            tooltip: 'পরিসংখ্যান',
+            tooltip: AppI18n.current('পরিসংখ্যান'),
           ),
           IconButton(
             icon: const Icon(Icons.tune_rounded, color: Colors.white, size: 22),
             onPressed: _showSettings,
-            tooltip: 'সেটিংস',
+            tooltip: AppI18n.current('সেটিংস'),
           ),
         ],
       ),
@@ -1594,7 +1596,7 @@ class _SettingsSheetState extends State<_SettingsSheet> {
               keyboardType: TextInputType.number,
               style: GoogleFonts.hindSiliguri(color: textColor),
               decoration: InputDecoration(
-                labelText: 'কাস্টম সংখ্যা লিখুন',
+                labelText: AppI18n.current('কাস্টম সংখ্যা লিখুন'),
                 labelStyle: GoogleFonts.hindSiliguri(
                   color: subColor,
                   fontSize: 13,

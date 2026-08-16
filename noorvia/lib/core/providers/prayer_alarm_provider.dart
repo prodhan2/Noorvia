@@ -1,21 +1,22 @@
 // ============================================================
 //  prayer_alarm_provider.dart
 //  Provider for managing prayer alarm state
-//  Uses local azan.mp3 only — no online API
+//  Supports both native (Kotlin/AlarmManager) and flutter implementations
 // ============================================================
 
 import 'package:flutter/foundation.dart';
 import '../models/prayer_alarm_settings.dart';
-import '../services/prayer_alarm_service.dart';
+import '../services/integrated_prayer_alarm_service.dart';
 
 class PrayerAlarmProvider extends ChangeNotifier {
-  final PrayerAlarmService _alarmService = PrayerAlarmService();
+  final IntegratedPrayerAlarmService _alarmService = IntegratedPrayerAlarmService();
 
   PrayerAlarmSettings? _settings;
   bool _isLoading = true;
 
   PrayerAlarmSettings? get settings => _settings;
   bool get isLoading => _isLoading;
+  bool get useNativeImplementation => IntegratedPrayerAlarmService.useNative;
 
   PrayerAlarmProvider() {
     _initialize();
@@ -111,6 +112,12 @@ class PrayerAlarmProvider extends ChangeNotifier {
   Future<int> getPendingAlarmsCount() async {
     final pending = await _alarmService.getPendingAlarms();
     return pending.length;
+  }
+
+  // ── Switch implementation (for testing/debugging) ─────────
+  void setImplementation(AlarmImplementation impl) {
+    IntegratedPrayerAlarmService.setImplementation(impl);
+    notifyListeners();
   }
 
   @override

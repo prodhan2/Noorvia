@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
@@ -6,8 +7,8 @@ import '../../core/providers/theme_provider.dart';
 import 'islamic_books_page.dart';
 
 class IslamicBookDetailPage extends StatefulWidget {
-  final IslamicBook book;
-  final List<IslamicBook> allBooks;
+  final BookNode book;
+  final List<BookNode> allBooks;
   final int currentIndex;
 
   const IslamicBookDetailPage({
@@ -23,7 +24,7 @@ class IslamicBookDetailPage extends StatefulWidget {
 
 class _IslamicBookDetailPageState extends State<IslamicBookDetailPage> {
   late int _currentIndex;
-  late IslamicBook _book;
+  late BookNode _book;
 
   @override
   void initState() {
@@ -115,12 +116,12 @@ class _IslamicBookDetailPageState extends State<IslamicBookDetailPage> {
                     child: Column(
                       children: [
                         Text(
-                          _book.coverEmoji,
+                          '📖',
                           style: const TextStyle(fontSize: 56),
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          _book.title,
+                          _book.name,
                           textAlign: TextAlign.center,
                           style: GoogleFonts.hindSiliguri(
                             fontSize: 20,
@@ -129,114 +130,9 @@ class _IslamicBookDetailPageState extends State<IslamicBookDetailPage> {
                             height: 1.4,
                           ),
                         ),
-                        if (_book.author.isNotEmpty) ...[
-                          const SizedBox(height: 6),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.person_outline,
-                                  size: 14, color: Colors.white70),
-                              const SizedBox(width: 4),
-                              Text(
-                                _book.author,
-                                style: GoogleFonts.hindSiliguri(
-                                  fontSize: 13,
-                                  color: Colors.white70,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                        if (_book.category.isNotEmpty) ...[
-                          const SizedBox(height: 10),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              _book.category,
-                              style: GoogleFonts.hindSiliguri(
-                                fontSize: 12,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
                       ],
                     ),
                   ),
-
-                  const SizedBox(height: 20),
-
-                  // ── Description ───────────────────────────────
-                  if (_book.description.isNotEmpty) ...[
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(18),
-                      decoration: BoxDecoration(
-                        color: cardColor,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: isDark
-                                ? Colors.black.withValues(alpha: 0.2)
-                                : AppColors.primary.withValues(alpha: 0.06),
-                            blurRadius: 10,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                        border: Border.all(
-                          color: AppColors.primary
-                              .withValues(alpha: isDark ? 0.15 : 0.08),
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  gradient: AppColors.gradient,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Icon(Icons.info_outline,
-                                    color: Colors.white, size: 16),
-                              ),
-                              const SizedBox(width: 10),
-                              Text(
-                                'বিবরণ',
-                                style: GoogleFonts.hindSiliguri(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w700,
-                                  color: textColor,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            _book.description
-                                .replaceAll('\\n', '\n')
-                                .trim(),
-                            style: GoogleFonts.hindSiliguri(
-                              fontSize: 14,
-                              color: textColor,
-                              height: 1.8,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-
-                  const SizedBox(height: 8),
                 ],
               ),
             ),

@@ -1,6 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:async' show unawaited;
 import 'package:firebase_core/firebase_core.dart';
@@ -13,12 +15,18 @@ import 'core/providers/prayer_alarm_provider.dart';
 import 'core/providers/audio_provider.dart';
 import 'core/providers/settings_provider.dart';
 import 'core/providers/notification_provider.dart';
+import 'core/providers/app_language_provider.dart';
+import 'core/providers/smart_salah_provider.dart';
+import 'core/providers/quran_reader_settings_provider.dart';
 import 'core/services/local_notification_service.dart';
 import 'core/services/data_sync_service.dart';
 import 'core/services/shake_detector_service.dart';
 import 'core/services/scheduled_notification_service.dart';
 import 'core/services/location_permission_service.dart';
 import 'core/services/prayer_alarm_service.dart';
+import 'core/services/firebase_session_service.dart';
+import 'core/data/local/local_store.dart';
+import 'firebase_options.dart';
 import 'screens/splash/splash_screen.dart';
 import 'widgets/floating_audio_player.dart';
 
@@ -28,10 +36,17 @@ void main() async {
   // Initialize timezone for prayer alarm scheduling
   tz.initializeTimeZones();
 
+  // Offline-first local database. On web this is a lightweight no-op stub.
+  await LocalStore.instance.init();
+
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    await FirebaseSessionService.ensureSignedIn();
+  } catch (_) {}
+
   if (!kIsWeb) {
-    try {
-      await Firebase.initializeApp();
-    } catch (_) {}
     // Initialise local notifications (Android only)
     await LocalNotificationService.init();
     // Initialize prayer alarm service (permissions + notification channel)
@@ -73,15 +88,28 @@ class MuslimViewApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AudioProvider()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
+        ChangeNotifierProvider(create: (_) => AppLanguageProvider()),
+        ChangeNotifierProvider(create: (_) => SmartSalahProvider()),
+        ChangeNotifierProvider(create: (_) => QuranReaderSettingsProvider()),
       ],
-      child: Consumer3<ThemeProvider, AudioProvider, SettingsProvider>(
-        builder: (context, themeProvider, audioProvider, settings, _) {
+      child: Consumer4<ThemeProvider, AudioProvider, SettingsProvider, AppLanguageProvider>(
+        builder: (context, themeProvider, audioProvider, settings, language, _) {
           return _AudioOverlayInjector(
             audioProvider: audioProvider,
             child: _GlobalShakeDetector(
               child: MaterialApp(
                 navigatorKey: _navKey,
-                title: 'মুসলিম ভিউ',
+                onGenerateTitle: (context) =>
+                    Localizations.localeOf(context).languageCode == 'en'
+                        ? 'Noorvia'
+                        : 'নূরভিয়া',
+                locale: language.locale,
+                supportedLocales: const [Locale('bn'), Locale('en')],
+                localizationsDelegates: const [
+                  GlobalMaterialLocalizations.delegate,
+                  GlobalWidgetsLocalizations.delegate,
+                  GlobalCupertinoLocalizations.delegate,
+                ],
                 debugShowCheckedModeBanner: false,
                 theme: AppTheme.buildLight(
                   settings.banglaFont,

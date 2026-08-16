@@ -1,14 +1,16 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
+import '../../core/data/local/local_store.dart';
 import '../../core/providers/theme_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../common/web_view_page.dart';
+import 'surah_detail_page.dart';
 
 class MushafPage extends StatefulWidget {
   const MushafPage({super.key});
@@ -21,6 +23,8 @@ class _MushafPageState extends State<MushafPage> {
   static const String _lastSurahKey = 'mushafLastSurah';
   static const String _mushafSourceKey = 'selectedMushafSource';
   static const String _madaniSvgSourceId = 'alfurqan_svg';
+  static const String _nativeSourceId = 'noorvia_native';
+  static const String _prefsNamespace = 'quran_mushaf';
 
   int _lastSurah = 1;
   _MushafSource _selectedSource = _mushafSources.first;
@@ -32,11 +36,11 @@ class _MushafPageState extends State<MushafPage> {
   }
 
   Future<void> _loadLastSurah() async {
-    final prefs = await SharedPreferences.getInstance();
+    final data = await LocalStore.instance.getJson(_prefsNamespace, 'reader_state');
     if (!mounted) return;
-    final sourceId = prefs.getString(_mushafSourceKey);
+    final sourceId = data?[_mushafSourceKey]?.toString();
     setState(() {
-      _lastSurah = prefs.getInt(_lastSurahKey) ?? 1;
+      _lastSurah = (data?[_lastSurahKey] as num?)?.toInt() ?? 1;
       _selectedSource = _mushafSources.firstWhere(
         (source) => source.id == sourceId,
         orElse: () => _mushafSources.first,
@@ -44,18 +48,42 @@ class _MushafPageState extends State<MushafPage> {
     });
   }
 
+  Future<void> _persistState() => LocalStore.instance.putJson(
+        _prefsNamespace,
+        'reader_state',
+        {
+          _lastSurahKey: _lastSurah,
+          _mushafSourceKey: _selectedSource.id,
+        },
+      );
+
   Future<void> _selectSource(_MushafSource source) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_mushafSourceKey, source.id);
     if (!mounted) return;
     setState(() => _selectedSource = source);
+    await _persistState();
   }
 
   Future<void> _openSurah(_MushafSurah surah) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_lastSurahKey, surah.number);
     if (!mounted) return;
     setState(() => _lastSurah = surah.number);
+    await _persistState();
+
+    if (_selectedSource.id == _nativeSourceId) {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => SurahDetailPage(
+            surahName: surah.name,
+            arabicName: surah.arabic,
+            surahNumber: surah.number,
+            ayatCount: surah.ayahs,
+            type: '',
+          ),
+        ),
+      );
+      return;
+    }
+
     if (_selectedSource.id == _madaniSvgSourceId) {
       await Navigator.push(
         context,
@@ -357,6 +385,18 @@ typedef _MushafType = _MushafSource;
 
 final List<_MushafSource> _mushafSources = [
   _MushafSource(
+    id: 'noorvia_native',
+    label: 'নূরভিয়া মুসহাফ',
+    urlFor: (surah) => '',
+    icon: Icons.auto_stories_rounded,
+  ),
+  _MushafSource(
+    id: 'alquran_cloud',
+    label: 'Al Quran Cloud',
+    urlFor: (surah) => 'https://alquran.cloud/mushaf/${surah.startPage}',
+    icon: Icons.cloud_outlined,
+  ),
+  _MushafSource(
     id: 'quran_com',
     label: 'Quran.com',
     urlFor: (surah) => 'https://quran.com/${surah.number}',
@@ -534,18 +574,7 @@ class _MadaniSvgSurahReaderPageState extends State<_MadaniSvgSurahReaderPage> {
   // ignore: unused_element
   String _bn(Object value) {
     const en = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-    const bn = [
-      'à§¦',
-      'à§§',
-      'à§¨',
-      'à§©',
-      'à§ª',
-      'à§«',
-      'à§¬',
-      'à§­',
-      'à§®',
-      'à§¯',
-    ];
+    const bn = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
     var text = value.toString();
     for (var i = 0; i < en.length; i++) {
       text = text.replaceAll(en[i], bn[i]);

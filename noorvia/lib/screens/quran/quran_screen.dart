@@ -1,225 +1,17 @@
-import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
 import 'package:provider/provider.dart';
-import '../../core/theme/app_theme.dart';
+
+import '../../core/data/local/local_store.dart';
+import '../../core/localization/app_i18n.dart';
+import '../../core/providers/app_language_provider.dart';
 import '../../core/providers/theme_provider.dart';
+import '../../core/quran/quran_surah_meta.dart';
+import '../../core/theme/app_theme.dart';
+import 'mushaf_page.dart';
+import 'quran_search_page.dart';
+import 'quran_goals_page.dart';
 import 'surah_detail_page.dart';
-
-// ─── Surah data ───────────────────────────────────────────────────────────────
-
-class SurahInfo {
-  final int number;
-  final String name;
-  final String arabic;
-  final String transliteration;
-  final String meaning;
-  final int ayatCount;
-  final String type;
-
-  const SurahInfo({
-    required this.number,
-    required this.name,
-    required this.arabic,
-    this.transliteration = '',
-    this.meaning = '',
-    required this.ayatCount,
-    required this.type,
-  });
-}
-
-const List<SurahInfo> _surahs = [
-  SurahInfo(
-    number: 1,
-    name: 'আল-ফাতিহা',
-    arabic: 'الفاتحة',
-    transliteration: 'Al-Fatihah',
-    meaning: 'সূচনা',
-    ayatCount: 7,
-    type: 'মাক্কী',
-  ),
-  SurahInfo(
-    number: 2,
-    name: 'আল-বাকারা',
-    arabic: 'البقرة',
-    transliteration: 'Al-Baqarah',
-    meaning: 'বকনা-বাছুর',
-    ayatCount: 286,
-    type: 'মাদানী',
-  ),
-  SurahInfo(
-    number: 3,
-    name: 'আলে-ইমরান',
-    arabic: 'آل عمران',
-    transliteration: "Ali 'Imran",
-    meaning: 'ইমরানের পরিবার',
-    ayatCount: 200,
-    type: 'মাদানী',
-  ),
-  SurahInfo(
-    number: 4,
-    name: 'আন-নিসা',
-    arabic: 'النساء',
-    transliteration: 'An-Nisa',
-    meaning: 'নারী',
-    ayatCount: 176,
-    type: 'মাদানী',
-  ),
-  SurahInfo(
-    number: 5,
-    name: 'আল-মায়িদা',
-    arabic: 'المائدة',
-    transliteration: "Al-Ma'idah",
-    meaning: 'খাদ্য পরিবেশিত টেবিল',
-    ayatCount: 120,
-    type: 'মাদানী',
-  ),
-  SurahInfo(
-    number: 6,
-    name: 'আল-আনআম',
-    arabic: 'الأنعام',
-    transliteration: "Al-An'am",
-    meaning: 'গৃহপালিত পশু',
-    ayatCount: 165,
-    type: 'মাক্কী',
-  ),
-  SurahInfo(
-    number: 7,
-    name: 'আল-আরাফ',
-    arabic: 'الأعراف',
-    transliteration: 'Al-Araf',
-    meaning: 'উচ্চস্থান',
-    ayatCount: 206,
-    type: 'মাক্কী',
-  ),
-  SurahInfo(
-    number: 8,
-    name: 'আল-আনফাল',
-    arabic: 'الأنفال',
-    transliteration: 'Al-Anfal',
-    meaning: 'যুদ্ধলব্ধ সম্পদ',
-    ayatCount: 75,
-    type: 'মাদানী',
-  ),
-  SurahInfo(
-    number: 9,
-    name: 'আত-তাওবা',
-    arabic: 'التوبة',
-    transliteration: 'At-Tawbah',
-    meaning: 'অনুশোচনা',
-    ayatCount: 129,
-    type: 'মাদানী',
-  ),
-  SurahInfo(
-    number: 10,
-    name: 'ইউনুস',
-    arabic: 'يونس',
-    transliteration: 'Yunus',
-    meaning: 'ইউনুস',
-    ayatCount: 109,
-    type: 'মাক্কী',
-  ),
-  SurahInfo(
-    number: 11,
-    name: 'হুদ',
-    arabic: 'هود',
-    transliteration: 'Hud',
-    meaning: 'হুদ',
-    ayatCount: 123,
-    type: 'মাক্কী',
-  ),
-  SurahInfo(
-    number: 12,
-    name: 'ইউসুফ',
-    arabic: 'يوسف',
-    transliteration: 'Yusuf',
-    meaning: 'ইউসুফ',
-    ayatCount: 111,
-    type: 'মাক্কী',
-  ),
-  SurahInfo(
-    number: 13,
-    name: 'আর-রাদ',
-    arabic: 'الرعد',
-    transliteration: 'Ar-Rad',
-    meaning: 'বজ্রপাত',
-    ayatCount: 43,
-    type: 'মাদানী',
-  ),
-  SurahInfo(
-    number: 14,
-    name: 'ইবরাহীম',
-    arabic: 'إبراهيم',
-    transliteration: 'Ibrahim',
-    meaning: 'ইবরাহীম',
-    ayatCount: 52,
-    type: 'মাক্কী',
-  ),
-  SurahInfo(
-    number: 15,
-    name: 'আল-হিজর',
-    arabic: 'الحجر',
-    transliteration: 'Al-Hijr',
-    meaning: 'পাথুরে ভূমি',
-    ayatCount: 99,
-    type: 'মাক্কী',
-  ),
-  SurahInfo(
-    number: 36,
-    name: 'ইয়া-সীন',
-    arabic: 'يس',
-    transliteration: 'Ya-Sin',
-    meaning: 'ইয়া-সীন',
-    ayatCount: 83,
-    type: 'মাক্কী',
-  ),
-  SurahInfo(
-    number: 55,
-    name: 'আর-রাহমান',
-    arabic: 'الرحمن',
-    transliteration: 'Ar-Rahman',
-    meaning: 'পরম দয়ালু',
-    ayatCount: 78,
-    type: 'মাদানী',
-  ),
-  SurahInfo(
-    number: 67,
-    name: 'আল-মুলক',
-    arabic: 'الملك',
-    transliteration: 'Al-Mulk',
-    meaning: 'রাজত্ব',
-    ayatCount: 30,
-    type: 'মাক্কী',
-  ),
-  SurahInfo(
-    number: 112,
-    name: 'আল-ইখলাস',
-    arabic: 'الإخلاص',
-    transliteration: 'Al-Ikhlas',
-    meaning: 'একনিষ্ঠতা',
-    ayatCount: 4,
-    type: 'মাক্কী',
-  ),
-  SurahInfo(
-    number: 113,
-    name: 'আল-ফালাক',
-    arabic: 'الفلق',
-    transliteration: 'Al-Falaq',
-    meaning: 'ভোরের আলো',
-    ayatCount: 5,
-    type: 'মাক্কী',
-  ),
-  SurahInfo(
-    number: 114,
-    name: 'আন-নাস',
-    arabic: 'الناس',
-    transliteration: 'An-Nas',
-    meaning: 'মানবজাতি',
-    ayatCount: 6,
-    type: 'মাক্কী',
-  ),
-];
-
-// ─── QuranScreen ──────────────────────────────────────────────────────────────
 
 class QuranScreen extends StatefulWidget {
   const QuranScreen({super.key});
@@ -228,470 +20,294 @@ class QuranScreen extends StatefulWidget {
   State<QuranScreen> createState() => _QuranScreenState();
 }
 
-class _QuranScreenState extends State<QuranScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  String _searchQuery = '';
-  List<SurahInfo> _filtered = _surahs;
+class _QuranScreenState extends State<QuranScreen> {
+  final _search = TextEditingController();
+  List<QuranSurahMeta> _visible = quranSurahs;
+  Map<String, dynamic>? _lastRead;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _loadProgress();
+  }
+
+  Future<void> _loadProgress() async {
+    final data = await LocalStore.instance.getJson('quran_progress', 'last_read');
+    if (!mounted) return;
+    setState(() => _lastRead = data);
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
+    _search.dispose();
     super.dispose();
   }
 
-  void _onSearch(String q) {
+  void _filter(String value) {
+    final q = value.trim().toLowerCase();
     setState(() {
-      _searchQuery = q;
-      _filtered = _surahs
-          .where(
-            (s) =>
-                s.name.contains(q) ||
-                s.arabic.contains(q) ||
-                s.number.toString().contains(q),
-          )
-          .toList();
+      if (q.isEmpty) {
+        _visible = quranSurahs;
+      } else {
+        _visible = quranSurahs.where((s) {
+          return s.number.toString() == q ||
+              s.banglaName.toLowerCase().contains(q) ||
+              s.englishName.toLowerCase().contains(q) ||
+              s.arabicName.contains(value.trim());
+        }).toList();
+      }
     });
   }
 
-  void _openSurah(BuildContext context, SurahInfo surah) {
-    Navigator.push(
+  Future<void> _open(QuranSurahMeta surah, {int? ayah}) async {
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => SurahDetailPage(
-          surahName: surah.name,
-          arabicName: surah.arabic,
+          surahName: surah.banglaName,
+          arabicName: surah.arabicName,
           surahNumber: surah.number,
-          ayatCount: surah.ayatCount,
-          type: surah.type,
+          ayatCount: surah.ayahCount,
+          type: '',
+          initialAyah: ayah,
         ),
       ),
     );
+    await _loadProgress();
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = context.watch<ThemeProvider>().isDark;
-    final textColor = isDark ? AppColors.darkText : AppColors.lightText;
-    final cardColor = isDark ? AppColors.darkCard : Colors.white;
+    final language = context.watch<AppLanguageProvider>();
+    final bg = isDark ? AppColors.darkBg : const Color(0xFFF3F0E8);
+    final card = isDark ? AppColors.darkCard : Colors.white;
+    final text = isDark ? AppColors.darkText : const Color(0xFF183B2A);
+    final sub = isDark ? AppColors.darkSubText : const Color(0xFF6B746F);
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBg : AppColors.lightBg,
-      body: Column(
-        children: [
-          // Search bar
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: Container(
-              decoration: BoxDecoration(
-                color: cardColor,
-                borderRadius: BorderRadius.circular(14),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 8,
-                  ),
-                ],
-              ),
-              child: TextField(
-                onChanged: _onSearch,
-                style: GoogleFonts.hindSiliguri(color: textColor),
-                decoration: InputDecoration(
-                  hintText: 'সূরার নাম বা নম্বর দিয়ে খুঁজুন...',
-                  hintStyle: GoogleFonts.hindSiliguri(
-                    color: Colors.grey,
-                    fontSize: 13,
-                  ),
-                  prefixIcon: const Icon(
-                    Icons.search,
-                    color: AppColors.primary,
-                    size: 20,
-                  ),
-                  suffixIcon: _searchQuery.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(
-                            Icons.clear,
-                            color: Colors.grey,
-                            size: 18,
-                          ),
-                          onPressed: () {
-                            _onSearch('');
-                          },
-                        )
-                      : null,
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-              ),
-            ),
-          ),
-
-          // Tabs
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: cardColor,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 6,
-                ),
-              ],
-            ),
-            child: TabBar(
-              controller: _tabController,
-              labelColor: Colors.white,
-              unselectedLabelColor: AppColors.primary,
-              dividerColor: Colors.transparent,
-              indicator: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              indicatorSize: TabBarIndicatorSize.tab,
-              labelStyle: GoogleFonts.hindSiliguri(
-                fontWeight: FontWeight.w700,
-                fontSize: 14,
-              ),
-              unselectedLabelStyle: GoogleFonts.hindSiliguri(
-                fontWeight: FontWeight.w500,
-              ),
-              tabs: const [
-                Tab(text: 'সূরা'),
-                Tab(text: 'পারা'),
-                Tab(text: 'পৃষ্ঠা'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildSurahList(isDark, textColor, cardColor),
-                _buildParaList(isDark, textColor, cardColor),
-                _buildPageList(isDark, textColor, cardColor),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Surah list ──────────────────────────────────────────────────────────────
-
-  Widget _buildSurahList(bool isDark, Color textColor, Color cardColor) {
-    if (_filtered.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('🔍', style: TextStyle(fontSize: 48)),
-            const SizedBox(height: 12),
-            Text(
-              'কোনো সূরা পাওয়া যায়নি',
-              style: GoogleFonts.hindSiliguri(color: Colors.grey, fontSize: 16),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: _filtered.length,
-      itemBuilder: (context, index) {
-        final surah = _filtered[index];
-        return _SurahListTile(
-          surah: surah,
-          isDark: isDark,
-          textColor: textColor,
-          cardColor: cardColor,
-          onTap: () => _openSurah(context, surah),
-        );
-      },
-    );
-  }
-
-  // ── Para list ───────────────────────────────────────────────────────────────
-
-  Widget _buildParaList(bool isDark, Color textColor, Color cardColor) {
-    final banglaNumbers = [
-      '১',
-      '২',
-      '৩',
-      '৪',
-      '৫',
-      '৬',
-      '৭',
-      '৮',
-      '৯',
-      '১০',
-      '১১',
-      '১২',
-      '১৩',
-      '১৪',
-      '১৫',
-      '১৬',
-      '১৭',
-      '১৮',
-      '১৯',
-      '২০',
-      '২১',
-      '২২',
-      '২৩',
-      '২৪',
-      '২৫',
-      '২৬',
-      '২৭',
-      '২৮',
-      '২৯',
-      '৩০',
-    ];
-    return GridView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4,
-        childAspectRatio: 1,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-      ),
-      itemCount: 30,
-      itemBuilder: (context, index) {
-        return GestureDetector(
-          onTap: () {},
-          child: Container(
-            decoration: BoxDecoration(
-              color: cardColor,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.25),
-                width: 1.5,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 4,
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  banglaNumbers[index],
-                  style: GoogleFonts.hindSiliguri(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.primary,
-                  ),
-                ),
-                Text(
-                  'পারা',
-                  style: GoogleFonts.hindSiliguri(
-                    fontSize: 10,
-                    color: Colors.grey,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  // ── Page list ───────────────────────────────────────────────────────────────
-
-  Widget _buildPageList(bool isDark, Color textColor, Color cardColor) {
-    return GridView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 5,
-        childAspectRatio: 1,
-        crossAxisSpacing: 6,
-        mainAxisSpacing: 6,
-      ),
-      itemCount: 604,
-      itemBuilder: (context, index) {
-        return GestureDetector(
-          onTap: () {},
-          child: Container(
-            decoration: BoxDecoration(
-              color: cardColor,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.15),
-              ),
-            ),
-            child: Center(
-              child: Text(
-                '${index + 1}',
-                style: GoogleFonts.hindSiliguri(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: textColor,
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-// ─── Surah list tile widget ───────────────────────────────────────────────────
-
-class _SurahListTile extends StatelessWidget {
-  final SurahInfo surah;
-  final bool isDark;
-  final Color textColor;
-  final Color cardColor;
-  final VoidCallback onTap;
-
-  const _SurahListTile({
-    required this.surah,
-    required this.isDark,
-    required this.textColor,
-    required this.cardColor,
-    required this.onTap,
-  });
-
-  String _toBangla(String s) {
-    const en = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-    const bn = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
-    for (int i = 0; i < en.length; i++) {
-      s = s.replaceAll(en[i], bn[i]);
-    }
-    return s;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        decoration: BoxDecoration(
-          color: cardColor,
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 6,
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          child: Row(
-            children: [
-              // Number badge
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    _toBangla(surah.number.toString()),
-                    style: GoogleFonts.hindSiliguri(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 14,
-                    ),
+      backgroundColor: bg,
+      body: SafeArea(
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
+                child: _HeroHeader(
+                  textColor: text,
+                  subColor: sub,
+                  onMushaf: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MushafPage()),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
-
-              // Name + meta
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                child: Row(
                   children: [
-                    // ── Row 1: Transliteration (meaning) — above Arabic ──
-                    if (surah.transliteration.isNotEmpty)
-                      Text(
-                        '${surah.transliteration} (${surah.meaning})',
-                        style: GoogleFonts.hindSiliguri(
-                          fontWeight: FontWeight.w700,
-                          color: textColor,
-                          fontSize: 15,
+                    Expanded(
+                      child: _QuranActionCard(
+                        icon: Icons.manage_search_rounded,
+                        title: 'কুরআন সার্চ',
+                        subtitle: 'বাংলা • English • عربي',
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const QuranSearchPage()),
                         ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    const SizedBox(height: 2),
-                    // ── Row 2: Arabic name ──
-                    Text(
-                      surah.arabic,
-                      textDirection: TextDirection.rtl,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        color: Color(0xFFB8860B), // gold
-                        fontFamily: 'NooreHuda',
-                        fontWeight: FontWeight.bold,
-                        height: 1.3,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    // ── Row 3: Type badge + ayat count ──
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 1,
-                          ),
-                          decoration: BoxDecoration(
-                            color: surah.type == 'মাক্কী'
-                                ? Colors.orange.withValues(alpha: 0.15)
-                                : Colors.blue.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            surah.type,
-                            style: GoogleFonts.hindSiliguri(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              color: surah.type == 'মাক্কী'
-                                  ? Colors.orange[700]
-                                  : Colors.blue[700],
-                            ),
-                          ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _QuranActionCard(
+                        icon: Icons.track_changes_rounded,
+                        title: 'খতম ও হিফজ',
+                        subtitle: 'লক্ষ্য • অগ্রগতি',
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const QuranGoalsPage()),
                         ),
-                        const SizedBox(width: 6),
-                        Text(
-                          '${_toBangla(surah.ayatCount.toString())} আয়াত',
-                          style: GoogleFonts.hindSiliguri(
-                            color: Colors.black87,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ],
                 ),
               ),
+            ),
+            if (_lastRead != null)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: _ContinueCard(
+                    color: card,
+                    textColor: text,
+                    subColor: sub,
+                    progress: _lastRead!,
+                    onTap: () {
+                      final no = (_lastRead!['surahNumber'] as num?)?.toInt() ?? 1;
+                      final ayah = (_lastRead!['ayahNumber'] as num?)?.toInt();
+                      final surah = quranSurahs[(no - 1).clamp(0, 113).toInt()];
+                      _open(surah, ayah: ayah);
+                    },
+                  ),
+                ),
+              ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                child: TextField(
+                  controller: _search,
+                  onChanged: _filter,
+                  textInputAction: TextInputAction.search,
+                  decoration: InputDecoration(
+                    hintText: AppI18n.current('সূরার নাম বা নম্বর দিয়ে খুঁজুন...'),
+                    prefixIcon: const Icon(Icons.search_rounded),
+                    suffixIcon: _search.text.isEmpty
+                        ? null
+                        : IconButton(
+                            onPressed: () {
+                              _search.clear();
+                              _filter('');
+                            },
+                            icon: const Icon(Icons.close_rounded),
+                          ),
+                    filled: true,
+                    fillColor: card,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: AppColors.primary.withValues(alpha: .12),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 28),
+              sliver: SliverList.separated(
+                itemCount: _visible.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                itemBuilder: (context, index) {
+                  final surah = _visible[index];
+                  final displayName = language.isBangla
+                      ? surah.banglaName
+                      : surah.englishName;
+                  return Material(
+                    color: card,
+                    borderRadius: BorderRadius.circular(16),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(16),
+                      onTap: () => _open(surah),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        child: Row(
+                          children: [
+                            _SurahNumber(number: surah.number),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    displayName,
+                                    style: TextStyle(
+                                      color: text,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    '${surah.englishName}  •  ${surah.ayahCount} আয়াত',
+                                    style: TextStyle(color: sub, fontSize: 12),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Text(
+                              surah.arabicName,
+                              textDirection: TextDirection.rtl,
+                              style: TextStyle(
+                                color: text,
+                                fontFamily: 'NooreHuda',
+                                fontSize: 25,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              size: 14,
+                              color: sub,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-              // Arrow
-              const SizedBox(width: 6),
-              const Icon(
-                Icons.arrow_forward_ios,
-                size: 12,
-                color: AppColors.primary,
+class _QuranActionCard extends StatelessWidget {
+  const _QuranActionCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title, subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return Material(
+      color: dark ? AppColors.darkCard : Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: .10),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: AppColors.primary, size: 21),
+              ),
+              const SizedBox(width: 9),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13)),
+                    const SizedBox(height: 2),
+                    Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 10.5), maxLines: 1),
+                  ],
+                ),
               ),
             ],
           ),
@@ -699,4 +315,193 @@ class _SurahListTile extends StatelessWidget {
       ),
     );
   }
+}
+
+class _HeroHeader extends StatelessWidget {
+  const _HeroHeader({
+    required this.textColor,
+    required this.subColor,
+    required this.onMushaf,
+  });
+  final Color textColor, subColor;
+  final VoidCallback onMushaf;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF0A4A2D), Color(0xFF19754B)],
+          ),
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: .18),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: .12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.menu_book_rounded,
+                    color: Colors.white,
+                    size: 29,
+                  ),
+                ),
+                const SizedBox(width: 13),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'পবিত্র কুরআন',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      SizedBox(height: 3),
+                      Text(
+                        'পড়ুন • শুনুন • অনুবাদ • অফলাইন',
+                        style: TextStyle(color: Colors.white70, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton.filledTonal(
+                  tooltip: AppI18n.current('পেজ অনুযায়ী মুসহাফ পড়ুন'),
+                  onPressed: onMushaf,
+                  icon: const Icon(Icons.auto_stories_rounded),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: .08),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text(
+                'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+                textAlign: TextAlign.center,
+                textDirection: TextDirection.rtl,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontFamily: 'NooreHuda',
+                  fontSize: 23,
+                  height: 1.6,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+}
+
+class _ContinueCard extends StatelessWidget {
+  const _ContinueCard({
+    required this.color,
+    required this.textColor,
+    required this.subColor,
+    required this.progress,
+    required this.onTap,
+  });
+  final Color color, textColor, subColor;
+  final Map<String, dynamic> progress;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final surah = (progress['surahNumber'] as num?)?.toInt() ?? 1;
+    final ayah = (progress['ayahNumber'] as num?)?.toInt() ?? 1;
+    final meta = quranSurahs[(surah - 1).clamp(0, 113).toInt()];
+    return Material(
+      color: color,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              const Icon(Icons.history_rounded, color: AppColors.primary),
+              const SizedBox(width: 11),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'যেখান থেকে পড়া শেষ করেছিলেন',
+                      style: TextStyle(
+                        color: textColor,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    Text(
+                      '${meta.banglaName} • আয়াত $ayah',
+                      style: TextStyle(color: subColor, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.play_arrow_rounded, color: AppColors.primary),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SurahNumber extends StatelessWidget {
+  const _SurahNumber({required this.number});
+  final int number;
+  @override
+  Widget build(BuildContext context) => SizedBox(
+        width: 42,
+        height: 42,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Transform.rotate(
+              angle: .785398,
+              child: Container(
+                width: 31,
+                height: 31,
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: .45),
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+            Text(
+              '$number',
+              style: const TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w800,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      );
 }

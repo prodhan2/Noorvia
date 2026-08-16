@@ -1,4 +1,6 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
+import 'package:muslim_view/core/localization/app_i18n.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import '../models/poster_model.dart';
@@ -156,7 +158,7 @@ class _PosterScreenState extends State<PosterScreen> {
                     IconButton(
                       icon: const Icon(Icons.refresh),
                       onPressed: _loadPosters,
-                      tooltip: 'রিফ্রেশ',
+                      tooltip: AppI18n.current('রিফ্রেশ'),
                     ),
                   ],
                 ),

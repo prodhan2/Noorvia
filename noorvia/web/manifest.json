@@ -1,11 +1,11 @@
 {
-    "name": "Muslim View",
-    "short_name": "Muslim View",
+    "name": "Noorvia",
+    "short_name": "Noorvia",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "Muslim View - Islamic App in Bangla.",
+    "description": "Noorvia - Bilingual Offline-First Islamic Companion.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

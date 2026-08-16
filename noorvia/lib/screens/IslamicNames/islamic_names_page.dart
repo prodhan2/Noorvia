@@ -1,5 +1,7 @@
 ﻿import 'dart:convert';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
+import 'package:muslim_view/core/localization/app_i18n.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
@@ -269,7 +271,7 @@ class _IslamicNamesPageState extends State<IslamicNamesPage>
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.white, size: 20),
             onPressed: _fetchData,
-            tooltip: 'রিফ্রেশ',
+            tooltip: AppI18n.current('রিফ্রেশ'),
           ),
           const SizedBox(width: 4),
         ],
@@ -404,7 +406,7 @@ class _IslamicNamesPageState extends State<IslamicNamesPage>
                           style: GoogleFonts.hindSiliguri(
                               color: textColor, fontSize: 14),
                           decoration: InputDecoration(
-                            hintText: 'নাম, অর্থ বা আরবি দিয়ে খুঁজুন...',
+                            hintText: AppI18n.current('নাম, অর্থ বা আরবি দিয়ে খুঁজুন...'),
                             hintStyle: GoogleFonts.hindSiliguri(
                                 color: subColor, fontSize: 13),
                             prefixIcon: Icon(Icons.search,

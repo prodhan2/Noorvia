@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
 import 'package:muslim_view/screens/iqc/iqc_home_page.dart';
 import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart';
@@ -8,7 +9,7 @@ import '../../core/providers/theme_provider.dart';
 import '../../core/providers/nav_provider.dart';
 import '../../core/config/app_routes.dart';
 import '../../core/services/location_permission_service.dart';
-import '../IslamicFeatures/BangalQUran/BanglaQuran.dart';
+import '../quran/quran_screen.dart';
 import '../quran/mushaf_page.dart';
 import '../IslamicFeatures/tashbi.dart';
 import '../IslamicFeatures/NamazNiyom.dart';
@@ -23,6 +24,9 @@ import '../IslamicNames/islamic_names_page.dart';
 import '../ArabicAlphabet/arabic_alphabet_home.dart';
 import '../IslamicBooks/islamic_books_page.dart';
 import '../location/nearby_mosques_screen.dart';
+import '../companion/daily_companion_page.dart';
+import '../services/halal_ingredient_page.dart';
+import '../location/islamic_places_page.dart';
 
 import '../IslamicFeatures/namaz_tracker_page.dart';
 import '../IslamicFeatures/azan_alarm_page.dart';
@@ -310,7 +314,7 @@ class _HomeScreenState extends State<HomeScreen>
     FeatureItem(
       emoji: '📖',
       label: 'কুরআন',
-      onTap: () => _go(context, const SurahListPage()),
+      onTap: () => _go(context, const QuranScreen()),
     ),
     FeatureItem(
       emoji: '📚',
@@ -372,7 +376,7 @@ class _HomeScreenState extends State<HomeScreen>
     FeatureItem(
       emoji: '📖',
       label: 'তিলাওয়াত',
-      onTap: () => _go(context, const MushafPage()),
+      onTap: () => _go(context, const QuranScreen()),
     ),
     FeatureItem(
       emoji: '🤲',
@@ -385,10 +389,9 @@ class _HomeScreenState extends State<HomeScreen>
       onTap: () => _go(context, TasbihCounter()),
     ),
     FeatureItem(
-      emoji: '📋',
-      label: 'আমল ট্রাকার',
-      onTap: () =>
-          _soon(context, 'আমল ট্রাকার', '📋', 'প্রতিদিনের আমল ট্র্যাক করুন'),
+      emoji: '🌟',
+      label: 'Noorvia\nToday',
+      onTap: () => _go(context, const DailyCompanionPage()),
     ),
     FeatureItem(
       emoji: '🕋',
@@ -445,10 +448,9 @@ class _HomeScreenState extends State<HomeScreen>
           _soon(context, 'ইসলামিক বিবাহ', '💑', 'ইসলামিক বিবাহ সংক্রান্ত তথ্য'),
     ),
     FeatureItem(
-      emoji: '🛒',
-      label: 'কেনাকাটা',
-      onTap: () =>
-          _soon(context, 'হালাল কেনাকাটা', '🛒', 'হালাল পণ্য ও সেবার তালিকা'),
+      emoji: '🔎',
+      label: 'হালাল\nসহায়ক',
+      onTap: () => _go(context, const HalalIngredientPage()),
     ),
     FeatureItem(
       emoji: '📰',
@@ -516,6 +518,11 @@ class _HomeScreenState extends State<HomeScreen>
       emoji: '📅',
       label: 'ক্যালেন্ডার',
       onTap: () => _go(context, PrayerTimesCalendarPage()),
+    ),
+    FeatureItem(
+      emoji: '🗺️',
+      label: 'ইসলামিক\nস্থান',
+      onTap: () => _go(context, const IslamicPlacesPage()),
     ),
     FeatureItem(
       emoji: '⭐',

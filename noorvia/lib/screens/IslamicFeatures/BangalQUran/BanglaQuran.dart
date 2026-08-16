@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'BanglaQuranSurahDetails.dart';
 import 'QuranBanglaFavouritePage.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
+import 'package:muslim_view/core/localization/app_i18n.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -348,7 +350,7 @@ class _SurahListPageState extends State<SurahListPage>
                     color: isDark ? AppColors.darkText : Colors.black87,
                   ),
                   decoration: InputDecoration(
-                    hintText: 'সূরার নাম বা অনুবাদ দিয়ে খুঁজুন...',
+                    hintText: AppI18n.current('সূরার নাম বা অনুবাদ দিয়ে খুঁজুন...'),
                     hintStyle: GoogleFonts.hindSiliguri(
                       color: isDark ? AppColors.darkSubText : Colors.grey,
                       fontSize: 13,
@@ -488,7 +490,7 @@ class _SurahListPageState extends State<SurahListPage>
         IconButton(
           icon: const Icon(Icons.refresh, color: Colors.white, size: 20),
           onPressed: _refresh,
-          tooltip: 'রিফ্রেশ',
+          tooltip: AppI18n.current('রিফ্রেশ'),
         ),
         IconButton(
           icon: const Icon(
@@ -496,7 +498,7 @@ class _SurahListPageState extends State<SurahListPage>
             color: Colors.white,
             size: 20,
           ),
-          tooltip: 'পছন্দের সূরা',
+          tooltip: AppI18n.current('পছন্দের সূরা'),
           onPressed: () async {
             await Navigator.push(
               context,

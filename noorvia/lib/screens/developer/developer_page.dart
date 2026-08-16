@@ -5,7 +5,8 @@
 // ============================================================
 
 import 'dart:convert';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:muslim_view/core/localization/localized_text.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
@@ -411,7 +412,7 @@ class _HeaderSection extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'মুসলিম ভিউ',
+                    'Noorvia',
                     style: GoogleFonts.hindSiliguri(
                       fontSize: 22,
                       fontWeight: FontWeight.w800,
@@ -419,7 +420,7 @@ class _HeaderSection extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'Muslim View',
+                    'Noorvia',
                     style: GoogleFonts.poppins(
                       fontSize: 11,
                       color: Colors.white.withValues(alpha: 0.85),

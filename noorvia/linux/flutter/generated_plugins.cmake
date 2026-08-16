@@ -4,6 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   audioplayers_linux
+  isar_community_flutter_libs
   printing
   url_launcher_linux
 )
