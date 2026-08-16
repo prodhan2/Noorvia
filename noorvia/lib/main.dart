@@ -36,8 +36,12 @@ void main() async {
   // Initialize timezone for prayer alarm scheduling
   tz.initializeTimeZones();
 
-  // Offline-first local database. On web this is a lightweight no-op stub.
-  await LocalStore.instance.init();
+  try {
+    // Offline-first local database. On web this is a lightweight no-op stub.
+    await LocalStore.instance.init();
+  } catch (e) {
+    debugPrint("Failed to init LocalStore: $e");
+  }
 
   try {
     await Firebase.initializeApp(
@@ -47,10 +51,19 @@ void main() async {
   } catch (_) {}
 
   if (!kIsWeb) {
-    // Initialise local notifications (Android only)
-    await LocalNotificationService.init();
-    // Initialize prayer alarm service (permissions + notification channel)
-    await PrayerAlarmService().initialize();
+    try {
+      // Initialise local notifications (Android only)
+      await LocalNotificationService.init();
+    } catch (e) {
+      debugPrint("Failed to init LocalNotificationService: $e");
+    }
+    
+    try {
+      // Initialize prayer alarm service (permissions + notification channel)
+      await PrayerAlarmService().initialize();
+    } catch (e) {
+      debugPrint("Failed to init PrayerAlarmService: $e");
+    }
     // Schedule daily morning (8:00) & night (21:00) notifications
     unawaited(ScheduledNotificationService.init());
 
