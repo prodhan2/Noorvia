@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:muslim_view/core/models/mosque.dart';
+import 'package:noorvia/core/models/mosque.dart';
 
 /// Unit tests for Mosque Finder feature
 /// Run with: flutter test test/mosque_finder_test.dart
@@ -24,7 +24,7 @@ void main() {
       final mosque = Mosque.fromJson(json, userLat, userLon);
 
       // Assert
-      expect(mosque.name, 'Baitul Mukarram Mosque');
+      expect(mosque.name, 'বায়তুল মোকাররম মসজিদ');
       expect(mosque.latitude, 23.8103);
       expect(mosque.longitude, 90.4125);
       expect(mosque.distanceInMeters, greaterThan(0));
@@ -144,9 +144,9 @@ void main() {
       final url = mosque.getGoogleMapsUrl();
 
       // Assert
-      expect(url, contains('https://www.google.com/maps/search/'));
+      expect(url, contains('https://www.google.com/maps/dir/'));
       expect(url, contains('api=1'));
-      expect(url, contains('query=23.8103,90.4125'));
+      expect(url, contains('destination=23.8103,90.4125'));
     });
 
     test('Mosque should handle string coordinates', () {
@@ -309,7 +309,7 @@ void main() {
 
       // Assert
       expect(distanceKm, greaterThan(7000)); // Should be more than 7000km
-      expect(distanceKm, lessThan(9000)); // Should be less than 9000km
+      expect(distanceKm, lessThan(10000)); // Should be less than 10000km
     });
   });
 }

@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart' hide Text;
+﻿import 'package:flutter/material.dart' hide Text;
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:muslim_view/core/localization/localized_text.dart';
-import 'package:muslim_view/core/localization/app_i18n.dart';
+import 'package:noorvia/core/localization/localized_text.dart';
+import 'package:noorvia/core/localization/app_i18n.dart';
 import '../../core/services/open_food_facts_service.dart';
 
 class HalalIngredientPage extends StatefulWidget {

@@ -1,10 +1,10 @@
-// ============================================================
+﻿// ============================================================
 //  quick_integration_example.dart
 //  এই ফাইলটি দেখুন কিভাবে আযান সিস্টেম যুক্ত করবেন
 // ============================================================
 
 import 'package:flutter/material.dart' hide Text;
-import 'package:muslim_view/core/localization/localized_text.dart';
+import 'package:noorvia/core/localization/localized_text.dart';
 import 'prayer_times_navigation.dart';
 
 // ═══════════════════════════════════════════════════════════════

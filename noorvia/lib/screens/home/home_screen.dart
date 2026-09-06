@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart' hide Text;
-import 'package:muslim_view/core/localization/localized_text.dart';
-import 'package:muslim_view/screens/iqc/iqc_home_page.dart';
+﻿import 'package:flutter/material.dart' hide Text;
+import 'package:noorvia/core/localization/localized_text.dart';
+import 'package:noorvia/screens/iqc/iqc_home_page.dart';
 import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';

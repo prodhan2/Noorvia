@@ -1,5 +1,5 @@
-name: muslim_view
-description: "Noorvia - Bilingual Offline-First Islamic Companion"
+name: noorvia
+description: "Noorvia: A modern, offline-first Islamic lifestyle companion featuring accurate prayer times, Azan, Quran, Qibla compass, Ruqyah, and Duas."
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -50,13 +50,21 @@ dependencies:
   isar_community: ^3.3.2
   isar_community_flutter_libs: ^3.3.2
   mobile_scanner: ^7.4.0
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
   isar_community_generator: ^3.3.2
   build_runner: ^2.4.15
+  flutter_launcher_icons: ^0.14.4
+
+flutter_launcher_icons:
+  android: "ic_launcher"
+  ios: true
+  image_path: "assets/noorvia_app_logo.png"
+  min_sdk_android: 21
+  adaptive_icon_background: "#0F4D2A"
+  adaptive_icon_foreground: "assets/noorvia_app_logo.png"
 
 flutter:
   uses-material-design: true
@@ -65,7 +73,7 @@ flutter:
     - assets/icons/
     - assets/data/
     - assets/audio/
-    - assets/muslim view app logo .png
+    - assets/noorvia_app_logo.png
   fonts:
     - family: NooreHuda
       fonts:

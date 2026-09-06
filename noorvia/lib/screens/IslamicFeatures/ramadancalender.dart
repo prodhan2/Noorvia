@@ -1,8 +1,8 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart' hide Text;
-import 'package:muslim_view/core/localization/localized_text.dart';
-import 'package:muslim_view/core/localization/app_i18n.dart';
+import 'package:noorvia/core/localization/localized_text.dart';
+import 'package:noorvia/core/localization/app_i18n.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';

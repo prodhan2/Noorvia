@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart' hide Text;
-import 'package:muslim_view/core/localization/localized_text.dart';
+﻿import 'package:flutter/material.dart' hide Text;
+import 'package:noorvia/core/localization/localized_text.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:url_launcher/url_launcher.dart';

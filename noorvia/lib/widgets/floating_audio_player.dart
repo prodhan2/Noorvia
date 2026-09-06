@@ -1,6 +1,6 @@
-import 'dart:math' as math;
+﻿import 'dart:math' as math;
 import 'package:flutter/material.dart' hide Text;
-import 'package:muslim_view/core/localization/localized_text.dart';
+import 'package:noorvia/core/localization/localized_text.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../core/providers/audio_provider.dart';

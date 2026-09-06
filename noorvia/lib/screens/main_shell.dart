@@ -1,11 +1,11 @@
-// ============================================================
+﻿// ============================================================
 //  main_shell.dart
 //  AppBar, Drawer, BottomNav — সব AppRoutes config থেকে আসে।
 //  নতুন route যোগ করতে শুধু app_routes.dart এডিট করুন।
 // ============================================================
 
 import 'package:flutter/material.dart' hide Text;
-import 'package:muslim_view/core/localization/localized_text.dart';
+import 'package:noorvia/core/localization/localized_text.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../core/theme/app_theme.dart';

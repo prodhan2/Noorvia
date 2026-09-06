@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart' hide Text;
-import 'package:muslim_view/core/localization/localized_text.dart';
+import 'package:noorvia/core/localization/localized_text.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -81,14 +81,16 @@ void main() async {
       statusBarIconBrightness: Brightness.dark,
     ),
   );
-  runApp(const MuslimViewApp());
+  runApp(const NoorviaApp());
 }
 
 // Global navigator key — used to access root Overlay from anywhere
 final GlobalKey<NavigatorState> _navKey = GlobalKey<NavigatorState>();
 
-class MuslimViewApp extends StatelessWidget {
-  const MuslimViewApp({super.key});
+typedef MuslimViewApp = NoorviaApp;
+
+class NoorviaApp extends StatelessWidget {
+  const NoorviaApp({super.key});
 
   @override
   Widget build(BuildContext context) {

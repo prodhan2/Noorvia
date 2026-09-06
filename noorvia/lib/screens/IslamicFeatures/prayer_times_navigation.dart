@@ -1,11 +1,11 @@
-// ============================================================
+﻿// ============================================================
 //  prayer_times_navigation.dart
 //  Helper widgets for navigating to prayer times and alarm pages
 // ============================================================
 
 import 'package:flutter/material.dart' hide Text;
-import 'package:muslim_view/core/localization/localized_text.dart';
-import 'package:muslim_view/core/localization/app_i18n.dart';
+import 'package:noorvia/core/localization/localized_text.dart';
+import 'package:noorvia/core/localization/app_i18n.dart';
 import 'prayer_times_page.dart';
 import 'prayer_alarm_settings_page.dart';
 

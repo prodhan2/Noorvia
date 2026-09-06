@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart' hide Text;
-import 'package:muslim_view/core/localization/localized_text.dart';
+﻿import 'package:flutter/material.dart' hide Text;
+import 'package:noorvia/core/localization/localized_text.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;

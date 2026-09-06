@@ -1,10 +1,10 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart' hide Text;
-import 'package:muslim_view/core/localization/localized_text.dart';
-import 'package:muslim_view/core/localization/app_i18n.dart';
+import 'package:noorvia/core/localization/localized_text.dart';
+import 'package:noorvia/core/localization/app_i18n.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';

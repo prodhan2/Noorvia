@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart' hide Text;
-import 'package:muslim_view/core/localization/localized_text.dart';
+import 'package:noorvia/core/localization/localized_text.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../onboarding/onboarding_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -97,11 +97,12 @@ class _SplashScreenState extends State<SplashScreen>
                       ],
                     ),
                     child: Center(
-                      child: ClipOval(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
                         child: Image.asset(
-                          'assets/muslim view app logo .png',
-                          width: 92,
-                          height: 92,
+                          'assets/noorvia_app_logo.png',
+                          width: 96,
+                          height: 96,
                           fit: BoxFit.cover,
                         ),
                       ),

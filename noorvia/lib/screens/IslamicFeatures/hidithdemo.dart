@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart' hide Text;
+﻿import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/services.dart';
-import 'package:muslim_view/core/localization/localized_text.dart';
-import 'package:muslim_view/core/localization/app_i18n.dart';
+import 'package:noorvia/core/localization/localized_text.dart';
+import 'package:noorvia/core/localization/app_i18n.dart';
 import '../../core/models/hadith_record.dart';
 import '../../core/services/hadith_service.dart';
 import '../../core/data/local/local_store.dart';

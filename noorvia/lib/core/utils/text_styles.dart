@@ -1,4 +1,4 @@
-// ════════════════════════════════════════════════════════════
+﻿// ════════════════════════════════════════════════════════════
 // TEXT STYLES HELPER — Global Settings থেকে TextStyle তৈরি করুন
 // ════════════════════════════════════════════════════════════
 //
@@ -8,7 +8,7 @@
 // ════════════════════════════════════════════════════════════
 
 import 'package:flutter/material.dart' hide Text;
-import 'package:muslim_view/core/localization/localized_text.dart';
+import 'package:noorvia/core/localization/localized_text.dart';
 import 'package:provider/provider.dart';
 import '../providers/settings_provider.dart';
 import '../providers/theme_provider.dart';

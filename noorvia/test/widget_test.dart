@@ -1,5 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:muslim_view/main.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:noorvia/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

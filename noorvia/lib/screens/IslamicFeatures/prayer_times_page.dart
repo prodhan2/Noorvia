@@ -1,11 +1,11 @@
-// ============================================================
+﻿// ============================================================
 //  prayer_times_page.dart
 //  Enhanced prayer times page with alarm integration
 // ============================================================
 
 import 'package:flutter/material.dart' hide Text;
-import 'package:muslim_view/core/localization/localized_text.dart';
-import 'package:muslim_view/core/localization/app_i18n.dart';
+import 'package:noorvia/core/localization/localized_text.dart';
+import 'package:noorvia/core/localization/app_i18n.dart';
 import 'package:provider/provider.dart';
 import '../../core/providers/prayer_provider.dart';
 import '../../core/providers/prayer_alarm_provider.dart';

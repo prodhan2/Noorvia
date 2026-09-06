@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart' hide Text;
-import 'package:muslim_view/core/localization/localized_text.dart';
+﻿import 'package:flutter/material.dart' hide Text;
+import 'package:noorvia/core/localization/localized_text.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 const _kPrimary = Color(0xFF1B6B3A);

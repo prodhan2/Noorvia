@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart' hide Text;
-import 'package:muslim_view/core/localization/localized_text.dart';
+﻿import 'package:flutter/material.dart' hide Text;
+import 'package:noorvia/core/localization/localized_text.dart';
 import '../../widgets/amar_mosjid_button.dart';
 
 /// Example screen showing how to integrate the "Amar Mosjid" feature

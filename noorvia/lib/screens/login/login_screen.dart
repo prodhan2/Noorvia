@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart' hide Text;
-import 'package:muslim_view/core/localization/localized_text.dart';
+import 'package:noorvia/core/localization/localized_text.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
@@ -46,11 +46,12 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               child: Column(
                 children: [
-                  ClipOval(
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
                     child: Image.asset(
-                      'assets/muslim view app logo .png',
-                      width: 64,
-                      height: 64,
+                      'assets/noorvia_app_logo.png',
+                      width: 68,
+                      height: 68,
                       fit: BoxFit.cover,
                     ),
                   ),

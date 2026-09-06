@@ -1,10 +1,10 @@
-// ============================================================
+﻿// ============================================================
 //  dua_list_page.dart
 //  একটি category-র সব দু'আ দেখায়
 // ============================================================
 
 import 'package:flutter/material.dart' hide Text;
-import 'package:muslim_view/core/localization/localized_text.dart';
+import 'package:noorvia/core/localization/localized_text.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';

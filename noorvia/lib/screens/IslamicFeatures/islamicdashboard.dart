@@ -1,4 +1,4 @@
-import 'AudioQuran.dart';
+﻿import 'AudioQuran.dart';
 import 'BangalQUran/BanglaQuran.dart';
 import 'NamazNiyom.dart';
 import 'islamciradio.dart';
@@ -7,7 +7,7 @@ import 'ramadancalender.dart';
 import 'calendar.dart';
 import 'tashbi.dart';
 import 'package:flutter/material.dart' hide Text;
-import 'package:muslim_view/core/localization/localized_text.dart';
+import 'package:noorvia/core/localization/localized_text.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';

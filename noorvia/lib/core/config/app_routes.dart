@@ -1,4 +1,4 @@
-// ============================================================
+﻿// ============================================================
 //  app_routes.dart  —  Muslim View centralized route & menu config
 //
 //  নতুন পেজ যোগ করতে মাত্র ৩টি কাজ:
@@ -8,7 +8,7 @@
 // ============================================================
 
 import 'package:flutter/material.dart' hide Text;
-import 'package:muslim_view/core/localization/localized_text.dart';
+import 'package:noorvia/core/localization/localized_text.dart';
 import '../../screens/home/home_screen.dart';
 import '../../screens/tools/tools_screen.dart';
 import '../../screens/quran/quran_screen.dart';

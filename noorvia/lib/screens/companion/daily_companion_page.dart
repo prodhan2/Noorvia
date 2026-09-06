@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart' hide Text;
+﻿import 'package:flutter/material.dart' hide Text;
 import 'package:intl/intl.dart' hide TextDirection;
-import 'package:muslim_view/core/localization/localized_text.dart';
-import 'package:muslim_view/core/localization/app_i18n.dart';
+import 'package:noorvia/core/localization/localized_text.dart';
+import 'package:noorvia/core/localization/app_i18n.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/data/local/local_store.dart';

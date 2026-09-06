@@ -1,10 +1,10 @@
-// ============================================================
+﻿// ============================================================
 //  prayer_alarm_settings_page.dart
 //  UI for configuring prayer alarms with individual customization
 // ============================================================
 
 import 'package:flutter/material.dart' hide Text;
-import 'package:muslim_view/core/localization/localized_text.dart';
+import 'package:noorvia/core/localization/localized_text.dart';
 import 'package:provider/provider.dart';
 import '../../core/providers/prayer_alarm_provider.dart';
 import '../../core/providers/prayer_provider.dart';

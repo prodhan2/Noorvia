@@ -1,11 +1,11 @@
-// ============================================================
+﻿// ============================================================
 //  azan_alarm_page.dart
 //  আযান অ্যালার্ম পেজ - সম্পূর্ণ আলাদা পেজ
 // ============================================================
 
 import 'package:flutter/material.dart' hide Text;
-import 'package:muslim_view/core/localization/localized_text.dart';
-import 'package:muslim_view/core/localization/app_i18n.dart';
+import 'package:noorvia/core/localization/localized_text.dart';
+import 'package:noorvia/core/localization/app_i18n.dart';
 import 'package:provider/provider.dart';
 import '../../core/providers/prayer_provider.dart';
 import '../../core/providers/prayer_alarm_provider.dart';

@@ -1,4 +1,4 @@
-// ============================================================
+﻿// ============================================================
 //  developer_page.dart  —  Developer Team Page
 //  Data source: GitHub raw JSON (remote fetch + cache)
 //  Features: Offline support, background refresh, modern UI
@@ -6,7 +6,7 @@
 
 import 'dart:convert';
 import 'package:flutter/material.dart' hide Text;
-import 'package:muslim_view/core/localization/localized_text.dart';
+import 'package:noorvia/core/localization/localized_text.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
